@@ -2,10 +2,12 @@
   @if (cargando) {
     <div class="loading">Cargando...</div>
   } @else if (proyecto) {
+
     <div class="page-header">
-      <div>
+      <div class="page-header-info">
+        <span class="tag-codigo">{{ proyecto.codigo }}</span>
         <h2>{{ proyecto.nombre }}</h2>
-        <span class="badge">{{ proyecto.codigo }}</span>
+        <span class="detail-cliente">{{ proyecto.cliente }}</span>
       </div>
       <div class="header-actions">
         <a [routerLink]="['/proyectos', proyecto.id, 'editar']" class="btn btn-warning">Editar</a>
@@ -13,6 +15,7 @@
       </div>
     </div>
 
+    <!-- Métricas QA -->
     <div class="stats-grid">
       <div class="stat-card">
         <span class="stat-value">{{ resumen?.totalRequerimientos ?? 0 }}</span>
@@ -32,11 +35,75 @@
       </div>
     </div>
 
+    <!-- Barra de avance -->
     <div class="detail-section">
-      <h3>Descripción</h3>
-      <p>{{ proyecto.descripcion }}</p>
+      <div class="avance-header">
+        <h3>Avance del Proyecto</h3>
+        <span class="avance-pct">{{ proyecto.porcentajeAvance }}%</span>
+      </div>
+      <div class="progress-bar progress-bar--lg">
+        <div class="progress-fill" [style.width.%]="proyecto.porcentajeAvance"></div>
+      </div>
+      <div class="avance-meta">
+        <span>Estado: <strong>{{ proyecto.estado }}</strong></span>
+        @if (proyecto.iteracion) { <span>Iteración: <strong>{{ proyecto.iteracion }}</strong></span> }
+        @if (proyecto.horasQA) { <span>Horas QA: <strong>{{ proyecto.horasQA }}h</strong></span> }
+        @if (proyecto.sistema) { <span>Sistema: <strong>{{ proyecto.sistema }}</strong></span> }
+      </div>
     </div>
 
+    <!-- Responsables + Fechas en dos columnas -->
+    <div class="detail-grid-2">
+
+      <div class="detail-section">
+        <h3>Responsables</h3>
+        <dl class="detail-list">
+          <dt>Jefe de Proyecto</dt>
+          <dd>{{ proyecto.jefeProyectoNombre ?? '-' }}</dd>
+          <dt>Jefe QA</dt>
+          <dd>{{ proyecto.jefeQANombre ?? '-' }}</dd>
+          <dt>Responsable QA</dt>
+          <dd>{{ proyecto.responsableQANombre ?? '-' }}</dd>
+        </dl>
+      </div>
+
+      <div class="detail-section">
+        <h3>Fechas</h3>
+        <dl class="detail-list">
+          <dt>Estimación</dt>
+          <dd>{{ proyecto.fechaEstimacion ? (proyecto.fechaEstimacion | date:'dd/MM/yyyy') : '-' }}</dd>
+          <dt>Inicio planificado</dt>
+          <dd>{{ proyecto.fechaInicioPlanificada ? (proyecto.fechaInicioPlanificada | date:'dd/MM/yyyy') : '-' }}</dd>
+          <dt>Fin planificado</dt>
+          <dd>{{ proyecto.fechaFinPlanificada ? (proyecto.fechaFinPlanificada | date:'dd/MM/yyyy') : '-' }}</dd>
+          <dt>Inicio real</dt>
+          <dd>{{ proyecto.fechaInicioReal ? (proyecto.fechaInicioReal | date:'dd/MM/yyyy') : '-' }}</dd>
+          <dt>Fin real</dt>
+          <dd>{{ proyecto.fechaFinReal ? (proyecto.fechaFinReal | date:'dd/MM/yyyy') : '-' }}</dd>
+        </dl>
+      </div>
+
+    </div>
+
+    <!-- Repositorio -->
+    @if (proyecto.repositorioUrl) {
+      <div class="detail-section">
+        <h3>Repositorio</h3>
+        <a [href]="proyecto.repositorioUrl" target="_blank" rel="noopener" class="repo-link">
+          {{ proyecto.repositorioUrl }}
+        </a>
+      </div>
+    }
+
+    <!-- Notas -->
+    @if (proyecto.notas) {
+      <div class="detail-section">
+        <h3>Notas</h3>
+        <p class="notas-text">{{ proyecto.notas }}</p>
+      </div>
+    }
+
+    <!-- Accesos rápidos -->
     <div class="quick-links">
       <a [routerLink]="['/requerimientos']" [queryParams]="{proyectoId: proyecto.id}" class="btn btn-outline">
         Ver Requerimientos

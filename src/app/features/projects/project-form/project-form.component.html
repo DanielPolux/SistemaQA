@@ -6,58 +6,147 @@
 
   @if (error) { <div class="alert alert-error">{{ error }}</div> }
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nombre *</label>
-        <input type="text" formControlName="nombre" placeholder="Nombre del proyecto" />
+  @if (cargando) {
+    <div class="loading">Cargando...</div>
+  } @else {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <!-- Identificación -->
+    <div class="form-section">
+      <h3 class="form-section-title">Identificación</h3>
+      <div class="form-row">
+        <div class="form-group form-group--sm">
+          <label for="codigo">Código *</label>
+          <input id="codigo" type="text" formControlName="codigo" placeholder="PROJ-01" />
+        </div>
+        <div class="form-group">
+          <label for="nombre">Nombre del Proyecto *</label>
+          <input id="nombre" type="text" formControlName="nombre" placeholder="Nombre completo del proyecto" />
+        </div>
       </div>
-      <div class="form-group form-group--sm">
-        <label>Código *</label>
-        <input type="text" formControlName="codigo" placeholder="PROJ-01" />
+      <div class="form-row">
+        <div class="form-group">
+          <label for="cliente">Cliente *</label>
+          <input id="cliente" type="text" formControlName="cliente" placeholder="Nombre del cliente" />
+        </div>
+        <div class="form-group">
+          <label for="sistema">Sistema</label>
+          <input id="sistema" type="text" formControlName="sistema" placeholder="Sistema o producto involucrado" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="repositorioUrl">Repositorio URL</label>
+        <input id="repositorioUrl" type="text" formControlName="repositorioUrl" placeholder="https://github.com/..." />
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Descripción *</label>
-      <textarea formControlName="descripcion" rows="3" placeholder="Descripción del proyecto"></textarea>
+    <!-- Responsables -->
+    <div class="form-section">
+      <h3 class="form-section-title">Responsables</h3>
+      <div class="form-row form-row--3">
+        <div class="form-group">
+          <label for="jefeProyectoId">Jefe de Proyecto *</label>
+          <select id="jefeProyectoId" formControlName="jefeProyectoId">
+            <option [value]="null">Seleccionar...</option>
+            @for (u of usuarios; track u.id) {
+              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="jefeQAId">Jefe QA *</label>
+          <select id="jefeQAId" formControlName="jefeQAId">
+            <option [value]="null">Seleccionar...</option>
+            @for (u of usuarios; track u.id) {
+              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="responsableQAId">Responsable QA</label>
+          <select id="responsableQAId" formControlName="responsableQAId">
+            <option [value]="null">Sin asignar</option>
+            @for (u of usuarios; track u.id) {
+              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+            }
+          </select>
+        </div>
+      </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Fecha Inicio *</label>
-        <input type="date" formControlName="fechaInicio" />
-      </div>
-      <div class="form-group">
-        <label>Fecha Fin</label>
-        <input type="date" formControlName="fechaFin" />
+    <!-- Estado y Avance -->
+    <div class="form-section">
+      <h3 class="form-section-title">Estado y Avance</h3>
+      <div class="form-row form-row--4">
+        <div class="form-group">
+          <label for="estado">Estado *</label>
+          <select id="estado" formControlName="estado">
+            @for (e of estados; track e) {
+              <option [value]="e">{{ e }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="iteracion">Iteración</label>
+          <input id="iteracion" type="number" formControlName="iteracion" placeholder="0" min="0" />
+        </div>
+        <div class="form-group">
+          <label for="porcentajeAvance">% Avance *</label>
+          <input id="porcentajeAvance" type="number" formControlName="porcentajeAvance" min="0" max="100" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label for="horasQA">Horas QA</label>
+          <input id="horasQA" type="number" formControlName="horasQA" placeholder="0" min="0" />
+        </div>
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Estado *</label>
-        <select formControlName="estado">
-          @for (e of estados; track e) {
-            <option [value]="e">{{ e }}</option>
-          }
-        </select>
+    <!-- Fechas -->
+    <div class="form-section">
+      <h3 class="form-section-title">Fechas</h3>
+      <div class="form-row form-row--3">
+        <div class="form-group">
+          <label for="fechaEstimacion">Fecha Estimación</label>
+          <input id="fechaEstimacion" type="date" formControlName="fechaEstimacion" />
+        </div>
+        <div class="form-group">
+          <label for="fechaInicioPlanificada">Fecha Inicio Planificada</label>
+          <input id="fechaInicioPlanificada" type="date" formControlName="fechaInicioPlanificada" />
+        </div>
+        <div class="form-group">
+          <label for="fechaFinPlanificada">Fecha Fin Planificada</label>
+          <input id="fechaFinPlanificada" type="date" formControlName="fechaFinPlanificada" />
+        </div>
       </div>
+      <div class="form-row form-row--3">
+        <div class="form-group"></div>
+        <div class="form-group">
+          <label for="fechaInicioReal">Fecha Inicio Real</label>
+          <input id="fechaInicioReal" type="date" formControlName="fechaInicioReal" />
+        </div>
+        <div class="form-group">
+          <label for="fechaFinReal">Fecha Fin Real</label>
+          <input id="fechaFinReal" type="date" formControlName="fechaFinReal" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Notas -->
+    <div class="form-section">
+      <h3 class="form-section-title">Notas</h3>
       <div class="form-group">
-        <label>Responsable *</label>
-        <select formControlName="responsableId">
-          <option [value]="null">Seleccionar...</option>
-          @for (u of usuarios; track u.id) {
-            <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
-          }
-        </select>
+        <label for="notas">Observaciones</label>
+        <textarea id="notas" formControlName="notas" rows="4"
+          placeholder="Observaciones, comentarios o información adicional..."></textarea>
       </div>
     </div>
 
     <div class="form-actions">
       <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
-        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Proyecto') }}
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar Proyecto' : 'Crear Proyecto') }}
       </button>
+      <a routerLink="/proyectos" class="btn btn-secondary">Cancelar</a>
     </div>
   </form>
+  }
 </div>

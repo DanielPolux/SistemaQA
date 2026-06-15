@@ -28,19 +28,41 @@ export class ProjectFormComponent implements OnInit {
   readonly estados = Object.values(EstadoProyecto);
 
   form = this.fb.group({
-    nombre: ['', [Validators.required, Validators.maxLength(100)]],
-    codigo: ['', [Validators.required, Validators.maxLength(20)]],
-    descripcion: ['', Validators.required],
-    fechaInicio: ['', Validators.required],
-    fechaFin: [''],
-    estado: [EstadoProyecto.ACTIVO, Validators.required],
-    responsableId: [null as number | null, Validators.required]
+    // Identificación
+    codigo: ['', [Validators.required, Validators.maxLength(30)]],
+    nombre: ['', [Validators.required, Validators.maxLength(150)]],
+    cliente: ['', Validators.required],
+    sistema: [''],
+
+    // Responsables
+    responsableQAId: [null as number | null],
+    jefeProyectoId: [null as number | null, Validators.required],
+    jefeQAId: [null as number | null, Validators.required],
+
+    // Estado y avance
+    estado: [EstadoProyecto.POR_ESTIMAR, Validators.required],
+    iteracion: [null as number | null],
+    porcentajeAvance: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+    horasQA: [null as number | null],
+
+    // Fechas planificadas
+    fechaEstimacion: [''],
+    fechaInicioPlanificada: [''],
+    fechaFinPlanificada: [''],
+
+    // Fechas reales
+    fechaInicioReal: [''],
+    fechaFinReal: [''],
+
+    // Otros
+    repositorioUrl: [''],
+    notas: ['']
   });
 
   get esEdicion(): boolean { return !!this.proyectoId; }
 
   ngOnInit(): void {
-    this.userService.getAll({ activo: true, porPagina: 100 }).subscribe(r => { this.usuarios = r.datos; });
+    this.userService.getAll({ activo: true, porPagina: 200 }).subscribe(r => { this.usuarios = r.datos; });
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -50,13 +72,20 @@ export class ProjectFormComponent implements OnInit {
         next: (p) => {
           this.form.patchValue({
             ...p,
-            fechaInicio: p.fechaInicio ? new Date(p.fechaInicio).toISOString().split('T')[0] : '',
-            fechaFin: p.fechaFin ? new Date(p.fechaFin).toISOString().split('T')[0] : ''
+            fechaEstimacion: this.toDateStr(p.fechaEstimacion),
+            fechaInicioPlanificada: this.toDateStr(p.fechaInicioPlanificada),
+            fechaFinPlanificada: this.toDateStr(p.fechaFinPlanificada),
+            fechaInicioReal: this.toDateStr(p.fechaInicioReal),
+            fechaFinReal: this.toDateStr(p.fechaFinReal)
           });
           this.cargando = false;
         }
       });
     }
+  }
+
+  private toDateStr(date?: Date): string {
+    return date ? new Date(date).toISOString().split('T')[0] : '';
   }
 
   onSubmit(): void {

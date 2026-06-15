@@ -24,9 +24,17 @@ export class ProjectListComponent implements OnInit {
 
   readonly estados = Object.values(EstadoProyecto);
 
-  ngOnInit(): void {
-    this.cargar();
-  }
+  readonly estadoClase: Record<EstadoProyecto, string> = {
+    [EstadoProyecto.POR_ESTIMAR]:   'badge-por-estimar',
+    [EstadoProyecto.ESTIMADO]:      'badge-estimado',
+    [EstadoProyecto.PLANIFICADO]:   'badge-planificado',
+    [EstadoProyecto.EN_EJECUCION]:  'badge-en-ejecucion',
+    [EstadoProyecto.OBSERVADO]:     'badge-observado',
+    [EstadoProyecto.EN_PRODUCCION]: 'badge-en-produccion',
+    [EstadoProyecto.FINALIZADO]:    'badge-finalizado'
+  };
+
+  ngOnInit(): void { this.cargar(); }
 
   cargar(): void {
     this.cargando = true;
@@ -36,26 +44,18 @@ export class ProjectListComponent implements OnInit {
       pagina: this.pagina,
       porPagina: this.porPagina
     }).subscribe({
-      next: (res) => {
-        this.proyectos = res.datos;
-        this.total = res.total;
-        this.cargando = false;
-      },
+      next: (res) => { this.proyectos = res.datos; this.total = res.total; this.cargando = false; },
       error: () => { this.cargando = false; }
     });
   }
 
-  buscar(): void {
-    this.pagina = 1;
-    this.cargar();
-  }
+  buscar(): void { this.pagina = 1; this.cargar(); }
 
-  cambiarPagina(p: number): void {
-    this.pagina = p;
-    this.cargar();
-  }
+  cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
 
-  get totalPaginas(): number {
-    return Math.ceil(this.total / this.porPagina);
+  get totalPaginas(): number { return Math.ceil(this.total / this.porPagina); }
+
+  badgeEstado(estado: EstadoProyecto): string {
+    return this.estadoClase[estado] ?? 'badge';
   }
 }
