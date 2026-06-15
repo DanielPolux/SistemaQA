@@ -40,9 +40,26 @@
           <input id="claveProyecto" type="text" formControlName="claveProyecto" readonly
             class="input-readonly" placeholder="Auto" />
         </div>
-        <div class="form-group form-group--sm">
+        <div class="form-group">
           <label for="requerimientoRf">Requerimiento RF</label>
-          <input id="requerimientoRf" type="text" formControlName="requerimientoRf" placeholder="RF-001" />
+          <input id="requerimientoRf"
+                 type="text"
+                 formControlName="requerimientoRf"
+                 list="requerimientosDatalist"
+                 (change)="onRequerimientoChange($event)"
+                 placeholder="Escribe o selecciona un requerimiento..."
+                 autocomplete="off" />
+          <datalist id="requerimientosDatalist">
+            @for (r of requerimientos; track r.id) {
+              <option value="{{ r.codigo }}">{{ r.codigo }} — {{ r.titulo }}</option>
+            }
+          </datalist>
+          @if (form.get('proyectoId')?.value && requerimientos.length === 0) {
+            <span class="field-hint">Sin requerimientos registrados para este proyecto</span>
+          }
+          @if (requerimientos.length > 0) {
+            <span class="field-hint">{{ requerimientos.length }} requerimiento(s) disponible(s)</span>
+          }
         </div>
       </div>
     </div>

@@ -5,9 +5,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
+import { RequirementService } from '../../../core/services/requirement.service';
 import {
   EstadoCasoPrueba, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
-  Proyecto, Usuario, Paso
+  Proyecto, Usuario, Paso, Requerimiento
 } from '../../../core/models';
 
 @Component({
@@ -21,12 +22,14 @@ export class TestCaseFormComponent implements OnInit {
   private service = inject(TestCaseService);
   private projectService = inject(ProjectService);
   private userService = inject(UserService);
+  private requirementService = inject(RequirementService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   casoId?: number;
   proyectos: Proyecto[] = [];
   usuarios: Usuario[] = [];
+  requerimientos: Requerimiento[] = [];
   guardando = false;
   error = '';
 
@@ -44,7 +47,6 @@ export class TestCaseFormComponent implements OnInit {
     tipo:              [TipoPrueba.FUNCIONAL, Validators.required],
     descripcion:       ['', Validators.required],
 
-    // textarea — converted to Paso[] on submit
     pasos:             ['', Validators.required],
     resultadoEsperado: ['', Validators.required],
 
@@ -57,7 +59,8 @@ export class TestCaseFormComponent implements OnInit {
     evidenciaUrl:      [''],
     observaciones:     [''],
 
-    requerimientoRf:   ['']
+    requerimientoRf:   [''],
+    requerimientoId:   [null as number | null]
   });
 
   get esEdicion(): boolean { return !!this.casoId; }
@@ -69,21 +72,41 @@ export class TestCaseFormComponent implements OnInit {
     this.form.get('proyectoId')?.valueChanges.subscribe(id => {
       const p = this.proyectos.find(x => x.id === id);
       if (p) this.form.patchValue({ claveProyecto: p.codigo }, { emitEvent: false });
+
+      // Recargar requerimientos al cambiar de proyecto
+      this.requerimientos = [];
+      this.form.patchValue({ requerimientoRf: '', requerimientoId: null }, { emitEvent: false });
+      if (id) {
+        this.requirementService.getByProyecto(id).subscribe(r => { this.requerimientos = r; });
+      }
     });
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.casoId = Number(id);
       this.service.getById(this.casoId).subscribe(c => {
+        // Cargar requerimientos del proyecto antes de patchValue
+        if (c.proyectoId) {
+          this.requirementService.getByProyecto(c.proyectoId).subscribe(r => {
+            this.requerimientos = r;
+          });
+        }
         this.form.patchValue({
           ...c,
           pasos: this.pasosATexto(c.pasos),
           fechaEjecucion: c.fechaEjecucion
             ? new Date(c.fechaEjecucion).toISOString().split('T')[0]
             : ''
-        });
+        } as any);
       });
     }
+  }
+
+  /** Cuando el usuario escoge o escribe en el campo requerimientoRf */
+  onRequerimientoChange(event: Event): void {
+    const codigo = (event.target as HTMLInputElement).value.trim();
+    const match = this.requerimientos.find(r => r.codigo === codigo);
+    this.form.patchValue({ requerimientoId: match?.id ?? null }, { emitEvent: false });
   }
 
   onSubmit(): void {
