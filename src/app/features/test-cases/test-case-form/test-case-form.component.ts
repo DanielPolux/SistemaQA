@@ -6,8 +6,8 @@ import { TestCaseService } from '../../../core/services/test-case.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import {
-  EstadoQA, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
-  Proyecto, Usuario
+  EstadoCasoPrueba, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
+  Proyecto, Usuario, Paso
 } from '../../../core/models';
 
 @Component({
@@ -30,39 +30,34 @@ export class TestCaseFormComponent implements OnInit {
   guardando = false;
   error = '';
 
-  readonly tipos = Object.values(TipoPrueba);
-  readonly prioridades = Object.values(PrioridadCasoPrueba);
-  readonly estadosQA = Object.values(EstadoQA);
+  readonly tipos      = Object.values(TipoPrueba);
+  readonly prioridades= Object.values(PrioridadCasoPrueba);
+  readonly estadosQA  = Object.values(EstadoCasoPrueba);
   readonly resultados = Object.values(ResultadoCasoPrueba);
 
   form = this.fb.group({
-    // Identificación
-    codigoCP: [''],
-    nombreCasoPrueba: ['', Validators.required],
-    proyectoId: [null as number | null, Validators.required],
-    claveProyecto: [''],
+    codigo:            [''],
+    nombre:            ['', Validators.required],
+    proyectoId:        [null as number | null, Validators.required],
+    claveProyecto:     [''],
 
-    // Tipo y descripción
-    tipoPrueba: [TipoPrueba.FUNCIONAL, Validators.required],
-    descripcionCasoPrueba: ['', Validators.required],
+    tipo:              [TipoPrueba.FUNCIONAL, Validators.required],
+    descripcion:       ['', Validators.required],
 
-    // Pasos y resultado
-    pasosDePrueba: ['', Validators.required],
+    // textarea — converted to Paso[] on submit
+    pasos:             ['', Validators.required],
     resultadoEsperado: ['', Validators.required],
 
-    // Clasificación
-    prioridad: [PrioridadCasoPrueba.MEDIA, Validators.required],
-    estadoQA: [EstadoQA.PENDIENTE, Validators.required],
-    resultado: [ResultadoCasoPrueba.NO_EJECUTADO],
+    prioridad:         [PrioridadCasoPrueba.MEDIA, Validators.required],
+    estado:            [EstadoCasoPrueba.PENDIENTE, Validators.required],
+    resultado:         [ResultadoCasoPrueba.SIN_EJECUTAR],
 
-    // Ejecución
-    responsableQAId: [null as number | null],
-    fechaEjecucion: [''],
-    evidenciaUrl: [''],
-    observaciones: [''],
+    responsableQaId:   [null as number | null],
+    fechaEjecucion:    [''],
+    evidenciaUrl:      [''],
+    observaciones:     [''],
 
-    // Requerimiento
-    requerimientoRF: ['', Validators.required]
+    requerimientoRf:   ['']
   });
 
   get esEdicion(): boolean { return !!this.casoId; }
@@ -71,7 +66,6 @@ export class TestCaseFormComponent implements OnInit {
     this.projectService.getAll({ porPagina: 200 }).subscribe(r => { this.proyectos = r.datos; });
     this.userService.getAll({ activo: true, porPagina: 200 }).subscribe(r => { this.usuarios = r.datos; });
 
-    // Auto-completar ClaveProyecto al seleccionar proyecto
     this.form.get('proyectoId')?.valueChanges.subscribe(id => {
       const p = this.proyectos.find(x => x.id === id);
       if (p) this.form.patchValue({ claveProyecto: p.codigo }, { emitEvent: false });
@@ -83,6 +77,7 @@ export class TestCaseFormComponent implements OnInit {
       this.service.getById(this.casoId).subscribe(c => {
         this.form.patchValue({
           ...c,
+          pasos: this.pasosATexto(c.pasos),
           fechaEjecucion: c.fechaEjecucion
             ? new Date(c.fechaEjecucion).toISOString().split('T')[0]
             : ''
@@ -95,13 +90,36 @@ export class TestCaseFormComponent implements OnInit {
     if (this.form.invalid) return;
     this.guardando = true;
 
+    const val = this.form.value;
+    const payload = {
+      ...val,
+      pasos: this.textoPasos(val.pasos as string)
+    };
+
     const op = this.esEdicion
-      ? this.service.update(this.casoId!, this.form.value as any)
-      : this.service.create(this.form.value as any);
+      ? this.service.update(this.casoId!, payload as any)
+      : this.service.create(payload as any);
 
     op.subscribe({
       next: (c) => this.router.navigate(['/casos-prueba', c.id]),
       error: (err) => { this.error = err.error?.message || 'Error al guardar'; this.guardando = false; }
     });
+  }
+
+  private textoPasos(texto: string): Paso[] {
+    if (!texto?.trim()) return [];
+    return texto
+      .split('\n')
+      .filter(l => l.trim())
+      .map((l, idx) => ({
+        orden: idx + 1,
+        descripcion: l.replace(/^\d+\.\s*/, '').trim(),
+        resultadoEsperado: ''
+      }));
+  }
+
+  private pasosATexto(pasos: Paso[]): string {
+    if (!pasos?.length) return '';
+    return pasos.map(p => `${p.orden}. ${p.descripcion}`).join('\n');
   }
 }

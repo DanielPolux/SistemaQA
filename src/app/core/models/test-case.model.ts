@@ -1,73 +1,74 @@
 export enum TipoPrueba {
-  FUNCIONAL = 'Funcional',
-  REGRESION = 'Regresión',
-  HUMO = 'Humo',
+  FUNCIONAL   = 'Funcional',
+  REGRESION   = 'Regresión',
+  HUMO        = 'Humo',
   INTEGRACION = 'Integración',
   RENDIMIENTO = 'Rendimiento',
-  SEGURIDAD = 'Seguridad',
-  USABILIDAD = 'Usabilidad',
-  EXPLORATORIA = 'Exploratoria'
+  SEGURIDAD   = 'Seguridad',
+  USABILIDAD  = 'Usabilidad'
 }
 
 export enum PrioridadCasoPrueba {
-  ALTA = 'Alta',
+  ALTA  = 'Alta',
   MEDIA = 'Media',
-  BAJA = 'Baja'
+  BAJA  = 'Baja'
 }
 
-export enum EstadoQA {
-  PENDIENTE = 'Pendiente',
+export enum EstadoCasoPrueba {
+  PENDIENTE    = 'Pendiente',
   EN_EJECUCION = 'En Ejecución',
-  BLOQUEADO = 'Bloqueado',
-  COMPLETADO = 'Completado'
+  EJECUTADO    = 'Ejecutado',
+  BLOQUEADO    = 'Bloqueado',
+  OMITIDO      = 'Omitido'
 }
+
+export { EstadoCasoPrueba as EstadoQA };
 
 export enum ResultadoCasoPrueba {
-  NO_EJECUTADO = 'No Ejecutado',
-  APROBADO = 'Aprobado',
-  FALLIDO = 'Fallido',
-  BLOQUEADO = 'Bloqueado'
+  SIN_EJECUTAR = 'Sin Ejecutar',
+  APROBADO     = 'Aprobado',
+  FALLIDO      = 'Fallido',
+  BLOQUEADO    = 'Bloqueado',
+  OMITIDO      = 'Omitido'
+}
+
+export interface Paso {
+  orden: number;
+  descripcion: string;
+  resultadoEsperado: string;
 }
 
 export interface CasoPrueba {
   id: number;
 
-  // Identificación
-  codigoCP?: string;                  // Codigo CP
-  nombreCasoPrueba: string;           // Nombre del Caso de Prueba (requerido)
-  proyectoId: number;                 // Proyecto — Búsqueda (requerido)
+  codigo?: string;
+  nombre: string;
+  proyectoId: number;
   proyectoNombre?: string;
-  claveProyecto?: string;             // ClaveProyecto (texto)
+  claveProyecto?: string;
 
-  // Tipo y descripción
-  tipoPrueba: TipoPrueba;             // Tipo de Prueba (requerido)
-  descripcionCasoPrueba: string;      // Descripción del Caso de Prueba (requerido)
+  tipo: TipoPrueba;
+  descripcion: string;
 
-  // Pasos y resultado
-  pasosDePrueba: string;              // Pasos de Prueba (texto libre, requerido)
-  resultadoEsperado: string;          // Resultado Esperado (requerido)
+  pasos: Paso[];
+  resultadoEsperado: string;
 
-  // Clasificación
-  prioridad: PrioridadCasoPrueba;     // Prioridad (requerido)
-  estadoQA: EstadoQA;                 // Estado QA (requerido)
-  resultado?: ResultadoCasoPrueba;    // Resultado
+  prioridad: PrioridadCasoPrueba;
+  estado: EstadoCasoPrueba;
+  resultado?: ResultadoCasoPrueba;
 
-  // Ejecución
-  responsableQAId?: number;
-  responsableQANombre?: string;       // Responsable QA
-  fechaEjecucion?: Date;             // Fecha Ejecución
-  evidenciaUrl?: string;             // Evidencia (hipervínculo)
-  observaciones?: string;            // Observaciones
+  responsableQaId?: number;
+  responsableQaNombre?: string;
+  fechaEjecucion?: Date;
+  evidenciaUrl?: string;
+  observaciones?: string;
 
-  // Requerimiento
-  requerimientoRF?: string;          // Requerimiento RF (texto, requerido)
-  rfId?: number;                     // RF — Búsqueda
+  requerimientoRf?: string;
+  requerimientoId?: number;
 
-  // Defectos
   defectosAsociadosIds?: number[];
   totalDefectos?: number;
 
-  // Auditoría
   creadoEn: Date;
   actualizadoEn: Date;
   creadoPor?: number;

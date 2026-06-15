@@ -7,15 +7,19 @@ import { PaginatedResponse } from './project.service';
 
 export interface FiltroCasoPrueba {
   proyectoId?: number;
-  rfId?: number;
-  estadoQA?: string;
-  tipoPrueba?: string;
+  requerimientoId?: number;
+  estado?: string;
+  tipo?: string;
   prioridad?: string;
   resultado?: string;
-  responsableQAId?: number;
+  responsableQaId?: number;
   busqueda?: string;
   pagina?: number;
   porPagina?: number;
+}
+
+export interface ImportarPayload {
+  casos: Partial<CasoPrueba>[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,8 +54,8 @@ export class TestCaseService {
     return this.http.put<CasoPrueba>(`${this.url}/${id}`, caso);
   }
 
-  importarDesdeExcel(casos: Partial<CasoPrueba>[]): Observable<ImportacionResultado> {
-    return this.http.post<ImportacionResultado>(`${this.url}/importar`, { casos });
+  importarDesdeExcel(payload: ImportarPayload): Observable<ImportacionResultado> {
+    return this.http.post<ImportacionResultado>(`${this.url}/importar`, payload);
   }
 
   delete(id: number): Observable<void> {

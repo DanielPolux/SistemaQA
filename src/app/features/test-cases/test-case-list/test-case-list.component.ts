@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TestCaseService } from '../../../core/services/test-case.service';
-import { CasoPrueba, EstadoQA, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba } from '../../../core/models';
+import { CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba } from '../../../core/models';
 
 @Component({
   selector: 'app-test-case-list',
@@ -13,7 +13,7 @@ import { CasoPrueba, EstadoQA, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPru
 })
 export class TestCaseListComponent implements OnInit {
   private service = inject(TestCaseService);
-  private route = inject(ActivatedRoute);
+  private route   = inject(ActivatedRoute);
 
   casos: CasoPrueba[] = [];
   total = 0;
@@ -21,27 +21,29 @@ export class TestCaseListComponent implements OnInit {
   porPagina = 15;
   proyectoId?: number;
   estadoFiltro = '';
-  tipoFiltro = '';
+  tipoFiltro   = '';
   resultadoFiltro = '';
   busqueda = '';
   cargando = false;
 
-  readonly estadosQA = Object.values(EstadoQA);
-  readonly tipos = Object.values(TipoPrueba);
+  readonly estadosQA  = Object.values(EstadoCasoPrueba);
+  readonly tipos      = Object.values(TipoPrueba);
   readonly resultados = Object.values(ResultadoCasoPrueba);
 
   readonly resultadoClase: Record<string, string> = {
     [ResultadoCasoPrueba.APROBADO]:    'badge-resultado-aprobado',
     [ResultadoCasoPrueba.FALLIDO]:     'badge-resultado-fallido',
     [ResultadoCasoPrueba.BLOQUEADO]:   'badge-resultado-bloqueado',
-    [ResultadoCasoPrueba.NO_EJECUTADO]:'badge-resultado-no-ejecutado'
+    [ResultadoCasoPrueba.SIN_EJECUTAR]:'badge-resultado-no-ejecutado',
+    [ResultadoCasoPrueba.OMITIDO]:     'badge-resultado-omitido'
   };
 
   readonly estadoQAClase: Record<string, string> = {
-    [EstadoQA.PENDIENTE]:    'badge-qa-pendiente',
-    [EstadoQA.EN_EJECUCION]: 'badge-qa-en-ejecucion',
-    [EstadoQA.BLOQUEADO]:    'badge-qa-bloqueado',
-    [EstadoQA.COMPLETADO]:   'badge-qa-completado'
+    [EstadoCasoPrueba.PENDIENTE]:    'badge-qa-pendiente',
+    [EstadoCasoPrueba.EN_EJECUCION]: 'badge-qa-en-ejecucion',
+    [EstadoCasoPrueba.EJECUTADO]:    'badge-qa-completado',
+    [EstadoCasoPrueba.BLOQUEADO]:    'badge-qa-bloqueado',
+    [EstadoCasoPrueba.OMITIDO]:      'badge-qa-omitido'
   };
 
   ngOnInit(): void {
@@ -54,16 +56,16 @@ export class TestCaseListComponent implements OnInit {
   cargar(): void {
     this.cargando = true;
     this.service.getAll({
-      proyectoId: this.proyectoId,
-      estadoQA: this.estadoFiltro || undefined,
-      tipoPrueba: this.tipoFiltro || undefined,
-      resultado: this.resultadoFiltro || undefined,
-      busqueda: this.busqueda || undefined,
-      pagina: this.pagina,
-      porPagina: this.porPagina
+      proyectoId:  this.proyectoId,
+      estado:      this.estadoFiltro  || undefined,
+      tipo:        this.tipoFiltro    || undefined,
+      resultado:   this.resultadoFiltro || undefined,
+      busqueda:    this.busqueda      || undefined,
+      pagina:      this.pagina,
+      porPagina:   this.porPagina
     }).subscribe({
       next: (res) => { this.casos = res.datos; this.total = res.total; this.cargando = false; },
-      error: () => { this.cargando = false; }
+      error: ()   => { this.cargando = false; }
     });
   }
 

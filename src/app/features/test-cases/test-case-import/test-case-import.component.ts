@@ -1,9 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { TestCaseService } from '../../../core/services/test-case.service';
-import { CasoPrueba, EstadoQA, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba, ImportacionResultado } from '../../../core/models';
+import { ProjectService } from '../../../core/services/project.service';
+import {
+  EstadoCasoPrueba, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
+  ImportacionResultado, Proyecto, Paso
+} from '../../../core/models';
 
 interface FilaPrevia {
   fila: number;
@@ -27,47 +32,52 @@ interface FilaPrevia {
 @Component({
   selector: 'app-test-case-import',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './test-case-import.component.html'
 })
-export class TestCaseImportComponent {
-  private service = inject(TestCaseService);
+export class TestCaseImportComponent implements OnInit {
+  private service        = inject(TestCaseService);
+  private projectService = inject(ProjectService);
 
-  // Valores permitidos para validación
-  private readonly TIPOS_VALIDOS = Object.values(TipoPrueba);
-  private readonly PRIORIDADES_VALIDAS = Object.values(PrioridadCasoPrueba);
-  private readonly ESTADOS_QA_VALIDOS = Object.values(EstadoQA);
+  // Valores permitidos — alineados con el backend
+  private readonly TIPOS_VALIDOS      = Object.values(TipoPrueba);
+  private readonly PRIORIDADES_VALIDAS= Object.values(PrioridadCasoPrueba);
+  private readonly ESTADOS_VALIDOS    = Object.values(EstadoCasoPrueba);
   private readonly RESULTADOS_VALIDOS = Object.values(ResultadoCasoPrueba);
 
-  // Columnas del template en orden
   readonly COLUMNAS_TEMPLATE = [
-    'Codigo CP', 'Nombre del Caso de Prueba *', 'Clave Proyecto *',
+    'Codigo CP', 'Nombre del Caso de Prueba *', 'Clave Proyecto',
     'Tipo de Prueba *', 'Descripcion del Caso de Prueba *', 'Prioridad *',
     'Estado QA *', 'Resultado Esperado *', 'Pasos de Prueba *',
-    'Requerimiento RF *', 'Resultado', 'Observaciones', 'Evidencia URL'
+    'Requerimiento RF', 'Resultado', 'Observaciones', 'Evidencia URL'
   ];
 
-  archivo: File | null = null;
-  filas: FilaPrevia[] = [];
-  importando = false;
+  proyectos: Proyecto[]      = [];
+  proyectoId: number | null  = null;
+  archivo: File | null       = null;
+  filas: FilaPrevia[]        = [];
+  importando                 = false;
   resultadoImport: ImportacionResultado | null = null;
-  errorArchivo = '';
+  errorArchivo               = '';
 
-  get filasValidas(): FilaPrevia[] { return this.filas.filter(f => f.valido); }
+  get filasValidas(): FilaPrevia[]  { return this.filas.filter(f => f.valido); }
   get filasConError(): FilaPrevia[] { return this.filas.filter(f => !f.valido); }
+
+  ngOnInit(): void {
+    this.projectService.getAll({ porPagina: 200 }).subscribe(r => { this.proyectos = r.datos; });
+  }
 
   // ─── Plantilla ───────────────────────────────────────────────────────────
 
   descargarPlantilla(): void {
     const wb = XLSX.utils.book_new();
 
-    // Hoja 1: Plantilla
     const instruccion = [['Sistema QA DLWLatam — Plantilla de Carga de Casos de Prueba']];
     const encabezados = [this.COLUMNAS_TEMPLATE];
     const ejemplo = [[
       'CP-001',
       'Verificar login con credenciales válidas',
-      'PROJ-01',
+      'PWC-2024',
       'Funcional',
       'Comprobar que un usuario registrado pueda iniciar sesión correctamente',
       'Alta',
@@ -75,7 +85,7 @@ export class TestCaseImportComponent {
       'El sistema muestra el dashboard del usuario',
       '1. Ir a /login\n2. Ingresar email: usuario@test.com\n3. Ingresar contraseña: 123456\n4. Clic en Iniciar Sesión',
       'RF-001',
-      'No Ejecutado',
+      'Sin Ejecutar',
       '',
       ''
     ]];
@@ -83,26 +93,23 @@ export class TestCaseImportComponent {
     const wsData = [...instruccion, [], encabezados[0], ...ejemplo];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Anchos de columna
     ws['!cols'] = [
       { wch: 12 }, { wch: 40 }, { wch: 14 }, { wch: 16 }, { wch: 40 },
       { wch: 10 }, { wch: 16 }, { wch: 40 }, { wch: 50 }, { wch: 14 },
       { wch: 16 }, { wch: 30 }, { wch: 30 }
     ];
-    // Fusionar celda de título
     ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Casos de Prueba');
 
-    // Hoja 2: Valores válidos
     const wsValores = XLSX.utils.aoa_to_sheet([
       ['Campo', 'Valores Permitidos'],
       ['Tipo de Prueba', this.TIPOS_VALIDOS.join(' | ')],
-      ['Prioridad', this.PRIORIDADES_VALIDAS.join(' | ')],
-      ['Estado QA', this.ESTADOS_QA_VALIDOS.join(' | ')],
-      ['Resultado', this.RESULTADOS_VALIDOS.join(' | ')]
+      ['Prioridad',      this.PRIORIDADES_VALIDAS.join(' | ')],
+      ['Estado QA',      this.ESTADOS_VALIDOS.join(' | ')],
+      ['Resultado',      this.RESULTADOS_VALIDOS.join(' | ')]
     ]);
-    wsValores['!cols'] = [{ wch: 18 }, { wch: 70 }];
+    wsValores['!cols'] = [{ wch: 18 }, { wch: 80 }];
     XLSX.utils.book_append_sheet(wb, wsValores, 'Valores Válidos');
 
     XLSX.writeFile(wb, 'plantilla_casos_prueba_DLWLatam.xlsx');
@@ -128,8 +135,8 @@ export class TestCaseImportComponent {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = new Uint8Array(e.target!.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
+      const wb   = XLSX.read(data, { type: 'array' });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
       const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as string[][];
       this.parsearFilas(rows);
     };
@@ -137,7 +144,6 @@ export class TestCaseImportComponent {
   }
 
   private parsearFilas(rows: string[][]): void {
-    // Buscar fila de encabezados (contiene "Nombre del Caso de Prueba")
     const headerIdx = rows.findIndex(r =>
       r.some(c => String(c).includes('Nombre del Caso de Prueba'))
     );
@@ -158,22 +164,23 @@ export class TestCaseImportComponent {
       const errores: string[] = [];
 
       if (!nombreCasoPrueba) errores.push('Nombre del Caso de Prueba es requerido');
-      if (!claveProyecto)    errores.push('Clave Proyecto es requerido');
-      if (!tipoPrueba)       errores.push('Tipo de Prueba es requerido');
+      if (!tipoPrueba)
+        errores.push('Tipo de Prueba es requerido');
       else if (!this.TIPOS_VALIDOS.includes(tipoPrueba as TipoPrueba))
-        errores.push(`Tipo de Prueba inválido: "${tipoPrueba}"`);
+        errores.push(`Tipo de Prueba inválido: "${tipoPrueba}". Valores: ${this.TIPOS_VALIDOS.join(', ')}`);
       if (!descripcionCasoPrueba) errores.push('Descripción es requerida');
-      if (!prioridad) errores.push('Prioridad es requerida');
+      if (!prioridad)
+        errores.push('Prioridad es requerida');
       else if (!this.PRIORIDADES_VALIDAS.includes(prioridad as PrioridadCasoPrueba))
-        errores.push(`Prioridad inválida: "${prioridad}"`);
-      if (!estadoQA) errores.push('Estado QA es requerido');
-      else if (!this.ESTADOS_QA_VALIDOS.includes(estadoQA as EstadoQA))
-        errores.push(`Estado QA inválido: "${estadoQA}"`);
+        errores.push(`Prioridad inválida: "${prioridad}". Valores: ${this.PRIORIDADES_VALIDAS.join(', ')}`);
+      if (!estadoQA)
+        errores.push('Estado QA es requerido');
+      else if (!this.ESTADOS_VALIDOS.includes(estadoQA as EstadoCasoPrueba))
+        errores.push(`Estado QA inválido: "${estadoQA}". Valores: ${this.ESTADOS_VALIDOS.join(', ')}`);
       if (!resultadoEsperado) errores.push('Resultado Esperado es requerido');
       if (!pasosDePrueba)     errores.push('Pasos de Prueba es requerido');
-      if (!requerimientoRF)   errores.push('Requerimiento RF es requerido');
       if (resultado && !this.RESULTADOS_VALIDOS.includes(resultado as ResultadoCasoPrueba))
-        errores.push(`Resultado inválido: "${resultado}"`);
+        errores.push(`Resultado inválido: "${resultado}". Valores: ${this.RESULTADOS_VALIDOS.join(', ')}`);
 
       return {
         fila: headerIdx + i + 2,
@@ -189,39 +196,55 @@ export class TestCaseImportComponent {
   // ─── Importación ─────────────────────────────────────────────────────────
 
   importar(): void {
-    if (!this.filasValidas.length) return;
+    if (!this.filasValidas.length || !this.proyectoId) return;
     this.importando = true;
     this.resultadoImport = null;
 
-    const casos: Partial<CasoPrueba>[] = this.filasValidas.map(f => ({
-      codigoCP: f.codigoCP || undefined,
-      nombreCasoPrueba: f.nombreCasoPrueba,
-      claveProyecto: f.claveProyecto,
-      tipoPrueba: f.tipoPrueba as TipoPrueba,
-      descripcionCasoPrueba: f.descripcionCasoPrueba,
-      prioridad: f.prioridad as PrioridadCasoPrueba,
-      estadoQA: f.estadoQA as EstadoQA,
+    const casos = this.filasValidas.map(f => ({
+      codigo:            f.codigoCP        || undefined,
+      nombre:            f.nombreCasoPrueba,
+      proyectoId:        this.proyectoId!,
+      claveProyecto:     f.claveProyecto   || undefined,
+      tipo:              f.tipoPrueba as TipoPrueba,
+      descripcion:       f.descripcionCasoPrueba,
+      prioridad:         f.prioridad       as PrioridadCasoPrueba,
+      estado:            f.estadoQA        as EstadoCasoPrueba,
+      resultado:        (f.resultado       as ResultadoCasoPrueba) || ResultadoCasoPrueba.SIN_EJECUTAR,
       resultadoEsperado: f.resultadoEsperado,
-      pasosDePrueba: f.pasosDePrueba,
-      requerimientoRF: f.requerimientoRF,
-      resultado: (f.resultado as ResultadoCasoPrueba) || ResultadoCasoPrueba.NO_EJECUTADO,
-      observaciones: f.observaciones || undefined,
-      evidenciaUrl: f.evidenciaUrl || undefined
+      pasos:             this.parsearPasos(f.pasosDePrueba),
+      requerimientoRf:   f.requerimientoRF || undefined,
+      observaciones:     f.observaciones   || undefined,
+      evidenciaUrl:      f.evidenciaUrl    || undefined
     }));
 
-    this.service.importarDesdeExcel(casos).subscribe({
+    this.service.importarDesdeExcel({ casos }).subscribe({
       next: (res) => { this.resultadoImport = res; this.importando = false; },
       error: (err) => {
-        this.resultadoImport = { importados: 0, errores: [{ fila: 0, mensaje: err.error?.message || 'Error al importar' }] };
+        this.resultadoImport = {
+          importados: 0,
+          errores: [{ fila: 0, mensaje: err.error?.message || 'Error al importar' }]
+        };
         this.importando = false;
       }
     });
   }
 
+  private parsearPasos(texto: string): Paso[] {
+    if (!texto?.trim()) return [];
+    return texto
+      .split('\n')
+      .filter(l => l.trim())
+      .map((l, idx) => ({
+        orden: idx + 1,
+        descripcion: l.replace(/^\d+\.\s*/, '').trim(),
+        resultadoEsperado: ''
+      }));
+  }
+
   limpiar(): void {
     this.archivo = null;
-    this.filas = [];
+    this.filas   = [];
     this.resultadoImport = null;
-    this.errorArchivo = '';
+    this.errorArchivo    = '';
   }
 }

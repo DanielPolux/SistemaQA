@@ -45,18 +45,18 @@
       <tbody>
         @for (c of casos; track c.id) {
           <tr>
-            <td><span class="tag-codigo">{{ c.codigoCP ?? '-' }}</span></td>
-            <td class="td-nombre">{{ c.nombreCasoPrueba }}</td>
-            <td>{{ c.requerimientoRF ?? '-' }}</td>
-            <td>{{ c.tipoPrueba }}</td>
+            <td><span class="tag-codigo">{{ c.codigo ?? '-' }}</span></td>
+            <td class="td-nombre">{{ c.nombre }}</td>
+            <td>{{ c.requerimientoRf ?? '-' }}</td>
+            <td>{{ c.tipo }}</td>
             <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
-            <td><span class="badge {{ estadoQAClase[c.estadoQA] }}">{{ c.estadoQA }}</span></td>
+            <td><span class="badge {{ estadoQAClase[c.estado] }}">{{ c.estado }}</span></td>
             <td>
               @if (c.resultado) {
                 <span class="badge {{ resultadoClase[c.resultado] }}">{{ c.resultado }}</span>
               } @else { <span class="text-muted">—</span> }
             </td>
-            <td>{{ c.responsableQANombre ?? '-' }}</td>
+            <td>{{ c.responsableQaNombre ?? '-' }}</td>
             <td>{{ c.fechaEjecucion ? (c.fechaEjecucion | date:'dd/MM/yyyy') : '-' }}</td>
             <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
             <td class="actions">

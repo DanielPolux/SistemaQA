@@ -4,6 +4,20 @@
     <a routerLink="/casos-prueba" class="btn btn-secondary">Volver al listado</a>
   </div>
 
+  <!-- Selección de proyecto (requerida) -->
+  <div class="import-project-selector">
+    <label for="proyectoImport"><strong>Proyecto de destino *</strong></label>
+    <select id="proyectoImport" [(ngModel)]="proyectoId" class="select-proyecto">
+      <option [ngValue]="null">Seleccionar proyecto...</option>
+      @for (p of proyectos; track p.id) {
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+      }
+    </select>
+    @if (!proyectoId) {
+      <span class="field-hint field-hint--warn">Debes seleccionar un proyecto antes de importar.</span>
+    }
+  </div>
+
   <!-- PASO 1: Descargar plantilla -->
   <div class="import-step">
     <div class="import-step-number">1</div>
@@ -108,7 +122,6 @@
                     <th>Fila</th>
                     <th>Código CP</th>
                     <th>Nombre del Caso de Prueba</th>
-                    <th>Clave Proyecto</th>
                     <th>RF</th>
                     <th>Tipo</th>
                     <th>Prioridad</th>
@@ -122,12 +135,11 @@
                       <td>{{ f.fila }}</td>
                       <td>{{ f.codigoCP || '-' }}</td>
                       <td class="td-nombre">{{ f.nombreCasoPrueba }}</td>
-                      <td><span class="tag-codigo">{{ f.claveProyecto }}</span></td>
-                      <td>{{ f.requerimientoRF }}</td>
+                      <td>{{ f.requerimientoRF || '-' }}</td>
                       <td>{{ f.tipoPrueba }}</td>
                       <td>{{ f.prioridad }}</td>
                       <td>{{ f.estadoQA }}</td>
-                      <td>{{ f.resultado || 'No Ejecutado' }}</td>
+                      <td>{{ f.resultado || 'Sin Ejecutar' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -144,12 +156,16 @@
         <div class="import-step-number">4</div>
         <div class="import-step-body">
           <h3>Confirmar importación</h3>
-          <p>Se importarán <strong>{{ filasValidas.length }}</strong> caso(s) de prueba.
-            @if (filasConError.length > 0) {
-              Las <strong>{{ filasConError.length }}</strong> fila(s) con error serán omitidas.
-            }
-          </p>
-          <button class="btn btn-primary" (click)="importar()" [disabled]="importando">
+          @if (!proyectoId) {
+            <div class="alert alert-error">Selecciona un proyecto de destino antes de importar.</div>
+          } @else {
+            <p>Se importarán <strong>{{ filasValidas.length }}</strong> caso(s) de prueba en el proyecto seleccionado.
+              @if (filasConError.length > 0) {
+                Las <strong>{{ filasConError.length }}</strong> fila(s) con error serán omitidas.
+              }
+            </p>
+          }
+          <button class="btn btn-primary" (click)="importar()" [disabled]="importando || !proyectoId">
             {{ importando ? 'Importando...' : 'Importar ' + filasValidas.length + ' caso(s)' }}
           </button>
         </div>

@@ -16,12 +16,12 @@
       <h3 class="form-section-title">Identificación</h3>
       <div class="form-row">
         <div class="form-group form-group--sm">
-          <label for="codigoCP">Código CP</label>
-          <input id="codigoCP" type="text" formControlName="codigoCP" placeholder="CP-001" />
+          <label for="codigo">Código CP</label>
+          <input id="codigo" type="text" formControlName="codigo" placeholder="CP-001" />
         </div>
         <div class="form-group">
-          <label for="nombreCasoPrueba">Nombre del Caso de Prueba *</label>
-          <input id="nombreCasoPrueba" type="text" formControlName="nombreCasoPrueba"
+          <label for="nombre">Nombre del Caso de Prueba *</label>
+          <input id="nombre" type="text" formControlName="nombre"
             placeholder="Descripción breve del caso" />
         </div>
       </div>
@@ -41,8 +41,8 @@
             class="input-readonly" placeholder="Auto" />
         </div>
         <div class="form-group form-group--sm">
-          <label for="requerimientoRF">Requerimiento RF *</label>
-          <input id="requerimientoRF" type="text" formControlName="requerimientoRF" placeholder="RF-001" />
+          <label for="requerimientoRf">Requerimiento RF</label>
+          <input id="requerimientoRf" type="text" formControlName="requerimientoRf" placeholder="RF-001" />
         </div>
       </div>
     </div>
@@ -52,8 +52,8 @@
       <h3 class="form-section-title">Tipo y Descripción</h3>
       <div class="form-row">
         <div class="form-group">
-          <label for="tipoPrueba">Tipo de Prueba *</label>
-          <select id="tipoPrueba" formControlName="tipoPrueba">
+          <label for="tipo">Tipo de Prueba *</label>
+          <select id="tipo" formControlName="tipo">
             @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
           </select>
         </div>
@@ -65,8 +65,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label for="descripcionCasoPrueba">Descripción del Caso de Prueba *</label>
-        <textarea id="descripcionCasoPrueba" formControlName="descripcionCasoPrueba" rows="3"
+        <label for="descripcion">Descripción del Caso de Prueba *</label>
+        <textarea id="descripcion" formControlName="descripcion" rows="3"
           placeholder="Qué se va a probar y cuál es el objetivo del caso..."></textarea>
       </div>
     </div>
@@ -75,8 +75,8 @@
     <div class="form-section">
       <h3 class="form-section-title">Pasos de Prueba</h3>
       <div class="form-group">
-        <label for="pasosDePrueba">Pasos de Prueba *</label>
-        <textarea id="pasosDePrueba" formControlName="pasosDePrueba" rows="6"
+        <label for="pasos">Pasos de Prueba *</label>
+        <textarea id="pasos" formControlName="pasos" rows="6"
           placeholder="1. Navegar a la página de inicio&#10;2. Hacer clic en el botón Iniciar Sesión&#10;3. Ingresar usuario y contraseña&#10;4. Hacer clic en Aceptar"></textarea>
         <span class="field-hint">Ingrese cada paso en una línea separada, numerados (1. 2. 3. ...)</span>
       </div>
@@ -92,8 +92,8 @@
       <h3 class="form-section-title">Estado y Ejecución</h3>
       <div class="form-row form-row--3">
         <div class="form-group">
-          <label for="estadoQA">Estado QA *</label>
-          <select id="estadoQA" formControlName="estadoQA">
+          <label for="estado">Estado QA *</label>
+          <select id="estado" formControlName="estado">
             @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
           </select>
         </div>
@@ -110,8 +110,8 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label for="responsableQAId">Responsable QA</label>
-          <select id="responsableQAId" formControlName="responsableQAId">
+          <label for="responsableQaId">Responsable QA</label>
+          <select id="responsableQaId" formControlName="responsableQaId">
             <option [value]="null">Sin asignar</option>
             @for (u of usuarios; track u.id) {
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
