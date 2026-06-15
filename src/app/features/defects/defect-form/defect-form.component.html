@@ -19,7 +19,7 @@
         <label>Caso de Prueba *</label>
         <select formControlName="casoPruebaId">
           <option [value]="null">Seleccionar...</option>
-          @for (c of casosPrueba; track c.id) { <option [value]="c.id">{{ c.codigo }} - {{ c.titulo }}</option> }
+          @for (c of casosPrueba; track c.id) { <option [value]="c.id">{{ c.codigo }} - {{ c.nombre }}</option> }
         </select>
       </div>
     </div>
