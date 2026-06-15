@@ -7,20 +7,75 @@
     </div>
   </div>
 
-  <div class="filters">
-    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar por nombre, código, RF..." />
-    <select [(ngModel)]="tipoFiltro" (change)="buscar()">
-      <option value="">Todos los tipos</option>
-      @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
-    </select>
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
-    </select>
-    <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
-      <option value="">Todos los resultados</option>
-      @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
-    </select>
+  <!-- Filtros en dos filas -->
+  <div class="filters-wrapper">
+
+    <!-- Fila 1: Proyecto y Requerimiento (dimensión principal) -->
+    <div class="filters-row">
+      <div class="filter-field filter-field--wide">
+        <label class="filter-label" for="filtroProyecto">Proyecto</label>
+        <input id="filtroProyecto"
+               type="text"
+               [(ngModel)]="proyectoFiltroTexto"
+               list="proyectosDatalist"
+               (change)="onProyectoChange($event)"
+               placeholder="Escribe código o nombre del proyecto..."
+               autocomplete="off" />
+        <datalist id="proyectosDatalist">
+          @for (p of proyectos; track p.id) {
+            <option value="{{ p.codigo }}">{{ p.codigo }} — {{ p.nombre }}</option>
+          }
+        </datalist>
+      </div>
+
+      <div class="filter-field filter-field--wide">
+        <label class="filter-label" for="filtroRequerimiento">Requerimiento</label>
+        <input id="filtroRequerimiento"
+               type="text"
+               [(ngModel)]="requerimientoFiltroTexto"
+               list="requerimientosDatalist"
+               (change)="onRequerimientoChange($event)"
+               [placeholder]="proyectoId ? 'Escribe código o título del requerimiento...' : 'Selecciona un proyecto primero'"
+               [disabled]="!proyectoId"
+               autocomplete="off" />
+        <datalist id="requerimientosDatalist">
+          @for (r of requerimientos; track r.id) {
+            <option value="{{ r.codigo }}">{{ r.codigo }} — {{ r.titulo }}</option>
+          }
+        </datalist>
+        @if (proyectoId && requerimientos.length > 0) {
+          <span class="filter-hint">{{ requerimientos.length }} requerimiento(s)</span>
+        }
+      </div>
+    </div>
+
+    <!-- Fila 2: Búsqueda de texto + filtros de estado/tipo/resultado -->
+    <div class="filters-row">
+      <input type="text"
+             [(ngModel)]="busqueda"
+             (keyup.enter)="buscar()"
+             placeholder="Buscar por nombre, código, RF..." />
+
+      <select [(ngModel)]="tipoFiltro" (change)="buscar()">
+        <option value="">Todos los tipos</option>
+        @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+
+      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+        <option value="">Todos los estados</option>
+        @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
+      </select>
+
+      <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
+        <option value="">Todos los resultados</option>
+        @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
+      </select>
+
+      <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()" title="Limpiar todos los filtros">
+        ✕ Limpiar
+      </button>
+    </div>
+
   </div>
 
   @if (cargando) {

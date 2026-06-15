@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TestCaseService } from '../../../core/services/test-case.service';
-import { CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba } from '../../../core/models';
+import { ProjectService } from '../../../core/services/project.service';
+import { RequirementService } from '../../../core/services/requirement.service';
+import {
+  CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
+  Proyecto, Requerimiento
+} from '../../../core/models';
 
 @Component({
   selector: 'app-test-case-list',
@@ -12,19 +17,29 @@ import { CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba } from '.
   templateUrl: './test-case-list.component.html'
 })
 export class TestCaseListComponent implements OnInit {
-  private service = inject(TestCaseService);
-  private route   = inject(ActivatedRoute);
+  private service            = inject(TestCaseService);
+  private route              = inject(ActivatedRoute);
+  private projectService     = inject(ProjectService);
+  private requirementService = inject(RequirementService);
 
-  casos: CasoPrueba[] = [];
-  total = 0;
-  pagina = 1;
+  casos: CasoPrueba[]            = [];
+  proyectos: Proyecto[]          = [];
+  requerimientos: Requerimiento[] = [];
+
+  total     = 0;
+  pagina    = 1;
   porPagina = 15;
+  cargando  = false;
+
+  // Filtros
   proyectoId?: number;
-  estadoFiltro = '';
-  tipoFiltro   = '';
+  proyectoFiltroTexto      = '';
+  requerimientoFiltroTexto = '';
+  requerimientoFiltroId?: number;
+  estadoFiltro    = '';
+  tipoFiltro      = '';
   resultadoFiltro = '';
-  busqueda = '';
-  cargando = false;
+  busqueda        = '';
 
   readonly estadosQA  = Object.values(EstadoCasoPrueba);
   readonly tipos      = Object.values(TipoPrueba);
@@ -47,22 +62,81 @@ export class TestCaseListComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.proyectoId = this.route.snapshot.queryParams['proyectoId']
-      ? Number(this.route.snapshot.queryParams['proyectoId'])
-      : undefined;
+    this.projectService.getAll({ porPagina: 500 }).subscribe(r => {
+      this.proyectos = r.datos;
+      // Restaurar filtro de proyecto si viene por queryParam
+      const qpId = this.route.snapshot.queryParams['proyectoId'];
+      if (qpId) {
+        this.proyectoId = Number(qpId);
+        const p = this.proyectos.find(x => x.id === this.proyectoId);
+        if (p) {
+          this.proyectoFiltroTexto = p.codigo;
+          this.requirementService.getByProyecto(this.proyectoId!).subscribe(reqs => {
+            this.requerimientos = reqs;
+          });
+        }
+      }
+    });
     this.cargar();
+  }
+
+  // ─── Filtro de proyecto ──────────────────────────────────────────────────
+
+  onProyectoChange(event: Event): void {
+    const codigo = (event.target as HTMLInputElement).value.trim();
+    const match  = this.proyectos.find(p => p.codigo === codigo);
+    const anteriorId = this.proyectoId;
+    this.proyectoId  = match?.id;
+
+    if (this.proyectoId !== anteriorId) {
+      // Limpiar requerimiento al cambiar proyecto
+      this.requerimientos          = [];
+      this.requerimientoFiltroTexto= '';
+      this.requerimientoFiltroId   = undefined;
+      if (this.proyectoId) {
+        this.requirementService.getByProyecto(this.proyectoId).subscribe(r => {
+          this.requerimientos = r;
+        });
+      }
+    }
+    this.buscar();
+  }
+
+  // ─── Filtro de requerimiento ─────────────────────────────────────────────
+
+  onRequerimientoChange(event: Event): void {
+    const codigo = (event.target as HTMLInputElement).value.trim();
+    const match  = this.requerimientos.find(r => r.codigo === codigo);
+    this.requerimientoFiltroId = match?.id;
+    this.buscar();
+  }
+
+  // ─── Limpiar ──────────────────────────────────────────────────────────────
+
+  limpiarFiltros(): void {
+    this.proyectoId              = undefined;
+    this.proyectoFiltroTexto     = '';
+    this.requerimientoFiltroTexto= '';
+    this.requerimientoFiltroId   = undefined;
+    this.requerimientos          = [];
+    this.estadoFiltro            = '';
+    this.tipoFiltro              = '';
+    this.resultadoFiltro         = '';
+    this.busqueda                = '';
+    this.buscar();
   }
 
   cargar(): void {
     this.cargando = true;
     this.service.getAll({
-      proyectoId:  this.proyectoId,
-      estado:      this.estadoFiltro  || undefined,
-      tipo:        this.tipoFiltro    || undefined,
-      resultado:   this.resultadoFiltro || undefined,
-      busqueda:    this.busqueda      || undefined,
-      pagina:      this.pagina,
-      porPagina:   this.porPagina
+      proyectoId:      this.proyectoId,
+      requerimientoId: this.requerimientoFiltroId,
+      estado:          this.estadoFiltro    || undefined,
+      tipo:            this.tipoFiltro      || undefined,
+      resultado:       this.resultadoFiltro || undefined,
+      busqueda:        this.busqueda        || undefined,
+      pagina:          this.pagina,
+      porPagina:       this.porPagina
     }).subscribe({
       next: (res) => { this.casos = res.datos; this.total = res.total; this.cargando = false; },
       error: ()   => { this.cargando = false; }

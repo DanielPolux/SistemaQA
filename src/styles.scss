@@ -191,6 +191,34 @@ textarea { resize: vertical; min-height: 80px; }
   input, select { flex: 1; max-width: 250px; }
 }
 
+/* Filters — dos filas (proyecto + requerimiento arriba, secundarios abajo) */
+.filters-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.filters-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  input, select { flex: 1; min-width: 150px; max-width: 260px; }
+  .btn { flex-shrink: 0; }
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 260px;
+  &--wide { flex: 2; max-width: 420px; }
+  input { width: 100%; }
+}
+.filter-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); }
+.filter-hint  { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+
 /* Badges */
 .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; background: var(--color-bg); border: 1px solid var(--color-border); white-space: nowrap; }
 .badge-activo     { background: #edf7d6; color: #4a7a0e; border-color: #b4df6a; }
