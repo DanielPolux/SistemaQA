@@ -1,0 +1,56 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Requerimientos</h2>
+    <a routerLink="/requerimientos/nuevo" class="btn btn-primary">+ Nuevo Requerimiento</a>
+  </div>
+
+  <div class="filters">
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar requerimiento..." />
+    <select [(ngModel)]="tipoFiltro" (change)="buscar()">
+      <option value="">Todos los tipos</option>
+      @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando requerimientos...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Título</th>
+          <th>Tipo</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Proyecto</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of requerimientos; track r.id) {
+          <tr>
+            <td>{{ r.codigo }}</td>
+            <td>{{ r.titulo }}</td>
+            <td>{{ r.tipo }}</td>
+            <td><span class="badge badge-prioridad-{{ r.prioridad | lowercase }}">{{ r.prioridad }}</span></td>
+            <td><span class="badge">{{ r.estado }}</span></td>
+            <td>{{ r.proyectoNombre }}</td>
+            <td class="actions">
+              <a [routerLink]="['/requerimientos', r.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              <a [routerLink]="['/casos-prueba']" [queryParams]="{requerimientoId: r.id}" class="btn btn-sm btn-info">
+                Ver Casos
+              </a>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty-row">No se encontraron requerimientos</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

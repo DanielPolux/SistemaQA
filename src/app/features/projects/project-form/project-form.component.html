@@ -1,0 +1,63 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ esEdicion ? 'Editar Proyecto' : 'Nuevo Proyecto' }}</h2>
+    <a routerLink="/proyectos" class="btn btn-secondary">Cancelar</a>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre *</label>
+        <input type="text" formControlName="nombre" placeholder="Nombre del proyecto" />
+      </div>
+      <div class="form-group form-group--sm">
+        <label>Código *</label>
+        <input type="text" formControlName="codigo" placeholder="PROJ-01" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Descripción *</label>
+      <textarea formControlName="descripcion" rows="3" placeholder="Descripción del proyecto"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha Inicio *</label>
+        <input type="date" formControlName="fechaInicio" />
+      </div>
+      <div class="form-group">
+        <label>Fecha Fin</label>
+        <input type="date" formControlName="fechaFin" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Estado *</label>
+        <select formControlName="estado">
+          @for (e of estados; track e) {
+            <option [value]="e">{{ e }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Responsable *</label>
+        <select formControlName="responsableId">
+          <option [value]="null">Seleccionar...</option>
+          @for (u of usuarios; track u.id) {
+            <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Proyecto') }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,59 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Proyectos</h2>
+    <a routerLink="/proyectos/nuevo" class="btn btn-primary">+ Nuevo Proyecto</a>
+  </div>
+
+  <div class="filters">
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar proyecto..." />
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (estado of estados; track estado) {
+        <option [value]="estado">{{ estado }}</option>
+      }
+    </select>
+    <button class="btn btn-secondary" (click)="buscar()">Buscar</button>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando proyectos...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Estado</th>
+          <th>Responsable</th>
+          <th>Fecha Inicio</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of proyectos; track p.id) {
+          <tr>
+            <td>{{ p.codigo }}</td>
+            <td>{{ p.nombre }}</td>
+            <td><span class="badge badge-{{ p.estado | lowercase }}">{{ p.estado }}</span></td>
+            <td>{{ p.responsableNombre }}</td>
+            <td>{{ p.fechaInicio | date:'dd/MM/yyyy' }}</td>
+            <td class="actions">
+              <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-info">Ver</a>
+              <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">No se encontraron proyectos</td></tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      @for (p of [].constructor(totalPaginas); track $index) {
+        <button class="btn btn-sm" [class.active]="pagina === $index + 1" (click)="cambiarPagina($index + 1)">
+          {{ $index + 1 }}
+        </button>
+      }
+    </div>
+  }
+</div>

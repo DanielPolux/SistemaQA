@@ -1,0 +1,24 @@
+<header class="app-header">
+  <div class="header-brand">
+    <a routerLink="/proyectos" class="brand-link">
+      <span class="brand-icon">QA</span>
+      <span class="brand-name">Sistema QA <span class="brand-company">DLWLatam</span></span>
+    </a>
+  </div>
+
+  <nav class="header-nav">
+    <a routerLink="/proyectos" routerLinkActive="active">Proyectos</a>
+    <a routerLink="/requerimientos" routerLinkActive="active">Requerimientos</a>
+    <a routerLink="/casos-prueba" routerLinkActive="active">Casos de Prueba</a>
+    <a routerLink="/defectos" routerLinkActive="active">Defectos</a>
+    <a routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
+  </nav>
+
+  <div class="header-user">
+    @if (usuario()) {
+      <span class="user-name">{{ usuario()?.nombre }} {{ usuario()?.apellido }}</span>
+      <span class="user-role">{{ usuario()?.rol }}</span>
+      <button class="btn btn-sm btn-outline" (click)="logout()">Salir</button>
+    }
+  </div>
+</header>

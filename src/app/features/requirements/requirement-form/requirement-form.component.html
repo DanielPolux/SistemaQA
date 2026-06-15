@@ -1,0 +1,66 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ esEdicion ? 'Editar Requerimiento' : 'Nuevo Requerimiento' }}</h2>
+    <a routerLink="/requerimientos" class="btn btn-secondary">Cancelar</a>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Proyecto *</label>
+        <select formControlName="proyectoId">
+          <option [value]="null">Seleccionar...</option>
+          @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+        </select>
+      </div>
+      <div class="form-group form-group--sm">
+        <label>Código *</label>
+        <input type="text" formControlName="codigo" placeholder="REQ-001" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Título *</label>
+      <input type="text" formControlName="titulo" placeholder="Título del requerimiento" />
+    </div>
+
+    <div class="form-group">
+      <label>Descripción *</label>
+      <textarea formControlName="descripcion" rows="3"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Criterios de Aceptación *</label>
+      <textarea formControlName="criteriosAceptacion" rows="3" placeholder="Dado que... Cuando... Entonces..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select formControlName="tipo">
+          @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioridad *</label>
+        <select formControlName="prioridad">
+          @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado *</label>
+        <select formControlName="estado">
+          @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Requerimiento') }}
+      </button>
+    </div>
+  </form>
+</div>

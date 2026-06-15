@@ -1,0 +1,58 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Defectos</h2>
+    <a routerLink="/defectos/nuevo" class="btn btn-primary">+ Reportar Defecto</a>
+  </div>
+
+  <div class="filters">
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar defecto..." />
+    <select [(ngModel)]="severidadFiltro" (change)="buscar()">
+      <option value="">Todas las severidades</option>
+      @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+    </select>
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando defectos...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Título</th>
+          <th>Caso de Prueba</th>
+          <th>Severidad</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Asignado A</th>
+          <th>Reportado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of defectos; track d.id) {
+          <tr>
+            <td>{{ d.codigo }}</td>
+            <td>{{ d.titulo }}</td>
+            <td>{{ d.casoPruebaCodigo ?? '-' }}</td>
+            <td><span class="badge badge-severidad-{{ d.severidad | lowercase }}">{{ d.severidad }}</span></td>
+            <td>{{ d.prioridad }}</td>
+            <td><span class="badge badge-estado-{{ d.estado | lowercase }}">{{ d.estado }}</span></td>
+            <td>{{ d.asignadoANombre ?? '-' }}</td>
+            <td>{{ d.creadoEn | date:'dd/MM/yyyy' }}</td>
+            <td class="actions">
+              <a [routerLink]="['/defectos', d.id]" class="btn btn-sm btn-info">Ver</a>
+              <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" class="empty-row">No se encontraron defectos</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

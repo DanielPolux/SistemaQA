@@ -1,0 +1,108 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ esEdicion ? 'Editar Caso de Prueba' : 'Nuevo Caso de Prueba' }}</h2>
+    <a routerLink="/casos-prueba" class="btn btn-secondary">Cancelar</a>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Proyecto *</label>
+        <select formControlName="proyectoId">
+          <option [value]="null">Seleccionar...</option>
+          @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Requerimiento</label>
+        <select formControlName="requerimientoId">
+          <option [value]="null">Sin requerimiento</option>
+          @for (r of requerimientos; track r.id) { <option [value]="r.id">{{ r.codigo }} - {{ r.titulo }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group form-group--sm">
+        <label>Código *</label>
+        <input type="text" formControlName="codigo" placeholder="TC-001" />
+      </div>
+      <div class="form-group">
+        <label>Título *</label>
+        <input type="text" formControlName="titulo" placeholder="Título del caso de prueba" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Descripción *</label>
+      <textarea formControlName="descripcion" rows="2"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Precondiciones</label>
+      <textarea formControlName="precondiciones" rows="2" placeholder="Estado del sistema antes de ejecutar"></textarea>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">
+        <h3>Pasos de Prueba</h3>
+        <button type="button" class="btn btn-sm btn-secondary" (click)="agregarPaso()">+ Agregar Paso</button>
+      </div>
+
+      <div formArrayName="pasos">
+        @for (paso of pasos.controls; track $index; let i = $index) {
+          <div [formGroupName]="i" class="step-item">
+            <span class="step-number">{{ i + 1 }}</span>
+            <div class="step-fields">
+              <input type="text" formControlName="descripcion" placeholder="Descripción del paso" />
+              <input type="text" formControlName="resultadoEsperado" placeholder="Resultado esperado del paso" />
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" (click)="eliminarPaso(i)" [disabled]="pasos.length === 1">✕</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Resultado Esperado General *</label>
+      <textarea formControlName="resultadoEsperado" rows="2"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select formControlName="tipo">
+          @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioridad *</label>
+        <select formControlName="prioridad">
+          @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado *</label>
+        <select formControlName="estado">
+          @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Asignado A</label>
+      <select formControlName="asignadoA">
+        <option [value]="null">Sin asignar</option>
+        @for (u of usuarios; track u.id) { <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option> }
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Caso de Prueba') }}
+      </button>
+    </div>
+  </form>
+</div>

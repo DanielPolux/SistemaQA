@@ -1,0 +1,107 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ esEdicion ? 'Editar Defecto' : 'Reportar Defecto' }}</h2>
+    <a routerLink="/defectos" class="btn btn-secondary">Cancelar</a>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Proyecto *</label>
+        <select formControlName="proyectoId">
+          <option [value]="null">Seleccionar...</option>
+          @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Caso de Prueba *</label>
+        <select formControlName="casoPruebaId">
+          <option [value]="null">Seleccionar...</option>
+          @for (c of casosPrueba; track c.id) { <option [value]="c.id">{{ c.codigo }} - {{ c.titulo }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group form-group--sm">
+        <label>Código *</label>
+        <input type="text" formControlName="codigo" placeholder="DEF-001" />
+      </div>
+      <div class="form-group">
+        <label>Título *</label>
+        <input type="text" formControlName="titulo" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Descripción *</label>
+      <textarea formControlName="descripcion" rows="2"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Pasos para Reproducir *</label>
+      <textarea formControlName="pasosReproduccion" rows="3" placeholder="1. Ingresar a...&#10;2. Hacer clic en..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Resultado Obtenido *</label>
+        <textarea formControlName="resultadoObtenido" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Resultado Esperado *</label>
+        <textarea formControlName="resultadoEsperado" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ambiente *</label>
+        <select formControlName="ambiente">
+          @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Versión *</label>
+        <input type="text" formControlName="version" placeholder="1.0.0" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Severidad *</label>
+        <select formControlName="severidad">
+          @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioridad *</label>
+        <select formControlName="prioridad">
+          @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado *</label>
+        <select formControlName="estado">
+          @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Asignado A</label>
+      <select formControlName="asignadoA">
+        <option [value]="null">Sin asignar</option>
+        @for (u of usuarios; track u.id) { <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option> }
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Reportar Defecto') }}
+      </button>
+    </div>
+  </form>
+</div>

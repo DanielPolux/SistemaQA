@@ -1,0 +1,57 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Casos de Prueba</h2>
+    <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+  </div>
+
+  <div class="filters">
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar caso de prueba..." />
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+    <select [(ngModel)]="tipoFiltro" (change)="buscar()">
+      <option value="">Todos los tipos</option>
+      @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando casos de prueba...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Título</th>
+          <th>Tipo</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Asignado A</th>
+          <th>Defectos</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of casos; track c.id) {
+          <tr>
+            <td>{{ c.codigo }}</td>
+            <td>{{ c.titulo }}</td>
+            <td>{{ c.tipo }}</td>
+            <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
+            <td><span class="badge badge-{{ c.estado | lowercase }}">{{ c.estado }}</span></td>
+            <td>{{ c.asignadoANombre ?? '-' }}</td>
+            <td>{{ c.totalDefectos ?? 0 }}</td>
+            <td class="actions">
+              <a [routerLink]="['/casos-prueba', c.id]" class="btn btn-sm btn-info">Ver</a>
+              <a [routerLink]="['/casos-prueba', c.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}" class="btn btn-sm btn-danger">+ Defecto</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-row">No se encontraron casos de prueba</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

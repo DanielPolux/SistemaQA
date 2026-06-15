@@ -1,0 +1,55 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Usuarios</h2>
+    <a routerLink="/usuarios/nuevo" class="btn btn-primary">+ Nuevo Usuario</a>
+  </div>
+
+  <div class="filters">
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar usuario..." />
+    <select [(ngModel)]="rolFiltro" (change)="buscar()">
+      <option value="">Todos los roles</option>
+      @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando usuarios...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of usuarios; track u.id) {
+          <tr>
+            <td>{{ u.nombre }} {{ u.apellido }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge badge-rol">{{ u.rol }}</span></td>
+            <td>
+              <span class="badge" [class.badge-activo]="u.activo" [class.badge-inactivo]="!u.activo">
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td>{{ u.creadoEn | date:'dd/MM/yyyy' }}</td>
+            <td class="actions">
+              <a [routerLink]="['/usuarios', u.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              <button class="btn btn-sm" [class.btn-danger]="u.activo" [class.btn-success]="!u.activo"
+                (click)="cambiarEstado(u)">
+                {{ u.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">No se encontraron usuarios</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

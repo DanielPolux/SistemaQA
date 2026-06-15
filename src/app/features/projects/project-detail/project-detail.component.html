@@ -1,0 +1,52 @@
+<div class="page-container">
+  @if (cargando) {
+    <div class="loading">Cargando...</div>
+  } @else if (proyecto) {
+    <div class="page-header">
+      <div>
+        <h2>{{ proyecto.nombre }}</h2>
+        <span class="badge">{{ proyecto.codigo }}</span>
+      </div>
+      <div class="header-actions">
+        <a [routerLink]="['/proyectos', proyecto.id, 'editar']" class="btn btn-warning">Editar</a>
+        <a routerLink="/proyectos" class="btn btn-secondary">Volver</a>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ resumen?.totalRequerimientos ?? 0 }}</span>
+        <span class="stat-label">Requerimientos</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ resumen?.totalCasosPrueba ?? 0 }}</span>
+        <span class="stat-label">Casos de Prueba</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ resumen?.totalDefectos ?? 0 }}</span>
+        <span class="stat-label">Defectos Totales</span>
+      </div>
+      <div class="stat-card stat-card--alert">
+        <span class="stat-value">{{ resumen?.defectosAbiertos ?? 0 }}</span>
+        <span class="stat-label">Defectos Abiertos</span>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Descripción</h3>
+      <p>{{ proyecto.descripcion }}</p>
+    </div>
+
+    <div class="quick-links">
+      <a [routerLink]="['/requerimientos']" [queryParams]="{proyectoId: proyecto.id}" class="btn btn-outline">
+        Ver Requerimientos
+      </a>
+      <a [routerLink]="['/casos-prueba']" [queryParams]="{proyectoId: proyecto.id}" class="btn btn-outline">
+        Ver Casos de Prueba
+      </a>
+      <a [routerLink]="['/defectos']" [queryParams]="{proyectoId: proyecto.id}" class="btn btn-outline">
+        Ver Defectos
+      </a>
+    </div>
+  }
+</div>
