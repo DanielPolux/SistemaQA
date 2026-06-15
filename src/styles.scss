@@ -218,6 +218,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .filter-label { font-size: 12px; font-weight: 500; color: var(--color-text-muted); }
 .filter-hint  { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+.select-inline { font-size: 12px; padding: 2px 4px; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; cursor: pointer; max-width: 140px; }
 
 /* Badges */
 .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; background: var(--color-bg); border: 1px solid var(--color-border); white-space: nowrap; }

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { RequirementService } from '../../../core/services/requirement.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
   Proyecto, Requerimiento
@@ -21,6 +22,7 @@ export class TestCaseListComponent implements OnInit {
   private route              = inject(ActivatedRoute);
   private projectService     = inject(ProjectService);
   private requirementService = inject(RequirementService);
+  auth                       = inject(AuthService);
 
   casos: CasoPrueba[]            = [];
   proyectos: Proyecto[]          = [];

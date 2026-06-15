@@ -25,11 +25,13 @@
         <span class="menu-label">Defectos</span>
       </a>
     </li>
+    @if (auth.esAdmin()) {
     <li>
       <a routerLink="/usuarios" routerLinkActive="active">
         <span class="menu-icon">👥</span>
         <span class="menu-label">Usuarios</span>
       </a>
     </li>
+    }
   </ul>
 </nav>

@@ -2,8 +2,10 @@
   <div class="page-header">
     <h2>Casos de Prueba</h2>
     <div class="header-actions">
-      <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
-      <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+      @if (auth.puedeEditar()) {
+        <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
+        <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+      }
     </div>
   </div>
 
@@ -115,9 +117,11 @@
             <td>{{ c.fechaEjecucion ? (c.fechaEjecucion | date:'dd/MM/yyyy') : '-' }}</td>
             <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
             <td class="actions">
-              <a [routerLink]="['/casos-prueba', c.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
-              <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}"
-                class="btn btn-sm btn-danger">+ Defecto</a>
+              @if (auth.puedeEditar()) {
+                <a [routerLink]="['/casos-prueba', c.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+                <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}"
+                  class="btn btn-sm btn-danger">+ Defecto</a>
+              }
             </td>
           </tr>
         } @empty {

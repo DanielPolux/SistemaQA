@@ -1,7 +1,9 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Requerimientos</h2>
-    <a routerLink="/requerimientos/nuevo" class="btn btn-primary">+ Nuevo Requerimiento</a>
+    @if (auth.puedeEditar()) {
+      <a routerLink="/requerimientos/nuevo" class="btn btn-primary">+ Nuevo Requerimiento</a>
+    }
   </div>
 
   <div class="filters">
@@ -41,7 +43,9 @@
             <td><span class="badge">{{ r.estado }}</span></td>
             <td>{{ r.proyectoNombre }}</td>
             <td class="actions">
-              <a [routerLink]="['/requerimientos', r.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              @if (auth.puedeEditar()) {
+                <a [routerLink]="['/requerimientos', r.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              }
               <a [routerLink]="['/casos-prueba']" [queryParams]="{requerimientoId: r.id}" class="btn btn-sm btn-info">
                 Ver Casos
               </a>

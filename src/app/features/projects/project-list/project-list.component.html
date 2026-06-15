@@ -1,7 +1,9 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Proyectos</h2>
-    <a routerLink="/proyectos/nuevo" class="btn btn-primary">+ Nuevo Proyecto</a>
+    @if (auth.puedeEditar()) {
+      <a routerLink="/proyectos/nuevo" class="btn btn-primary">+ Nuevo Proyecto</a>
+    }
   </div>
 
   <div class="filters">
@@ -56,7 +58,9 @@
             <td>{{ p.fechaFinPlanificada ? (p.fechaFinPlanificada | date:'dd/MM/yyyy') : '-' }}</td>
             <td class="actions">
               <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-info">Ver</a>
-              <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              @if (auth.puedeEditar()) {
+                <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              }
             </td>
           </tr>
         } @empty {

@@ -30,6 +30,11 @@ export enum AmbienteDefecto {
   PRODUCCION = 'Producción'
 }
 
+export enum EstadoDesarrollo {
+  ATENDIDO = 'Atendido',
+  NO_APLICA = 'No Aplica'
+}
+
 export interface Defecto {
   id: number;
   proyectoId: number;
@@ -55,6 +60,7 @@ export interface Defecto {
   creadoEn: Date;
   actualizadoEn: Date;
   fechaResolucion?: Date;
+  estadoDesarrollo?: EstadoDesarrollo | null;
   comentarios?: ComentarioDefecto[];
 }
 

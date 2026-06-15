@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ComentarioDefecto, Defecto } from '../models';
+import { ComentarioDefecto, Defecto, EstadoDesarrollo } from '../models';
 import { environment } from '../../../environments/environment';
 import { PaginatedResponse } from './project.service';
 
@@ -55,6 +55,10 @@ export class DefectService {
 
   agregarComentario(defectoId: number, comentario: string): Observable<ComentarioDefecto> {
     return this.http.post<ComentarioDefecto>(`${this.url}/${defectoId}/comentarios`, { comentario });
+  }
+
+  actualizarEstadoDesarrollo(id: number, estadoDesarrollo: EstadoDesarrollo): Observable<Defecto> {
+    return this.http.patch<Defecto>(`${this.url}/${id}/estado-desarrollo`, { estadoDesarrollo });
   }
 
   delete(id: number): Observable<void> {

@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { Rol } from './core/models';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/proyectos', pathMatch: 'full' },
@@ -29,7 +31,7 @@ export const routes: Routes = [
   },
   {
     path: 'usuarios',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard([Rol.ADMIN])],
     loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES)
   },
   { path: '**', redirectTo: '/proyectos' }

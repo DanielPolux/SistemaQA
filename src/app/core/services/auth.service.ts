@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
-import { AuthResponse, LoginRequest, Usuario } from '../models';
+import { AuthResponse, LoginRequest, Rol, Usuario } from '../models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -11,6 +11,10 @@ export class AuthService {
   private readonly USER_KEY = 'qa_user';
 
   usuarioActual = signal<Usuario | null>(this.getUserFromStorage());
+
+  readonly esAdmin       = computed(() => this.usuarioActual()?.rol === Rol.ADMIN);
+  readonly esDesarrollador = computed(() => this.usuarioActual()?.rol === Rol.DEVELOPER);
+  readonly puedeEditar   = computed(() => this.usuarioActual()?.rol !== Rol.DEVELOPER);
 
   constructor(private http: HttpClient, private router: Router) {}
 

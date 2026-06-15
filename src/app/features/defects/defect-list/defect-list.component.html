@@ -1,7 +1,9 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Defectos</h2>
-    <a routerLink="/defectos/nuevo" class="btn btn-primary">+ Reportar Defecto</a>
+    @if (auth.puedeEditar()) {
+      <a routerLink="/defectos/nuevo" class="btn btn-primary">+ Reportar Defecto</a>
+    }
   </div>
 
   <div class="filters">
@@ -29,6 +31,7 @@
           <th>Prioridad</th>
           <th>Estado</th>
           <th>Asignado A</th>
+          <th>Estado Dev</th>
           <th>Reportado</th>
           <th>Acciones</th>
         </tr>
@@ -43,14 +46,29 @@
             <td>{{ d.prioridad }}</td>
             <td><span class="badge badge-estado-{{ d.estado | lowercase }}">{{ d.estado }}</span></td>
             <td>{{ d.asignadoANombre ?? '-' }}</td>
+            <td>
+              @if (auth.esDesarrollador()) {
+                <select class="select-inline"
+                        [value]="d.estadoDesarrollo ?? ''"
+                        (change)="onEstadoDesarrolloChange(d, $any($event.target).value)">
+                  <option value="">— Sin actualizar —</option>
+                  @for (ed of estadosDesarrollo; track ed) {
+                    <option [value]="ed">{{ ed }}</option>
+                  }
+                </select>
+              } @else {
+                {{ d.estadoDesarrollo ?? '-' }}
+              }
+            </td>
             <td>{{ d.creadoEn | date:'dd/MM/yyyy' }}</td>
             <td class="actions">
-              <a [routerLink]="['/defectos', d.id]" class="btn btn-sm btn-info">Ver</a>
-              <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              @if (auth.puedeEditar()) {
+                <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              }
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="9" class="empty-row">No se encontraron defectos</td></tr>
+          <tr><td colspan="10" class="empty-row">No se encontraron defectos</td></tr>
         }
       </tbody>
     </table>

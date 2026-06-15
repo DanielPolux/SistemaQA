@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RequirementService } from '../../../core/services/requirement.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Requerimiento, EstadoRequerimiento, TipoRequerimiento } from '../../../core/models';
 
 @Component({
@@ -14,6 +15,7 @@ import { Requerimiento, EstadoRequerimiento, TipoRequerimiento } from '../../../
 export class RequirementListComponent implements OnInit {
   private service = inject(RequirementService);
   private route = inject(ActivatedRoute);
+  auth = inject(AuthService);
 
   requerimientos: Requerimiento[] = [];
   total = 0;

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../../../core/services/project.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Proyecto, EstadoProyecto } from '../../../core/models';
 
 @Component({
@@ -13,6 +14,7 @@ import { Proyecto, EstadoProyecto } from '../../../core/models';
 })
 export class ProjectListComponent implements OnInit {
   private service = inject(ProjectService);
+  auth = inject(AuthService);
 
   proyectos: Proyecto[] = [];
   total = 0;

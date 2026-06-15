@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DefectService } from '../../../core/services/defect.service';
-import { Defecto, EstadoDefecto, SeveridadDefecto } from '../../../core/models';
+import { AuthService } from '../../../core/services/auth.service';
+import { Defecto, EstadoDefecto, EstadoDesarrollo, SeveridadDefecto } from '../../../core/models';
 
 @Component({
   selector: 'app-defect-list',
@@ -14,6 +15,7 @@ import { Defecto, EstadoDefecto, SeveridadDefecto } from '../../../core/models';
 export class DefectListComponent implements OnInit {
   private service = inject(DefectService);
   private route = inject(ActivatedRoute);
+  auth = inject(AuthService);
 
   defectos: Defecto[] = [];
   total = 0;
@@ -27,6 +29,7 @@ export class DefectListComponent implements OnInit {
 
   readonly estados = Object.values(EstadoDefecto);
   readonly severidades = Object.values(SeveridadDefecto);
+  readonly estadosDesarrollo = Object.values(EstadoDesarrollo);
 
   ngOnInit(): void {
     this.proyectoId = this.route.snapshot.queryParams['proyectoId']
@@ -51,4 +54,11 @@ export class DefectListComponent implements OnInit {
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+
+  onEstadoDesarrolloChange(defecto: Defecto, valor: string): void {
+    if (!valor) return;
+    this.service.actualizarEstadoDesarrollo(defecto.id, valor as EstadoDesarrollo).subscribe(updated => {
+      defecto.estadoDesarrollo = updated.estadoDesarrollo;
+    });
+  }
 }
