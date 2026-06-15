@@ -1,0 +1,181 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Importar Casos de Prueba desde Excel</h2>
+    <a routerLink="/casos-prueba" class="btn btn-secondary">Volver al listado</a>
+  </div>
+
+  <!-- PASO 1: Descargar plantilla -->
+  <div class="import-step">
+    <div class="import-step-number">1</div>
+    <div class="import-step-body">
+      <h3>Descarga la plantilla oficial</h3>
+      <p>Usa la plantilla para asegurarte de que los datos tengan el formato correcto.
+        La hoja <strong>Valores Válidos</strong> dentro del archivo contiene las opciones
+        permitidas para cada campo de selección.</p>
+      <button class="btn btn-accent" (click)="descargarPlantilla()">
+        Descargar Plantilla (.xlsx)
+      </button>
+    </div>
+  </div>
+
+  <!-- PASO 2: Cargar archivo -->
+  <div class="import-step">
+    <div class="import-step-number">2</div>
+    <div class="import-step-body">
+      <h3>Carga el archivo completado</h3>
+      <p>Solo se aceptan archivos <strong>.xlsx</strong> o <strong>.xls</strong>.</p>
+
+      <label class="file-drop-zone" for="archivoExcel">
+        <div class="file-drop-icon">📂</div>
+        @if (archivo) {
+          <span class="file-name">{{ archivo.name }}</span>
+          <span class="file-size">{{ (archivo.size / 1024).toFixed(1) }} KB</span>
+        } @else {
+          <span>Haz clic para seleccionar o arrastra el archivo aquí</span>
+        }
+        <input id="archivoExcel" type="file" accept=".xlsx,.xls" (change)="onFileChange($event)" hidden />
+      </label>
+
+      @if (errorArchivo) {
+        <div class="alert alert-error">{{ errorArchivo }}</div>
+      }
+
+      @if (archivo && filas.length > 0) {
+        <button class="btn btn-secondary btn-sm" (click)="limpiar()">Limpiar y cargar otro</button>
+      }
+    </div>
+  </div>
+
+  <!-- PASO 3: Vista previa -->
+  @if (filas.length > 0) {
+    <div class="import-step">
+      <div class="import-step-number">3</div>
+      <div class="import-step-body">
+        <h3>Vista previa de datos</h3>
+
+        <div class="import-summary">
+          <div class="summary-item summary-item--ok">
+            <span class="summary-num">{{ filasValidas.length }}</span>
+            <span>Filas válidas</span>
+          </div>
+          <div class="summary-item summary-item--error">
+            <span class="summary-num">{{ filasConError.length }}</span>
+            <span>Filas con error</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-num">{{ filas.length }}</span>
+            <span>Total filas</span>
+          </div>
+        </div>
+
+        <!-- Tabla de filas con error -->
+        @if (filasConError.length > 0) {
+          <div class="import-errors-section">
+            <h4>Filas con errores (no se importarán)</h4>
+            <table class="data-table data-table--compact">
+              <thead>
+                <tr>
+                  <th>Fila</th>
+                  <th>Nombre del Caso</th>
+                  <th>Errores encontrados</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (f of filasConError; track f.fila) {
+                  <tr class="row-error">
+                    <td>{{ f.fila }}</td>
+                    <td>{{ f.nombreCasoPrueba || '(vacío)' }}</td>
+                    <td>
+                      <ul class="error-list">
+                        @for (e of f.errores; track e) { <li>{{ e }}</li> }
+                      </ul>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- Tabla de filas válidas -->
+        @if (filasValidas.length > 0) {
+          <div class="import-valid-section">
+            <h4>Filas que se importarán ({{ filasValidas.length }})</h4>
+            <div class="table-scroll">
+              <table class="data-table data-table--compact">
+                <thead>
+                  <tr>
+                    <th>Fila</th>
+                    <th>Código CP</th>
+                    <th>Nombre del Caso de Prueba</th>
+                    <th>Clave Proyecto</th>
+                    <th>RF</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Estado QA</th>
+                    <th>Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of filasValidas; track f.fila) {
+                    <tr class="row-valid">
+                      <td>{{ f.fila }}</td>
+                      <td>{{ f.codigoCP || '-' }}</td>
+                      <td class="td-nombre">{{ f.nombreCasoPrueba }}</td>
+                      <td><span class="tag-codigo">{{ f.claveProyecto }}</span></td>
+                      <td>{{ f.requerimientoRF }}</td>
+                      <td>{{ f.tipoPrueba }}</td>
+                      <td>{{ f.prioridad }}</td>
+                      <td>{{ f.estadoQA }}</td>
+                      <td>{{ f.resultado || 'No Ejecutado' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- PASO 4: Importar -->
+    @if (filasValidas.length > 0 && !resultadoImport) {
+      <div class="import-step">
+        <div class="import-step-number">4</div>
+        <div class="import-step-body">
+          <h3>Confirmar importación</h3>
+          <p>Se importarán <strong>{{ filasValidas.length }}</strong> caso(s) de prueba.
+            @if (filasConError.length > 0) {
+              Las <strong>{{ filasConError.length }}</strong> fila(s) con error serán omitidas.
+            }
+          </p>
+          <button class="btn btn-primary" (click)="importar()" [disabled]="importando">
+            {{ importando ? 'Importando...' : 'Importar ' + filasValidas.length + ' caso(s)' }}
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Resultado final -->
+  @if (resultadoImport) {
+    <div class="import-result" [class.import-result--ok]="resultadoImport.importados > 0">
+      <div class="result-icon">{{ resultadoImport.importados > 0 ? '✓' : '✕' }}</div>
+      <div class="result-body">
+        <h3>{{ resultadoImport.importados > 0 ? 'Importación completada' : 'Error en la importación' }}</h3>
+        <p>{{ resultadoImport.importados }} caso(s) importado(s) correctamente.</p>
+        @if (resultadoImport.errores.length > 0) {
+          <ul class="error-list">
+            @for (e of resultadoImport.errores; track e.fila) {
+              <li>Fila {{ e.fila }}: {{ e.mensaje }}</li>
+            }
+          </ul>
+        }
+        <div class="result-actions">
+          <a routerLink="/casos-prueba" class="btn btn-primary">Ver Casos de Prueba</a>
+          <button class="btn btn-secondary" (click)="limpiar()">Importar otro archivo</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

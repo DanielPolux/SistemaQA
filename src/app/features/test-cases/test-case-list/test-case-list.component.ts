@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TestCaseService } from '../../../core/services/test-case.service';
-import { CasoPrueba, EstadoCasoPrueba, PrioridadCasoPrueba, TipoCasoPrueba } from '../../../core/models';
+import { CasoPrueba, EstadoQA, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba } from '../../../core/models';
 
 @Component({
   selector: 'app-test-case-list',
@@ -22,11 +22,27 @@ export class TestCaseListComponent implements OnInit {
   proyectoId?: number;
   estadoFiltro = '';
   tipoFiltro = '';
+  resultadoFiltro = '';
   busqueda = '';
   cargando = false;
 
-  readonly estados = Object.values(EstadoCasoPrueba);
-  readonly tipos = Object.values(TipoCasoPrueba);
+  readonly estadosQA = Object.values(EstadoQA);
+  readonly tipos = Object.values(TipoPrueba);
+  readonly resultados = Object.values(ResultadoCasoPrueba);
+
+  readonly resultadoClase: Record<string, string> = {
+    [ResultadoCasoPrueba.APROBADO]:    'badge-resultado-aprobado',
+    [ResultadoCasoPrueba.FALLIDO]:     'badge-resultado-fallido',
+    [ResultadoCasoPrueba.BLOQUEADO]:   'badge-resultado-bloqueado',
+    [ResultadoCasoPrueba.NO_EJECUTADO]:'badge-resultado-no-ejecutado'
+  };
+
+  readonly estadoQAClase: Record<string, string> = {
+    [EstadoQA.PENDIENTE]:    'badge-qa-pendiente',
+    [EstadoQA.EN_EJECUCION]: 'badge-qa-en-ejecucion',
+    [EstadoQA.BLOQUEADO]:    'badge-qa-bloqueado',
+    [EstadoQA.COMPLETADO]:   'badge-qa-completado'
+  };
 
   ngOnInit(): void {
     this.proyectoId = this.route.snapshot.queryParams['proyectoId']
@@ -39,8 +55,9 @@ export class TestCaseListComponent implements OnInit {
     this.cargando = true;
     this.service.getAll({
       proyectoId: this.proyectoId,
-      estado: this.estadoFiltro || undefined,
-      tipo: this.tipoFiltro || undefined,
+      estadoQA: this.estadoFiltro || undefined,
+      tipoPrueba: this.tipoFiltro || undefined,
+      resultado: this.resultadoFiltro || undefined,
       busqueda: this.busqueda || undefined,
       pagina: this.pagina,
       porPagina: this.porPagina
@@ -51,4 +68,6 @@ export class TestCaseListComponent implements OnInit {
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+
+  get totalPaginas(): number { return Math.ceil(this.total / this.porPagina); }
 }

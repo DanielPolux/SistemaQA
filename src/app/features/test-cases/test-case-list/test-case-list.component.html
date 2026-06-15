@@ -1,18 +1,25 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Casos de Prueba</h2>
-    <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+    <div class="header-actions">
+      <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
+      <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+    </div>
   </div>
 
   <div class="filters">
-    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar caso de prueba..." />
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
-    </select>
+    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar por nombre, código, RF..." />
     <select [(ngModel)]="tipoFiltro" (change)="buscar()">
       <option value="">Todos los tipos</option>
       @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+    <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
+      <option value="">Todos los resultados</option>
+      @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
     </select>
   </div>
 
@@ -22,12 +29,15 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Código</th>
-          <th>Título</th>
+          <th>Código CP</th>
+          <th>Nombre del Caso de Prueba</th>
+          <th>RF</th>
           <th>Tipo</th>
           <th>Prioridad</th>
-          <th>Estado</th>
-          <th>Asignado A</th>
+          <th>Estado QA</th>
+          <th>Resultado</th>
+          <th>Responsable QA</th>
+          <th>F. Ejecución</th>
           <th>Defectos</th>
           <th>Acciones</th>
         </tr>
@@ -35,23 +45,39 @@
       <tbody>
         @for (c of casos; track c.id) {
           <tr>
-            <td>{{ c.codigo }}</td>
-            <td>{{ c.titulo }}</td>
-            <td>{{ c.tipo }}</td>
+            <td><span class="tag-codigo">{{ c.codigoCP ?? '-' }}</span></td>
+            <td class="td-nombre">{{ c.nombreCasoPrueba }}</td>
+            <td>{{ c.requerimientoRF ?? '-' }}</td>
+            <td>{{ c.tipoPrueba }}</td>
             <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
-            <td><span class="badge badge-{{ c.estado | lowercase }}">{{ c.estado }}</span></td>
-            <td>{{ c.asignadoANombre ?? '-' }}</td>
-            <td>{{ c.totalDefectos ?? 0 }}</td>
+            <td><span class="badge {{ estadoQAClase[c.estadoQA] }}">{{ c.estadoQA }}</span></td>
+            <td>
+              @if (c.resultado) {
+                <span class="badge {{ resultadoClase[c.resultado] }}">{{ c.resultado }}</span>
+              } @else { <span class="text-muted">—</span> }
+            </td>
+            <td>{{ c.responsableQANombre ?? '-' }}</td>
+            <td>{{ c.fechaEjecucion ? (c.fechaEjecucion | date:'dd/MM/yyyy') : '-' }}</td>
+            <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
             <td class="actions">
-              <a [routerLink]="['/casos-prueba', c.id]" class="btn btn-sm btn-info">Ver</a>
               <a [routerLink]="['/casos-prueba', c.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
-              <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}" class="btn btn-sm btn-danger">+ Defecto</a>
+              <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}"
+                class="btn btn-sm btn-danger">+ Defecto</a>
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="8" class="empty-row">No se encontraron casos de prueba</td></tr>
+          <tr><td colspan="11" class="empty-row">No se encontraron casos de prueba</td></tr>
         }
       </tbody>
     </table>
+
+    @if (totalPaginas > 1) {
+      <div class="pagination">
+        @for (p of [].constructor(totalPaginas); track $index) {
+          <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+            (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+        }
+      </div>
+    }
   }
 </div>

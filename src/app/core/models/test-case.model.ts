@@ -1,11 +1,12 @@
-export enum TipoCasoPrueba {
+export enum TipoPrueba {
   FUNCIONAL = 'Funcional',
   REGRESION = 'Regresión',
   HUMO = 'Humo',
   INTEGRACION = 'Integración',
   RENDIMIENTO = 'Rendimiento',
   SEGURIDAD = 'Seguridad',
-  USABILIDAD = 'Usabilidad'
+  USABILIDAD = 'Usabilidad',
+  EXPLORATORIA = 'Exploratoria'
 }
 
 export enum PrioridadCasoPrueba {
@@ -14,41 +15,65 @@ export enum PrioridadCasoPrueba {
   BAJA = 'Baja'
 }
 
-export enum EstadoCasoPrueba {
+export enum EstadoQA {
   PENDIENTE = 'Pendiente',
   EN_EJECUCION = 'En Ejecución',
-  APROBADO = 'Aprobado',
-  FALLIDO = 'Fallido',
   BLOQUEADO = 'Bloqueado',
-  OMITIDO = 'Omitido'
+  COMPLETADO = 'Completado'
 }
 
-export interface PasoPrueba {
-  orden: number;
-  descripcion: string;
-  resultadoEsperado: string;
+export enum ResultadoCasoPrueba {
+  NO_EJECUTADO = 'No Ejecutado',
+  APROBADO = 'Aprobado',
+  FALLIDO = 'Fallido',
+  BLOQUEADO = 'Bloqueado'
 }
 
 export interface CasoPrueba {
   id: number;
-  proyectoId: number;
+
+  // Identificación
+  codigoCP?: string;                  // Codigo CP
+  nombreCasoPrueba: string;           // Nombre del Caso de Prueba (requerido)
+  proyectoId: number;                 // Proyecto — Búsqueda (requerido)
   proyectoNombre?: string;
-  requerimientoId?: number;
-  requerimientoCodigo?: string;
-  codigo: string;
-  titulo: string;
-  descripcion: string;
-  precondiciones: string;
-  pasos: PasoPrueba[];
-  resultadoEsperado: string;
-  tipo: TipoCasoPrueba;
-  prioridad: PrioridadCasoPrueba;
-  estado: EstadoCasoPrueba;
-  asignadoA?: number;
-  asignadoANombre?: string;
-  creadoPor: number;
-  creadoPorNombre?: string;
+  claveProyecto?: string;             // ClaveProyecto (texto)
+
+  // Tipo y descripción
+  tipoPrueba: TipoPrueba;             // Tipo de Prueba (requerido)
+  descripcionCasoPrueba: string;      // Descripción del Caso de Prueba (requerido)
+
+  // Pasos y resultado
+  pasosDePrueba: string;              // Pasos de Prueba (texto libre, requerido)
+  resultadoEsperado: string;          // Resultado Esperado (requerido)
+
+  // Clasificación
+  prioridad: PrioridadCasoPrueba;     // Prioridad (requerido)
+  estadoQA: EstadoQA;                 // Estado QA (requerido)
+  resultado?: ResultadoCasoPrueba;    // Resultado
+
+  // Ejecución
+  responsableQAId?: number;
+  responsableQANombre?: string;       // Responsable QA
+  fechaEjecucion?: Date;             // Fecha Ejecución
+  evidenciaUrl?: string;             // Evidencia (hipervínculo)
+  observaciones?: string;            // Observaciones
+
+  // Requerimiento
+  requerimientoRF?: string;          // Requerimiento RF (texto, requerido)
+  rfId?: number;                     // RF — Búsqueda
+
+  // Defectos
+  defectosAsociadosIds?: number[];
+  totalDefectos?: number;
+
+  // Auditoría
   creadoEn: Date;
   actualizadoEn: Date;
-  totalDefectos?: number;
+  creadoPor?: number;
+}
+
+export interface ImportacionResultado {
+  importados: number;
+  errores: { fila: number; mensaje: string }[];
 }

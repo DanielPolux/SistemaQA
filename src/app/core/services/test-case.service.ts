@@ -1,17 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CasoPrueba } from '../models';
+import { CasoPrueba, ImportacionResultado } from '../models';
 import { environment } from '../../../environments/environment';
 import { PaginatedResponse } from './project.service';
 
 export interface FiltroCasoPrueba {
   proyectoId?: number;
-  requerimientoId?: number;
-  estado?: string;
-  tipo?: string;
+  rfId?: number;
+  estadoQA?: string;
+  tipoPrueba?: string;
   prioridad?: string;
-  asignadoA?: number;
+  resultado?: string;
+  responsableQAId?: number;
   busqueda?: string;
   pagina?: number;
   porPagina?: number;
@@ -47,6 +48,10 @@ export class TestCaseService {
 
   update(id: number, caso: Partial<CasoPrueba>): Observable<CasoPrueba> {
     return this.http.put<CasoPrueba>(`${this.url}/${id}`, caso);
+  }
+
+  importarDesdeExcel(casos: Partial<CasoPrueba>[]): Observable<ImportacionResultado> {
+    return this.http.post<ImportacionResultado>(`${this.url}/importar`, { casos });
   }
 
   delete(id: number): Observable<void> {
