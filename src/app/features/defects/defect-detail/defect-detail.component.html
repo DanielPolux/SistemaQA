@@ -1,0 +1,146 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-header-info">
+      @if (defecto) {
+        <h2>
+          <span class="tag-codigo tag-codigo--defecto">{{ defecto.codigoProyecto ?? defecto.codigo }}</span>
+          &nbsp;{{ defecto.titulo }}
+        </h2>
+        <span class="detail-cliente">{{ defecto.proyectoNombre }}</span>
+      } @else {
+        <h2>Detalle de Defecto</h2>
+      }
+    </div>
+    <a routerLink="/defectos" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  @if (cargando) { <div class="loading">Cargando defecto...</div> }
+
+  @if (!cargando && defecto) {
+
+    <!-- Badges de estado -->
+    <div class="detail-section" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px 20px;">
+      <span class="badge {{ estadoClase[defecto.estado] }}">{{ defecto.estado }}</span>
+      <span class="badge {{ severidadClase[defecto.severidad] }}">{{ defecto.severidad }}</span>
+      <span class="badge {{ prioridadClase[defecto.prioridad] }}">{{ defecto.prioridad }}</span>
+      @if (defecto.estadoDesarrollo === 'Atendido') {
+        <span class="badge badge-dev-atendido">Atendido</span>
+      } @else if (defecto.estadoDesarrollo === 'No Aplica') {
+        <span class="badge badge-dev-noapl">No Aplica</span>
+      }
+    </div>
+
+    <!-- Datos generales -->
+    <div class="detail-section">
+      <h3>Datos Generales</h3>
+      <div class="detail-grid">
+        <div class="detail-row">
+          <span class="detail-label">Código</span>
+          <span class="detail-value">
+            <span class="tag-codigo tag-codigo--defecto">{{ defecto.codigoProyecto ?? defecto.codigo }}</span>
+            &nbsp;<small class="text-muted">{{ defecto.codigo }}</small>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Proyecto</span>
+          <span class="detail-value">{{ defecto.proyectoNombre ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Caso de Prueba</span>
+          <span class="detail-value">{{ defecto.casoPruebaCodigo ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Ambiente</span>
+          <span class="detail-value">{{ defecto.ambiente }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Versión</span>
+          <span class="detail-value">{{ defecto.version }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Asignado A</span>
+          <span class="detail-value">{{ defecto.asignadoANombre ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reportado Por</span>
+          <span class="detail-value">{{ defecto.reportadoPorNombre ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fecha Reporte</span>
+          <span class="detail-value">{{ defecto.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        @if (defecto.fechaResolucion) {
+          <div class="detail-row">
+            <span class="detail-label">Fecha Resolución</span>
+            <span class="detail-value">{{ defecto.fechaResolucion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Descripción del defecto -->
+    <div class="detail-section">
+      <h3>Descripción del Defecto</h3>
+
+      <p class="detail-section-title">Descripción</p>
+      <p class="detail-text" style="margin-bottom:16px">{{ defecto.descripcion }}</p>
+
+      <p class="detail-section-title">Pasos para Reproducir</p>
+      <pre class="detail-pre" style="margin-bottom:16px">{{ defecto.pasosReproduccion }}</pre>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <div>
+          <p class="detail-section-title">Resultado Obtenido</p>
+          <p class="detail-text">{{ defecto.resultadoObtenido }}</p>
+        </div>
+        <div>
+          <p class="detail-section-title">Resultado Esperado</p>
+          <p class="detail-text">{{ defecto.resultadoEsperado }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Respuesta del desarrollador -->
+    @if (defecto.estadoDesarrollo || defecto.comentariosDesarrollo) {
+      <div class="detail-section">
+        <h3>Respuesta del Desarrollador</h3>
+        @if (defecto.estadoDesarrollo) {
+          <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px">
+            <span class="detail-section-title" style="display:inline; border:none; padding:0; margin:0">Estado Dev:</span>
+            @if (defecto.estadoDesarrollo === 'Atendido') {
+              <span class="badge badge-dev-atendido">Atendido</span>
+            } @else {
+              <span class="badge badge-dev-noapl">No Aplica</span>
+            }
+          </div>
+        }
+        @if (defecto.comentariosDesarrollo) {
+          <p class="detail-section-title">Comentarios del Desarrollador</p>
+          <p class="detail-text">{{ defecto.comentariosDesarrollo }}</p>
+        }
+      </div>
+    }
+
+    <!-- Comentarios del sistema -->
+    @if (defecto.comentarios && defecto.comentarios.length > 0) {
+      <div class="detail-section">
+        <h3>Historial de Comentarios</h3>
+        @for (c of defecto.comentarios; track c.id) {
+          <div style="padding:10px 0; border-bottom:1px solid var(--color-border)">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+              <strong style="font-size:13px">{{ c.usuarioNombre ?? '—' }}</strong>
+              <span class="text-light" style="font-size:11.5px">{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p style="font-size:13.5px; margin:0; line-height:1.6">{{ c.comentario }}</p>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  @if (!cargando && !defecto) {
+    <div class="alert alert-error">No se encontró el defecto solicitado.</div>
+  }
+</div>

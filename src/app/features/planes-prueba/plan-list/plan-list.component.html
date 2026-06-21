@@ -1,0 +1,139 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Planes de Prueba</h2>
+    @if (puedeGestionar()) {
+      <a routerLink="/planes-prueba/nuevo" class="btn btn-primary">+ Nuevo Plan</a>
+    }
+  </div>
+
+  <div class="filters">
+    <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
+      <option [ngValue]="undefined">Todos los proyectos</option>
+      @for (p of proyectos; track p.id) {
+        <option [ngValue]="p.id">{{ p.nombre }}</option>
+      }
+    </select>
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando planes...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Plan</th>
+          <th>Proyecto</th>
+          <th>Responsable</th>
+          <th>Estado</th>
+          <th>Ciclos</th>
+          <th>Ejecuciones</th>
+          <th>Fecha Objetivo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of planes; track p.id) {
+          <tr>
+            <td class="td-nombre">
+              <a [routerLink]="['/planes-prueba', p.id]" class="link-primary">{{ p.nombre }}</a>
+            </td>
+            <td>{{ p.proyectoNombre ?? '—' }}</td>
+            <td>{{ p.responsableNombre ?? '—' }}</td>
+            <td>
+              <span class="badge {{ estadoClase[p.estado] }}">{{ p.estado }}</span>
+            </td>
+            <td>
+              <span class="plan-stat-chip">
+                {{ p.ciclosCerrados ?? 0 }} / {{ p.totalCiclos ?? 0 }} cerrados
+              </span>
+            </td>
+            <td>
+              <span class="plan-stat-inline">
+                <span class="plan-aprobado">{{ p.aprobados ?? 0 }} ok</span>
+                @if ((p.fallidos ?? 0) > 0) {
+                  <span class="plan-fallido">{{ p.fallidos }} fail</span>
+                }
+              </span>
+            </td>
+            <td>{{ p.fechaObjetivo ? (p.fechaObjetivo | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="actions">
+              <a [routerLink]="['/planes-prueba', p.id]"
+                 class="btn btn-sm btn-icon btn-info" title="Ver detalle">
+                <i class="bi bi-eye"></i>
+              </a>
+              @if (puedeGestionar()) {
+                <a [routerLink]="['/planes-prueba', p.id, 'editar']"
+                   class="btn btn-sm btn-icon btn-secondary" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                @if (p.estado === 'Activo') {
+                  <button class="btn btn-sm btn-icon btn-warning" title="Cerrar plan"
+                          (click)="cerrar(p)">
+                    <i class="bi bi-lock"></i>
+                  </button>
+                } @else {
+                  <button class="btn btn-sm btn-icon btn-success" title="Reabrir plan"
+                          (click)="reabrir(p)">
+                    <i class="bi bi-unlock"></i>
+                  </button>
+                }
+                <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                        (click)="eliminar(p.id, p.nombre)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-row">No se encontraron planes de prueba</td></tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ planes.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                      (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Confirmación eliminar -->
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <div><h3 class="modal-title">Eliminar plan</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Eliminar el plan <strong>{{ confirmPendiente.nombre }}</strong>?</p>
+        <p class="confirm-sub">Los ciclos vinculados quedarán sin plan asignado.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

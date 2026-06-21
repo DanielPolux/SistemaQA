@@ -4,7 +4,7 @@ Guía de contexto para Claude Code al trabajar en este proyecto.
 
 ## Resumen del Proyecto
 
-**Sistema QA** es una aplicación Angular 18 para gestión de calidad de software. Maneja proyectos, requerimientos, casos de prueba y defectos con autenticación JWT y control de acceso por roles.
+**Sistema QA** es una aplicación Angular 18 para gestión de calidad de software. Maneja proyectos, requerimientos, casos de prueba, ciclos de prueba, ejecuciones y defectos con autenticación JWT y control de acceso por roles.
 
 **Stack:** Angular 18 (standalone components + signals) · TypeScript strict · SCSS · REST API
 
@@ -15,7 +15,8 @@ Guía de contexto para Claude Code al trabajar en este proyecto.
 ```
 src/app/
 ├── core/           # Singleton: modelos, servicios HTTP, guards, interceptors
-├── features/       # Lazy-loaded por ruta: auth, projects, requirements, test-cases, defects, users
+├── features/       # Lazy-loaded por ruta: auth, projects, requirements, test-cases,
+│                   #   defects, users, ejecuciones, ciclos, catalogos, dashboard
 └── layout/         # Header y Sidebar (siempre visibles cuando autenticado)
 ```
 
@@ -40,6 +41,7 @@ src/app/
 ### Rutas
 - Todas protegidas con `authGuard` excepto `/auth/login`.
 - Sección `/usuarios` protegida adicionalmente con `roleGuard([Rol.ADMIN])`.
+- Sección `/ciclos` protegida con `roleGuard([Rol.QA_LEAD, Rol.PROJECT_MANAGER, Rol.ADMIN])`.
 - Usar `loadComponent` y `loadChildren` para lazy loading — no importar componentes directamente en rutas.
 
 ### Modelos
@@ -50,7 +52,35 @@ src/app/
 ### Formularios
 - Usar **Reactive Forms** (`FormBuilder`, `FormGroup`, `FormArray`).
 - Validación con `Validators` de Angular — no validación custom en templates.
-- El componente de formulario determina crear vs. editar según si `casoId`/`proyectoId`/etc. es `undefined`.
+
+---
+
+## Modelos principales (`core/models/`)
+
+| Archivo | Interfaces / Enums clave |
+|---|---|
+| `project.model.ts` | `Proyecto`, `EstadoProyecto` |
+| `requirement.model.ts` | `Requerimiento`, `EstadoRequerimiento`, `PrioridadRequerimiento` |
+| `test-case.model.ts` | `CasoPrueba`, `EstadoCasoPrueba`, `ResultadoCasoPrueba`, `TipoPrueba` |
+| `defect.model.ts` | `Defecto`, `EstadoDefecto`, `SeveridadDefecto`, `PrioridadDefecto`, `AmbienteDefecto` |
+| `ejecucion.model.ts` | `EjecucionCasoPrueba`, `ResultadoEjecucion`, `AmbienteEjecucion` |
+| `ciclo-prueba.model.ts` | `CicloPrueba`, `EstadoCiclo` |
+| `user.model.ts` | `Usuario`, `Rol` |
+
+---
+
+## Servicios HTTP (`core/services/`)
+
+| Servicio | URL base |
+|---|---|
+| `ProjectService` | `/proyectos` |
+| `RequirementService` | `/requerimientos` |
+| `TestCaseService` | `/casos-prueba` |
+| `DefectService` | `/defectos` |
+| `EjecucionService` | `/ejecuciones` |
+| `CicloService` | `/ciclos-prueba` |
+| `UserService` | `/usuarios` |
+| `AuditoriaService` | `/auditoria` |
 
 ---
 
@@ -59,26 +89,52 @@ src/app/
 ```
 Proyecto (1) ──────────────── (N) Requerimiento
 Proyecto (1) ──────────────── (N) Caso de Prueba
+Proyecto (1) ──────────────── (N) Ciclo de Prueba
 Requerimiento (1) ──────────── (N) Caso de Prueba  [opcional]
+Caso de Prueba (1) ─────────── (N) Ejecución
+Ciclo de Prueba (1) ────────── (N) Ejecución        [auto-asignado]
+Ejecución (0..1) ───────────── (1) Defecto          [auto-vinculado en Fallido]
 Caso de Prueba (1) ─────────── (N) Defecto
-Usuario (1) ────────────────── (N) Proyecto [como responsable]
-Usuario (1) ────────────────── (N) Caso de Prueba [asignado]
-Usuario (1) ────────────────── (N) Defecto [asignado / reportado]
 ```
 
 ---
 
 ## Roles y Permisos
 
-| Rol              | Enum value          | Alcance                                  |
-|------------------|---------------------|------------------------------------------|
-| `Administrador`  | `Rol.ADMIN`         | Acceso total incluido gestión de usuarios|
-| `QA Lead`        | `Rol.QA_LEAD`       | CRUD en requerimientos, casos, defectos  |
-| `QA Tester`      | `Rol.QA_TESTER`     | Ejecutar casos y reportar defectos       |
-| `Desarrollador`  | `Rol.DEVELOPER`     | Ver y resolver defectos asignados        |
-| `Project Manager`| `Rol.PROJECT_MANAGER`| CRUD proyectos, ver resto               |
+| Rol              | Enum value            | Alcance                                   |
+|------------------|-----------------------|-------------------------------------------|
+| `Administrador`  | `Rol.ADMIN`           | Acceso total incluido gestión de usuarios |
+| `QA Lead`        | `Rol.QA_LEAD`         | CRUD en requerimientos, casos, ciclos, defectos |
+| `QA Tester`      | `Rol.QA_TESTER`       | Ejecutar casos y reportar defectos        |
+| `Desarrollador`  | `Rol.DEVELOPER`       | Ver y resolver defectos asignados         |
+| `Project Manager`| `Rol.PROJECT_MANAGER` | CRUD proyectos, ciclos, ver resto         |
 
-El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn` — se usa en rutas específicas dentro de `*.routes.ts`.
+El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn`.
+
+---
+
+## Comportamientos clave a recordar
+
+### Ciclos de Prueba
+- El backend auto-asigna el ciclo activo del proyecto a cada nueva ejecución.
+- Si no hay ciclo activo, el botón "Ejecutar" en la grilla de casos de prueba muestra un **popup de error** (no abre el modal de ejecución).
+- La grilla de ciclos (`/ciclos`) muestra: Nombre, Proyecto, Estado (badge), Fechas, Total Ejecuciones, Acciones (cerrar / reabrir / eliminar).
+- Solo se puede eliminar un ciclo si `totalEjecuciones === 0`.
+
+### Modal de Ejecución (en Casos de Prueba)
+- Cuando resultado = `Fallido`: aparece el bloque "Datos del Defecto" con todos los campos para crear el defecto inline.
+- Campo "Evidencia (URL)": cuando resultado ≠ Fallido se muestra antes del bloque; cuando = Fallido se mueve al final del bloque de defecto.
+- Al guardar con Fallido: crea la ejecución, luego crea el defecto; muestra pantalla de éxito con código `INC-XXX`.
+- El ciclo activo se muestra en un banner verde dentro del modal.
+
+### Defectos
+- Código global: `DEF-XXXX` (auto-incremento total). Código de proyecto: `INC-XXX` (por proyecto).
+- La grilla de defectos muestra `codigoProyecto` (INC-XXX) en la columna "Defecto".
+- El defecto recién creado se auto-vincula a la última ejecución `Fallido` sin defecto para ese caso.
+
+### Proyectos (filtrado por usuario)
+- Non-admin: solo ven proyectos donde son `jefe_proyecto`, `jefe_qa`, `responsable_qa`, o tienen casos/defectos asignados.
+- Implementado en el backend — el frontend no necesita cambios especiales.
 
 ---
 
@@ -86,6 +142,9 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 
 ### Proyecto
 `Activo → En Pausa → Completado` | `Activo → Inactivo`
+
+### Ciclo de Prueba
+`Activo → Cerrado` | `Cerrado → Activo` (reabrir)
 
 ### Caso de Prueba
 `Pendiente → En Ejecución → Aprobado | Fallido | Bloqueado | Omitido`
@@ -101,9 +160,10 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 
 - Un único archivo global: `src/styles.scss`.
 - Variables CSS en `:root` (colores, dimensiones del layout).
-- Clases de utilidad definidas globalmente: `.btn`, `.badge`, `.data-table`, `.form-group`, `.page-container`, `.stats-grid`.
+- Clases de utilidad globales: `.btn`, `.badge`, `.data-table`, `.form-group`, `.page-container`, `.stats-grid`.
+- Clases de ciclos: `.ciclo-banner`, `.ciclo-banner--activo` (verde), `.badge-ciclo-activo`, `.badge-ciclo-cerrado`.
+- Clases de defecto en modal: `.defecto-section`, `.defecto-section-title` (borde/fondo rojo).
 - **No crear archivos `.scss` por componente** a menos que el componente tenga estilos muy específicos y extensos.
-- Las clases `.badge-*` se construyen dinámicamente con el valor del enum en minúsculas (ej: `badge-crítico` para severidad Crítico). Agregar esos estilos en `styles.scss` si se necesitan colores específicos.
 
 ---
 
@@ -126,25 +186,3 @@ npm test               # Tests unitarios con Karma
 - No crear helpers globales en `app.component.ts` — colocarlos en `shared/` o `core/`.
 - No omitir `track` en los bucles `@for`.
 - No usar `any` explícito si puede evitarse con los tipos de `core/models`.
-
----
-
-## Agregar una Nueva Feature
-
-1. Crear directorio en `src/app/features/<nombre>/`
-2. Crear `<nombre>.routes.ts` con las rutas lazy del feature
-3. Agregar la ruta en `src/app/app.routes.ts` con `loadChildren`
-4. Crear modelos en `core/models/` si son nuevos y exportarlos desde `index.ts`
-5. Crear servicio en `core/services/` con métodos CRUD estándar
-6. Crear componentes list + form siguiendo el patrón existente
-
----
-
-## Variables de Entorno
-
-| Variable        | Desarrollo              | Producción |
-|-----------------|-------------------------|------------|
-| `apiUrl`        | `http://localhost:3000/api` | `/api` |
-| `production`    | `false`                 | `true`     |
-
-Modificar `src/environments/environment.ts` para desarrollo local.

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,9 +15,11 @@ export class UserListComponent implements OnInit {
   private service = inject(UserService);
 
   usuarios: Usuario[] = [];
-  total = 0;
-  pagina = 1;
-  porPagina = 15;
+  total     = 0;
+  pagina    = 1;
+  porPagina = 10;
+
+  get totalPaginas(): number { return Math.ceil(this.total / this.porPagina); }
   rolFiltro = '';
   busqueda = '';
   cargando = false;
@@ -47,4 +49,24 @@ export class UserListComponent implements OnInit {
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+  cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
+
+  // ─── Modal confirmación eliminar ─────────────────────────────────────────
+  modalConfirmarAbierto = signal(false);
+  confirmPendiente: { id: number; nombre: string } | null = null;
+
+  eliminar(id: number, nombre: string): void {
+    this.confirmPendiente = { id, nombre };
+    this.modalConfirmarAbierto.set(true);
+  }
+
+  cerrarConfirmar(): void {
+    this.modalConfirmarAbierto.set(false);
+    this.confirmPendiente = null;
+  }
+
+  confirmarEliminar(): void {
+    if (!this.confirmPendiente) return;
+    this.service.delete(this.confirmPendiente.id).subscribe({ next: () => { this.cerrarConfirmar(); this.cargar(); } });
+  }
 }

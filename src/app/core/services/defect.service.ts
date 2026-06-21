@@ -12,6 +12,7 @@ export interface FiltroDefecto {
   severidad?: string;
   prioridad?: string;
   asignadoA?: number;
+  reportadoPor?: number;
   busqueda?: string;
   pagina?: number;
   porPagina?: number;
@@ -57,11 +58,15 @@ export class DefectService {
     return this.http.post<ComentarioDefecto>(`${this.url}/${defectoId}/comentarios`, { comentario });
   }
 
-  actualizarEstadoDesarrollo(id: number, estadoDesarrollo: EstadoDesarrollo): Observable<Defecto> {
-    return this.http.patch<Defecto>(`${this.url}/${id}/estado-desarrollo`, { estadoDesarrollo });
+  actualizarEstadoDesarrollo(id: number, estadoDesarrollo: EstadoDesarrollo, comentariosDesarrollo?: string): Observable<Defecto> {
+    return this.http.patch<Defecto>(`${this.url}/${id}/estado-desarrollo`, { estadoDesarrollo, comentariosDesarrollo });
   }
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
+  }
+
+  getSiguienteCodigo(proyectoId: number): Observable<{ codigoProyecto: string }> {
+    return this.http.get<{ codigoProyecto: string }>(`${this.url}/siguiente-codigo/${proyectoId}`);
   }
 }

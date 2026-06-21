@@ -46,6 +46,12 @@ export class TestCaseService {
     return this.http.get<CasoPrueba[]>(`${environment.apiUrl}/proyectos/${proyectoId}/casos-prueba`);
   }
 
+  getNextCodigo(proyectoId: number): Observable<{ codigo: string }> {
+    return this.http.get<{ codigo: string }>(`${this.url}/next-codigo`, {
+      params: new HttpParams().set('proyectoId', String(proyectoId)),
+    });
+  }
+
   create(caso: Partial<CasoPrueba>): Observable<CasoPrueba> {
     return this.http.post<CasoPrueba>(this.url, caso);
   }

@@ -1,0 +1,303 @@
+<div class="page-container">
+
+  <!-- ─── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div>
+      <h2 class="dash-greeting">Bienvenido, {{ usuario?.nombre }} {{ usuario?.apellido }}</h2>
+      <p class="dash-subtitle">{{ usuario?.rol }} · {{ usuario?.email }}</p>
+    </div>
+    <span class="dash-date">{{ today | date:'dd/MM/yyyy' }}</span>
+  </div>
+
+  @if (cargando()) {
+    <div class="loading">Cargando estadísticas...</div>
+  }
+
+  @if (!cargando() && s) {
+
+    <!-- ─── KPI cards ───────────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">📁</div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ s.resumen.proyectos_activos }}</div>
+          <div class="kpi-label">Proyectos Activos</div>
+        </div>
+        <div class="kpi-sub">Avance promedio: <strong>{{ s.resumen.avance_promedio }}%</strong></div>
+      </div>
+
+      <div class="kpi-card kpi-indigo">
+        <div class="kpi-icon">🧪</div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ s.resumen.casos_totales }}</div>
+          <div class="kpi-label">Casos de Prueba</div>
+        </div>
+        <div class="kpi-sub">Ejecutados: <strong>{{ s.resumen.casos_ejecutados }}</strong>
+          ({{ pct(s.resumen.casos_ejecutados, s.resumen.casos_totales) }}%)</div>
+      </div>
+
+      @if (esTester) {
+        <div class="kpi-card kpi-red">
+          <div class="kpi-icon">🔍</div>
+          <div class="kpi-body">
+            <div class="kpi-value">{{ s.resumen.defectos_pendientes_verificacion }}</div>
+            <div class="kpi-label">Pendientes de Verificar</div>
+          </div>
+          <div class="kpi-sub">Reportados por mí: <strong>{{ s.resumen.mis_defectos_reportados }}</strong></div>
+        </div>
+      } @else {
+        <div class="kpi-card kpi-red">
+          <div class="kpi-icon">🐛</div>
+          <div class="kpi-body">
+            <div class="kpi-value">{{ s.resumen.defectos_abiertos }}</div>
+            <div class="kpi-label">Defectos Abiertos</div>
+          </div>
+          <div class="kpi-sub">Reportados por mí: <strong>{{ s.resumen.mis_defectos_reportados }}</strong></div>
+        </div>
+      }
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">👤</div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ s.resumen.mis_casos }}</div>
+          <div class="kpi-label">Mis Casos Asignados</div>
+        </div>
+        <div class="kpi-sub">
+          @if (esTester) {
+            Defectos reportados: <strong>{{ s.resumen.mis_defectos_reportados }}</strong>
+          } @else {
+            Defectos abiertos asignados: <strong>{{ s.resumen.mis_defectos_abiertos }}</strong>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Fila central ────────────────────────────────────────────────── -->
+    <div class="dash-grid-2">
+
+      <!-- Proyectos con avance -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Proyectos — Avance</h3>
+          <a routerLink="/proyectos" class="dash-card-link">Ver todos →</a>
+        </div>
+        @if (s.proyectosAvance.length === 0) {
+          <p class="text-muted">No hay proyectos activos.</p>
+        } @else {
+          <div class="project-progress-list">
+            @for (p of s.proyectosAvance; track p.id) {
+              <div class="project-progress-item">
+                <div class="project-progress-top">
+                  <span class="project-codigo">{{ p.codigo }}</span>
+                  <span class="project-nombre">{{ p.nombre }}</span>
+                  <span class="project-pct">{{ p.porcentaje_avance }}%</span>
+                </div>
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" [style.width.%]="p.porcentaje_avance"></div>
+                </div>
+                <div class="project-progress-meta">
+                  <span>{{ p.casos_ejecutados }}/{{ p.casos_totales }} casos</span>
+                  @if (p.defectos_abiertos > 0) {
+                    <span class="defectos-badge">{{ p.defectos_abiertos }} defecto(s)</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Casos por estado -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Casos de Prueba por Estado</h3>
+          <a routerLink="/casos-prueba" class="dash-card-link">Ver todos →</a>
+        </div>
+        @if (s.casosPorEstado.length === 0) {
+          <p class="text-muted">Sin datos.</p>
+        } @else {
+          @for (item of s.casosPorEstado; track item.estado) {
+            <div class="dist-row">
+              <span class="dist-label">{{ item.estado }}</span>
+              <div class="dist-bar-track">
+                <div class="dist-bar-fill"
+                     [style.width.%]="pct(item.total, totalCasos(s.casosPorEstado))"
+                     [style.background]="estadoCasoColor[item.estado] ?? '#94a3b8'">
+                </div>
+              </div>
+              <span class="dist-count">{{ item.total }}</span>
+            </div>
+          }
+        }
+      </div>
+
+    </div>
+
+    <!-- ─── Fila mi trabajo ──────────────────────────────────────────────── -->
+    <div class="dash-grid-3">
+
+      <!-- Mis casos por estado -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Mis Casos Asignados</h3>
+        </div>
+        @if (s.misCasos.length === 0) {
+          <p class="text-muted">No tienes casos asignados.</p>
+        } @else {
+          @for (item of s.misCasos; track item.estado) {
+            <div class="dist-row">
+              <span class="dist-label">{{ item.estado }}</span>
+              <div class="dist-bar-track">
+                <div class="dist-bar-fill"
+                     [style.width.%]="pct(item.total, totalCasos(s.misCasos))"
+                     [style.background]="estadoCasoColor[item.estado] ?? '#94a3b8'">
+                </div>
+              </div>
+              <span class="dist-count">{{ item.total }}</span>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Mis defectos por severidad (devs/otros) / por estado (testers) -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>{{ esTester ? 'Mis Defectos Reportados' : 'Mis Defectos Asignados' }}</h3>
+          @if (esTester) {
+            <a routerLink="/defectos" class="dash-card-link">Ver todos →</a>
+          }
+        </div>
+        @if (s.misDefectosAsignados.length === 0) {
+          <p class="text-muted">{{ esTester ? 'No tienes defectos reportados activos.' : 'No tienes defectos abiertos asignados.' }}</p>
+        } @else {
+          @for (item of s.misDefectosAsignados; track $index) {
+            <div class="dist-row">
+              <span class="dist-label">{{ esTester ? item.estado : item.severidad }}</span>
+              <div class="dist-bar-track">
+                <div class="dist-bar-fill"
+                     [style.width.%]="pct(item.total, totalCasos(s.misDefectosAsignados))"
+                     [style.background]="esTester ? '#2D4F72' : (severidadColor[item.severidad ?? ''] ?? '#94a3b8')">
+                </div>
+              </div>
+              <span class="dist-count">{{ item.total }}</span>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Defectos abiertos por severidad global -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Defectos Abiertos por Severidad</h3>
+          <a routerLink="/defectos" class="dash-card-link">Ver todos →</a>
+        </div>
+        @if (s.defectosPorSeveridad.length === 0) {
+          <p class="text-muted">Sin defectos abiertos.</p>
+        } @else {
+          <div class="severidad-bubbles">
+            @for (item of s.defectosPorSeveridad; track item.severidad) {
+              <div class="sev-bubble {{ severidadClase[item.severidad] }}">
+                <span class="sev-count">{{ item.total }}</span>
+                <span class="sev-label">{{ item.severidad }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- ─── Panel verificación para tester ────────────────────────────────── -->
+    @if (esTester && s.misDefectosPendientesVerificacion.length > 0) {
+      <div class="dash-card dash-card--alert">
+        <div class="dash-card-header">
+          <h3><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;margin-right:6px"></i>Defectos Pendientes de Tu Verificación</h3>
+          <a routerLink="/defectos" [queryParams]="{estado: 'En Revisión'}" class="dash-card-link">Ver todos →</a>
+        </div>
+        <div class="activity-list">
+          @for (d of s.misDefectosPendientesVerificacion; track d.id) {
+            <div class="activity-item activity-item--verify">
+              <div class="activity-main">
+                <span class="activity-code">{{ d.codigoProyecto }}</span>
+                <span class="activity-title">{{ d.titulo }}</span>
+                <span class="badge badge-dev-{{ d.estadoDesarrollo === 'Atendido' ? 'atendido' : 'noapl' }}" style="margin-left:6px">
+                  {{ d.estadoDesarrollo }}
+                </span>
+              </div>
+              <div class="activity-meta">
+                <span class="badge {{ severidadClase[d.severidad] }}">{{ d.severidad }}</span>
+                <span class="activity-project">{{ d.proyecto_nombre }}</span>
+                @if (d.desarrollador_nombre) {
+                  <span class="activity-tester">Dev: {{ d.desarrollador_nombre }}</span>
+                }
+                <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-xs btn-success">Verificar</a>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ─── Actividad reciente ───────────────────────────────────────────── -->
+    <div class="dash-grid-2">
+
+      <!-- Últimos defectos -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Últimos Defectos Reportados</h3>
+          <a routerLink="/defectos" class="dash-card-link">Ver todos →</a>
+        </div>
+        @if (s.ultimosDefectos.length === 0) {
+          <p class="text-muted">Sin defectos registrados.</p>
+        } @else {
+          <div class="activity-list">
+            @for (d of s.ultimosDefectos; track d.id) {
+              <div class="activity-item">
+                <div class="activity-main">
+                  <span class="activity-code">{{ d.codigo }}</span>
+                  <span class="activity-title">{{ d.titulo }}</span>
+                </div>
+                <div class="activity-meta">
+                  <span class="badge {{ severidadClase[d.severidad] }}">{{ d.severidad }}</span>
+                  <span class="badge {{ estadoDefectoClase[d.estado] }}">{{ d.estado }}</span>
+                  <span class="activity-project">{{ d.proyecto_nombre }}</span>
+                  <span class="activity-date">{{ d.creado_en | date:'dd/MM/yy' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Últimas ejecuciones -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3>Últimas Ejecuciones</h3>
+          <a routerLink="/ejecuciones" class="dash-card-link">Ver todas →</a>
+        </div>
+        @if (s.ultimasEjecuciones.length === 0) {
+          <p class="text-muted">Sin ejecuciones registradas.</p>
+        } @else {
+          <div class="activity-list">
+            @for (e of s.ultimasEjecuciones; track e.id) {
+              <div class="activity-item">
+                <div class="activity-main">
+                  <span class="activity-code">{{ e.caso_codigo }}</span>
+                  <span class="activity-title">{{ e.caso_nombre }}</span>
+                </div>
+                <div class="activity-meta">
+                  <span class="badge {{ resultadoClase[e.resultado] }}">{{ e.resultado }}</span>
+                  <span class="activity-project">{{ e.proyecto_nombre }}</span>
+                  <span class="activity-tester">{{ e.tester_nombre }}</span>
+                  <span class="activity-date">{{ e.fecha | date:'dd/MM/yy' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+
+  }
+</div>

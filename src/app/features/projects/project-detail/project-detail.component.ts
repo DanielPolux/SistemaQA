@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ProjectService } from '../../../core/services/project.service';
 import { Proyecto, ProyectoResumen } from '../../../core/models';
 
@@ -17,10 +18,23 @@ export class ProjectDetailComponent implements OnInit {
   proyecto?: Proyecto;
   resumen?: ProyectoResumen;
   cargando = true;
+  error = '';
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.service.getById(id).subscribe(p => { this.proyecto = p; });
-    this.service.getResumen(id).subscribe(r => { this.resumen = r; this.cargando = false; });
+    forkJoin({
+      proyecto: this.service.getById(id),
+      resumen:  this.service.getResumen(id),
+    }).subscribe({
+      next: ({ proyecto, resumen }) => {
+        this.proyecto = proyecto;
+        this.resumen  = resumen;
+        this.cargando = false;
+      },
+      error: () => {
+        this.cargando = false;
+        this.error = 'No se pudo cargar el proyecto. Verifica que existe y que tienes acceso.';
+      },
+    });
   }
 }

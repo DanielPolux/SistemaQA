@@ -1,6 +1,11 @@
 <div class="page-container">
   @if (cargando) {
     <div class="loading">Cargando...</div>
+  } @else if (error) {
+    <div class="empty-state">
+      <p>{{ error }}</p>
+      <a routerLink="/proyectos" class="btn btn-secondary">Volver a proyectos</a>
+    </div>
   } @else if (proyecto) {
 
     <div class="page-header">
@@ -10,7 +15,6 @@
         <span class="detail-cliente">{{ proyecto.cliente }}</span>
       </div>
       <div class="header-actions">
-        <a [routerLink]="['/proyectos', proyecto.id, 'editar']" class="btn btn-warning">Editar</a>
         <a routerLink="/proyectos" class="btn btn-secondary">Volver</a>
       </div>
     </div>
@@ -46,8 +50,8 @@
       </div>
       <div class="avance-meta">
         <span>Estado: <strong>{{ proyecto.estado }}</strong></span>
-        @if (proyecto.iteracion) { <span>Iteración: <strong>{{ proyecto.iteracion }}</strong></span> }
-        @if (proyecto.horasQA) { <span>Horas QA: <strong>{{ proyecto.horasQA }}h</strong></span> }
+
+        @if (proyecto.horasQa) { <span>Horas QA: <strong>{{ proyecto.horasQa }}h</strong></span> }
         @if (proyecto.sistema) { <span>Sistema: <strong>{{ proyecto.sistema }}</strong></span> }
       </div>
     </div>
@@ -61,9 +65,9 @@
           <dt>Jefe de Proyecto</dt>
           <dd>{{ proyecto.jefeProyectoNombre ?? '-' }}</dd>
           <dt>Jefe QA</dt>
-          <dd>{{ proyecto.jefeQANombre ?? '-' }}</dd>
+          <dd>{{ proyecto.jefeQaNombre ?? '-' }}</dd>
           <dt>Responsable QA</dt>
-          <dd>{{ proyecto.responsableQANombre ?? '-' }}</dd>
+          <dd>{{ proyecto.responsableQaNombre ?? '-' }}</dd>
         </dl>
       </div>
 

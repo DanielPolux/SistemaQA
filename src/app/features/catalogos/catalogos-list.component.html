@@ -1,0 +1,179 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Catálogos del Sistema</h2>
+    <div class="header-actions">
+      @if (auth.esAdmin()) {
+        <button class="btn btn-primary" (click)="abrirNuevo()">+ Nuevo Ítem</button>
+      }
+    </div>
+  </div>
+
+  <div class="catalogo-layout">
+
+    <!-- ─── Panel izquierdo: grupos ─────────────────────────────────────── -->
+    <aside class="catalogo-sidebar">
+      <div class="catalogo-sidebar-title">Grupos</div>
+      @if (cargandoGrupos()) {
+        <div class="loading">Cargando...</div>
+      } @else {
+        <ul class="grupo-list">
+          @for (g of grupos; track g.grupo) {
+            <li class="grupo-item" [class.activo]="grupoActivo === g.grupo" (click)="seleccionarGrupo(g.grupo)">
+              <span class="grupo-nombre">{{ etiquetaGrupo(g.grupo) }}</span>
+              <span class="grupo-badge">{{ g.activos }}/{{ g.total }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <!-- ─── Panel derecho: ítems del grupo ──────────────────────────────── -->
+    <div class="catalogo-content">
+      @if (!grupoActivo) {
+        <div class="catalogo-placeholder">
+          <p>Selecciona un grupo para ver sus valores.</p>
+        </div>
+      } @else if (cargandoItems()) {
+        <div class="loading">Cargando ítems...</div>
+      } @else {
+        <div class="catalogo-content-header">
+          <h3>{{ etiquetaGrupo(grupoActivo) }}</h3>
+          <span class="tag-codigo">{{ grupoActivo }}</span>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:60px">Orden</th>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th style="width:90px">Estado</th>
+              <th style="width:70px">Sistema</th>
+              @if (auth.esAdmin()) {
+                <th style="width:110px">Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items; track item.id) {
+              <tr [class.row-inactivo]="!item.activo">
+                <td class="text-center">{{ item.orden }}</td>
+                <td><code class="tag-codigo">{{ item.codigo }}</code></td>
+                <td>{{ item.nombre }}</td>
+                <td class="text-muted">{{ item.descripcion || '—' }}</td>
+                <td>
+                  @if (item.activo) {
+                    <span class="badge badge-activo">Activo</span>
+                  } @else {
+                    <span class="badge badge-inactivo">Inactivo</span>
+                  }
+                </td>
+                <td class="text-center">
+                  @if (item.sistema) {
+                    <span title="Ítem del sistema — no eliminable">🔒</span>
+                  }
+                </td>
+                @if (auth.esAdmin()) {
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-secondary" (click)="abrirEditar(item)" title="Editar">Editar</button>
+                      <button class="btn btn-sm btn-toggle"
+                              [title]="item.activo ? 'Desactivar' : 'Activar'"
+                              (click)="toggleActivo(item)">
+                        {{ item.activo ? 'Desact.' : 'Activar' }}
+                      </button>
+                      @if (!item.sistema) {
+                        <button class="btn btn-sm btn-danger" (click)="abrirEliminar(item)" title="Eliminar">✕</button>
+                      }
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal Nuevo / Editar ────────────────────────────────────────────── -->
+@if (modalAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ editandoId ? 'Editar Ítem' : 'Nuevo Ítem de Catálogo' }}</h3>
+        <button class="modal-close" (click)="cerrarModal()">✕</button>
+      </div>
+
+      <div class="modal-body" [formGroup]="form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Grupo <span class="required">*</span></label>
+            <input type="text" formControlName="grupo" placeholder="Ej: ESTADO_DEFECTO" />
+          </div>
+          <div class="form-group form-group--sm">
+            <label>Orden</label>
+            <input type="number" formControlName="orden" min="0" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Código <span class="required">*</span></label>
+            <input type="text" formControlName="codigo" placeholder="Ej: En Progreso" />
+            <small class="field-hint">Valor exacto que usa el sistema internamente.</small>
+          </div>
+          <div class="form-group">
+            <label>Nombre <span class="required">*</span></label>
+            <input type="text" formControlName="nombre" placeholder="Ej: En Progreso" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea formControlName="descripcion" rows="3" placeholder="Explica cuándo se usa este valor..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="activo" />
+            Activo
+          </label>
+        </div>
+
+        @if (errorModal) {
+          <div class="alert-error">{{ errorModal }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid || guardando()">
+          {{ guardando() ? 'Guardando...' : (editandoId ? 'Guardar Cambios' : 'Crear Ítem') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Modal Confirmar Eliminar ─────────────────────────────────────────── -->
+@if (modalEliminarAbierto()) {
+  <div class="modal-overlay" (click)="cerrarEliminar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirmar eliminación</h3>
+        <button class="modal-close" (click)="cerrarEliminar()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Eliminar el ítem <strong>{{ eliminandoItem?.nombre }}</strong> del grupo <strong>{{ eliminandoItem?.grupo }}</strong>?</p>
+        <p class="text-muted" style="margin-top:0.5rem; font-size:0.85rem">Esta acción no puede deshacerse. Solo aplica a ítems no-sistema.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarEliminar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

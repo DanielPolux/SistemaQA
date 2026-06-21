@@ -1,0 +1,162 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="page-header-info">
+      <h2>Reportes de Proyecto</h2>
+    </div>
+  </div>
+
+  <!-- Selector de proyecto -->
+  <div class="reporte-selector">
+    <label class="form-label">Selecciona un proyecto</label>
+    <div class="reporte-selector-row">
+      <select class="form-control reporte-select" [(ngModel)]="proyectoId" (change)="seleccionarProyecto()">
+        <option [ngValue]="null" disabled>-- Elige un proyecto --</option>
+        @for (p of proyectos; track p.id) {
+          <option [ngValue]="p.id">{{ p.codigo }} · {{ p.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Estado de carga / error -->
+  @if (cargando()) {
+    <div class="loading">Generando reporte...</div>
+  } @else if (error()) {
+    <div class="empty-state"><p>{{ error() }}</p></div>
+  } @else if (!datos()) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver sus estadísticas y gráficas.</p>
+    </div>
+  }
+
+  @if (datos(); as d) {
+
+    <!-- Encabezado del proyecto -->
+    <div class="reporte-header">
+      <span class="tag-codigo">{{ d.proyecto.codigo }}</span>
+      <h3>{{ d.proyecto.nombre }}</h3>
+      <span class="detail-cliente">{{ d.proyecto.cliente }}</span>
+      <span class="badge">{{ d.proyecto.estado }}</span>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="stats-grid reporte-kpis">
+      <div class="stat-card">
+        <span class="stat-value">{{ d.resumen.casosTotales }}</span>
+        <span class="stat-label">Casos de Prueba</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ d.resumen.casosEjecutados }}</span>
+        <span class="stat-label">Ejecutados</span>
+      </div>
+      <div class="stat-card stat-card--success">
+        <span class="stat-value">{{ d.resumen.porcentajeAvance }}%</span>
+        <span class="stat-label">Avance</span>
+      </div>
+      <div class="stat-card stat-card--success">
+        <span class="stat-value">{{ d.resumen.porcentajeAprobacion }}%</span>
+        <span class="stat-label">Aprobación</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ d.resumen.totalDefectos }}</span>
+        <span class="stat-label">Defectos Totales</span>
+      </div>
+      <div class="stat-card stat-card--alert">
+        <span class="stat-value">{{ d.resumen.defectosAbiertos }}</span>
+        <span class="stat-label">Defectos Abiertos</span>
+      </div>
+    </div>
+
+    <!-- Barras de avance -->
+    <div class="detail-section">
+      <div class="avance-header">
+        <h4>Avance de ejecución</h4>
+        <span class="avance-pct">{{ d.resumen.porcentajeAvance }}%</span>
+      </div>
+      <div class="progress-bar progress-bar--lg">
+        <div class="progress-fill" [style.width.%]="d.resumen.porcentajeAvance"></div>
+      </div>
+      <div class="avance-header" style="margin-top: 12px">
+        <h4>Tasa de aprobación</h4>
+        <span class="avance-pct" style="color: #28a745">{{ d.resumen.porcentajeAprobacion }}%</span>
+      </div>
+      <div class="progress-bar progress-bar--lg">
+        <div class="progress-fill progress-fill--success" [style.width.%]="d.resumen.porcentajeAprobacion"></div>
+      </div>
+    </div>
+
+    <!-- Fila 1: Casos por estado + Resultados de ejecución -->
+    <div class="reporte-charts-grid">
+      <div class="detail-section reporte-chart-card">
+        <h4>Casos de Prueba por Estado</h4>
+        @if (d.casosPorEstado.length > 0) {
+          <div class="chart-wrapper">
+            <canvas #chartCasosEstado></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin datos</p>
+        }
+      </div>
+      <div class="detail-section reporte-chart-card">
+        <h4>Resultados de Ejecución</h4>
+        @if (d.resultadosEjecucion.length > 0) {
+          <div class="chart-wrapper">
+            <canvas #chartResultados></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin ejecuciones registradas</p>
+        }
+      </div>
+    </div>
+
+    <!-- Fila 2: Defectos por severidad + Defectos por estado -->
+    <div class="reporte-charts-grid">
+      <div class="detail-section reporte-chart-card">
+        <h4>Defectos por Severidad</h4>
+        @if (d.defectosPorSeveridad.length > 0) {
+          <div class="chart-wrapper">
+            <canvas #chartDefSeveridad></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin defectos</p>
+        }
+      </div>
+      <div class="detail-section reporte-chart-card">
+        <h4>Defectos por Estado</h4>
+        @if (d.defectosPorEstado.length > 0) {
+          <div class="chart-wrapper">
+            <canvas #chartDefEstado></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin defectos</p>
+        }
+      </div>
+    </div>
+
+    <!-- Fila 3: Defectos por prioridad + Avance por ciclo -->
+    <div class="reporte-charts-grid">
+      <div class="detail-section reporte-chart-card">
+        <h4>Defectos por Prioridad</h4>
+        @if (d.defectosPorPrioridad.length > 0) {
+          <div class="chart-wrapper">
+            <canvas #chartDefPrioridad></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin defectos</p>
+        }
+      </div>
+      <div class="detail-section reporte-chart-card reporte-chart-card--wide">
+        <h4>Resultados por Ciclo de Prueba</h4>
+        @if (d.avancePorCiclo.length > 0) {
+          <div class="chart-wrapper chart-wrapper--tall">
+            <canvas #chartAvanceCiclos></canvas>
+          </div>
+        } @else {
+          <p class="chart-empty">Sin ciclos con ejecuciones</p>
+        }
+      </div>
+    </div>
+
+  }
+</div>

@@ -1,0 +1,214 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Ciclos de Prueba</h2>
+    @if (auth.puedeEditar()) {
+      <button class="btn btn-primary" (click)="abrirModalNuevo()">+ Nuevo Ciclo</button>
+    }
+  </div>
+
+  <div class="filters">
+    <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
+      <option [ngValue]="undefined">Todos los proyectos</option>
+      @for (p of proyectos; track p.id) {
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+      }
+    </select>
+    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+      <option value="">Todos los estados</option>
+      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+    </select>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando ciclos...</div>
+  } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Proyecto</th>
+          <th>Estado</th>
+          <th>Fecha Inicio</th>
+          <th>Fecha Fin</th>
+          <th>Ejecuciones</th>
+          <th>Creado Por</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of ciclos; track c.id) {
+          <tr>
+            <td><strong>{{ c.nombre }}</strong>
+              @if (c.descripcion) {
+                <br><small class="text-muted">{{ c.descripcion }}</small>
+              }
+            </td>
+            <td>
+              @if (c.proyectoCodigo) { <span class="tag-codigo">{{ c.proyectoCodigo }}</span> }
+              {{ c.proyectoNombre }}
+            </td>
+            <td>
+              <span class="badge {{ estadoClase[c.estado] }}">{{ c.estado }}</span>
+            </td>
+            <td>{{ c.fechaInicio ? (c.fechaInicio | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ c.fechaFin    ? (c.fechaFin    | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="td-center">
+              <span class="badge badge-version">{{ c.totalEjecuciones ?? 0 }}</span>
+            </td>
+            <td>{{ c.creadoPorNombre ?? '—' }}</td>
+            <td class="actions">
+              @if (auth.puedeEjecutar() && c.estado === 'Activo') {
+                <button class="btn btn-sm btn-icon btn-ejecutar"
+                        title="Ejecutar casos del ciclo"
+                        (click)="ejecutarCiclo(c)">
+                  <i class="bi bi-play-circle-fill"></i>
+                </button>
+              }
+              @if (auth.puedeEditar()) {
+                <a [routerLink]="['/ciclos', c.id, 'editar']"
+                   class="btn btn-sm btn-icon btn-warning" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                @if (c.estado === 'Activo') {
+                  <button class="btn btn-sm btn-icon btn-secondary" title="Cerrar ciclo"
+                          (click)="cerrar(c)">
+                    <i class="bi bi-lock"></i>
+                  </button>
+                } @else {
+                  <button class="btn btn-sm btn-icon btn-info" title="Reabrir ciclo"
+                          (click)="reabrir(c)">
+                    <i class="bi bi-unlock"></i>
+                  </button>
+                }
+                @if ((c.totalEjecuciones ?? 0) === 0) {
+                  <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                          (click)="eliminar(c.id, c.nombre)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-row">No se encontraron ciclos de prueba</td></tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ ciclos.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ─── Modal pre-validación Nuevo Ciclo ────────────────────────────────── -->
+@if (modalNuevoAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModalNuevo()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🔄</span>
+          <h3 class="modal-title">Nuevo Ciclo de Prueba</h3>
+        </div>
+        <button class="modal-close" (click)="cerrarModalNuevo()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Proyecto *</label>
+          <select [ngModel]="proyectoSelId" (ngModelChange)="onProyectoNuevoChange($event)">
+            <option [ngValue]="null">Seleccionar proyecto...</option>
+            @for (p of proyectos; track p.id) {
+              <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }} ({{ p.estado }})</option>
+            }
+          </select>
+        </div>
+
+        @if (validandoProyecto) {
+          <p class="field-hint" style="margin-top:8px">Verificando requisitos del proyecto...</p>
+        }
+
+        @if (!validandoProyecto && proyectoSelId && erroresPrevia.length > 0) {
+          <div class="alert alert-warning" style="margin-top:12px">
+            <strong>No es posible crear un ciclo para este proyecto:</strong>
+            <ul style="margin:6px 0 0 16px; padding:0">
+              @for (e of erroresPrevia; track e) {
+                <li>{{ e }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (!validandoProyecto && proyectoSelId && puedeContinuar) {
+          <div class="alert alert-success" style="margin-top:12px">
+            El proyecto cumple todos los requisitos. Puedes continuar.
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModalNuevo()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="!puedeContinuar" (click)="continuarNuevoCiclo()">
+          Continuar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (popupBloqueoAbierto()) {
+  <div class="modal-overlay" (click)="cerrarPopupBloqueo()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--warning">
+        <div class="modal-title-group">
+          <span class="modal-icon">⚠️</span>
+          <h3 class="modal-title">No se puede ejecutar el ciclo</h3>
+        </div>
+        <button class="modal-close" (click)="cerrarPopupBloqueo()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0; line-height:1.6">{{ popupBloqueoMsg }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="cerrarPopupBloqueo()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <h3 class="modal-title">Eliminar ciclo</h3>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Eliminar el ciclo <strong>{{ confirmPendiente.nombre }}</strong>?</p>
+        <p class="confirm-sub">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

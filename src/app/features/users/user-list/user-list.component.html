@@ -39,10 +39,17 @@
             </td>
             <td>{{ u.creadoEn | date:'dd/MM/yyyy' }}</td>
             <td class="actions">
-              <a [routerLink]="['/usuarios', u.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
-              <button class="btn btn-sm" [class.btn-danger]="u.activo" [class.btn-success]="!u.activo"
+              <a [routerLink]="['/usuarios', u.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button class="btn btn-sm btn-icon" title="{{ u.activo ? 'Desactivar' : 'Activar' }}"
+                [class.btn-secondary]="u.activo" [class.btn-success]="!u.activo"
                 (click)="cambiarEstado(u)">
-                {{ u.activo ? 'Desactivar' : 'Activar' }}
+                <i class="bi" [class.bi-person-slash]="u.activo" [class.bi-person-check]="!u.activo"></i>
+              </button>
+              <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                (click)="eliminar(u.id, u.nombre + ' ' + u.apellido)">
+                <i class="bi bi-trash"></i>
               </button>
             </td>
           </tr>
@@ -51,5 +58,46 @@
         }
       </tbody>
     </table>
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ usuarios.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                (click)="cambiarPagina($index + 1)">{{ $index + 1 }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>
+
+<!-- ─── Modal Confirmación Eliminar ─────────────────────────────────────── -->
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <div><h3 class="modal-title">Eliminar usuario</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Estás seguro de que deseas eliminar al usuario <strong>{{ confirmPendiente.nombre }}</strong>?</p>
+        <p class="confirm-sub">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

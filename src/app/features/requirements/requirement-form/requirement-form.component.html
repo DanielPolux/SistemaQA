@@ -1,23 +1,56 @@
 <div class="page-container">
   <div class="page-header">
     <h2>{{ esEdicion ? 'Editar Requerimiento' : 'Nuevo Requerimiento' }}</h2>
-    <a routerLink="/requerimientos" class="btn btn-secondary">Cancelar</a>
+    <a routerLink="/requerimientos"
+       [queryParams]="proyectoIdActual ? { proyectoId: proyectoIdActual } : {}"
+       class="btn btn-secondary">Cancelar</a>
   </div>
 
   @if (error) { <div class="alert alert-error">{{ error }}</div> }
 
+  @if (guardadoId) {
+    <div class="success-screen">
+      <div class="success-icon-circle">✓</div>
+      <h3 class="success-title">¡Requerimiento creado exitosamente!</h3>
+      <p class="success-subtitle">
+        <span class="tag-codigo">{{ guardadoCodigo }}</span> {{ guardadoTitulo }}
+      </p>
+      <div class="alert alert-info success-next-msg">
+        <strong>Próximo paso:</strong> Ahora debes generar al menos un <strong>caso de prueba</strong> asociado a este requerimiento para poder incluirlo en un ciclo de pruebas.
+      </div>
+      <div class="success-actions">
+        <a [routerLink]="['/casos-prueba/nuevo']"
+           [queryParams]="{ requerimientoId: guardadoId, proyectoId: proyectoIdActual }"
+           class="btn btn-primary">
+          + Crear Caso de Prueba
+        </a>
+        <a routerLink="/requerimientos"
+           [queryParams]="proyectoIdActual ? { proyectoId: proyectoIdActual } : {}"
+           class="btn btn-outline">
+          Ver Requerimientos
+        </a>
+      </div>
+    </div>
+  }
+
+  @if (!guardadoId) {
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
     <div class="form-row">
       <div class="form-group">
         <label>Proyecto *</label>
-        <select formControlName="proyectoId">
-          <option [value]="null">Seleccionar...</option>
-          @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
-        </select>
+        @if (proyectoFijo) {
+          <input type="text" [value]="proyectoNombre" readonly class="input-readonly" />
+        } @else {
+          <select formControlName="proyectoId">
+            <option [value]="null">Seleccionar...</option>
+            @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+          </select>
+        }
       </div>
       <div class="form-group form-group--sm">
-        <label>Código *</label>
-        <input type="text" formControlName="codigo" placeholder="REQ-001" />
+        <label>Código RF</label>
+        <input type="text" formControlName="codigo" class="input-readonly" readonly
+          [placeholder]="esEdicion ? '' : 'Auto (RF-01, RF-02…)'" />
       </div>
     </div>
 
@@ -63,4 +96,5 @@
       </button>
     </div>
   </form>
+  }
 </div>

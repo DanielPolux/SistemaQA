@@ -29,7 +29,7 @@ export class LoginComponent {
     this.error = '';
 
     this.auth.login(this.form.value as any).subscribe({
-      next: () => this.router.navigate(['/proyectos']),
+      next: () => this.router.navigate(['/dashboard']),
       error: (err) => {
         this.error = err.error?.message || 'Credenciales inválidas';
         this.cargando = false;

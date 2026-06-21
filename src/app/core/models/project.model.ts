@@ -1,11 +1,19 @@
+export interface DocumentoRequerimiento {
+  itemId: string;
+  nombre: string;
+  url: string;
+  tamano: number;
+  subidoEn: string;
+}
+
 export enum EstadoProyecto {
-  POR_ESTIMAR = 'Por estimar',
-  ESTIMADO = 'Estimado',
-  PLANIFICADO = 'Planificado',
-  EN_EJECUCION = 'En ejecución',
-  OBSERVADO = 'Observado',
-  EN_PRODUCCION = 'En producción',
-  FINALIZADO = 'Finalizado'
+  POR_ESTIMAR   = 'Por estimar',
+  ESTIMADO      = 'Estimado',
+  OBSERVADO     = 'Observado',
+  PLANIFICADO   = 'Planificado',
+  EN_EJECUCION  = 'En Ejecución',
+  FINALIZADO    = 'Finalizado',
+  EN_PRODUCCION = 'En Produccion',
 }
 
 export interface Proyecto {
@@ -18,18 +26,18 @@ export interface Proyecto {
   sistema?: string;         // Sistema
 
   // Responsables
-  responsableQAId?: number;
-  responsableQANombre?: string;    // Responsable QA
+  responsableQaId?: number;
+  responsableQaNombre?: string;    // Responsable QA
   jefeProyectoId: number;
   jefeProyectoNombre?: string;     // Jefe de Proyecto (requerido)
-  jefeQAId: number;
-  jefeQANombre?: string;           // Jefe QA (requerido)
+  jefeQaId: number;
+  jefeQaNombre?: string;           // Jefe QA (requerido)
 
   // Estado y avance
   estado: EstadoProyecto;          // Estado (requerido)
-  iteracion?: number;              // Iteración
-  porcentajeAvance: number;        // % Avance (requerido)
-  horasQA?: number;                // HorasQA
+  porcentajeAvance: number;        // % casos ejecutados / total
+  porcentajeAprobacion?: number;   // % casos aprobados / ejecutados
+  horasQa?: number;                // HorasQA
 
   // Fechas planificadas
   fechaEstimacion?: Date;          // Fecha estimacion
@@ -42,7 +50,9 @@ export interface Proyecto {
 
   // Otros
   repositorioUrl?: string;         // Repositorio URL
+  documentoUrl?: string;           // URL documento estimación / planificación
   notas?: string;                  // Notas
+  documentosRequerimientos?: DocumentoRequerimiento[];
 
   // Auditoría (SharePoint las genera automáticamente)
   creadoEn: Date;

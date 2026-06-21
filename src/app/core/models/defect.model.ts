@@ -43,6 +43,7 @@ export interface Defecto {
   casoPruebaCodigo?: string;
   requerimientoId?: number;
   codigo: string;
+  codigoProyecto?: string;
   titulo: string;
   descripcion: string;
   pasosReproduccion: string;
@@ -61,6 +62,7 @@ export interface Defecto {
   actualizadoEn: Date;
   fechaResolucion?: Date;
   estadoDesarrollo?: EstadoDesarrollo | null;
+  comentariosDesarrollo?: string | null;
   comentarios?: ComentarioDefecto[];
 }
 

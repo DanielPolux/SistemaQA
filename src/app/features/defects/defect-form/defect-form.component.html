@@ -6,29 +6,50 @@
 
   @if (error) { <div class="alert alert-error">{{ error }}</div> }
 
+  @if (esSoloDesarrollo && !soloLectura) {
+    <div class="alert alert-info" style="margin-bottom:16px">
+      <i class="bi bi-info-circle-fill"></i>
+      Solo puedes actualizar el <strong>Estado Desarrollo</strong> y los <strong>Comentarios Desarrollo</strong>. Los demás campos son de solo lectura.
+    </div>
+  }
+  @if (soloLectura) {
+    <div class="alert alert-warning" style="margin-bottom:16px">
+      <i class="bi bi-lock-fill"></i>
+      @if (form.getRawValue().estado === 'En Revisión') {
+        Ya respondiste este defecto. El tester está verificando la corrección. <strong>Solo lectura.</strong>
+      } @else {
+        Este defecto está <strong>{{ form.getRawValue().estado }}</strong>. Solo lectura.
+      }
+    </div>
+  }
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
     <div class="form-row">
       <div class="form-group">
         <label>Proyecto *</label>
-        <select formControlName="proyectoId">
-          <option [value]="null">Seleccionar...</option>
-          @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
-        </select>
+        @if (casoFijo) {
+          <input type="text" [value]="proyectoNombreFijo" readonly class="input-readonly" />
+        } @else {
+          <select formControlName="proyectoId">
+            <option [value]="null">Seleccionar...</option>
+            @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+          </select>
+        }
       </div>
       <div class="form-group">
         <label>Caso de Prueba *</label>
-        <select formControlName="casoPruebaId">
-          <option [value]="null">Seleccionar...</option>
-          @for (c of casosPrueba; track c.id) { <option [value]="c.id">{{ c.codigo }} - {{ c.nombre }}</option> }
-        </select>
+        @if (casoFijo) {
+          <input type="text" [value]="casoNombreFijo" readonly class="input-readonly" />
+        } @else {
+          <select formControlName="casoPruebaId">
+            <option [value]="null">Seleccionar...</option>
+            @for (c of casosPrueba; track c.id) { <option [value]="c.id">{{ c.codigo }} - {{ c.nombre }}</option> }
+          </select>
+        }
       </div>
     </div>
 
     <div class="form-row">
-      <div class="form-group form-group--sm">
-        <label>Código *</label>
-        <input type="text" formControlName="codigo" placeholder="DEF-001" />
-      </div>
       <div class="form-group">
         <label>Título *</label>
         <input type="text" formControlName="titulo" />
@@ -90,18 +111,46 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Asignado A</label>
-      <select formControlName="asignadoA">
-        <option [value]="null">Sin asignar</option>
-        @for (u of usuarios; track u.id) { <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option> }
-      </select>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Asignado A</label>
+        <select formControlName="asignadoA">
+          <option [value]="null">Sin asignar</option>
+          @for (u of usuarios; track u.id) { <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option> }
+        </select>
+      </div>
+      @if (esEdicion && auth.puedeGestionarDesarrollo()) {
+        <div class="form-group">
+          <label>Estado Desarrollo</label>
+          <select formControlName="estadoDesarrollo">
+            <option [value]="null">— Sin actualizar —</option>
+            @for (ed of estadosDesarrollo; track ed) { <option [value]="ed">{{ ed }}</option> }
+          </select>
+        </div>
+      }
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
-        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Reportar Defecto') }}
-      </button>
-    </div>
+    @if (esEdicion && auth.puedeGestionarDesarrollo()) {
+      <div class="form-group">
+        <label>Comentarios Desarrollo</label>
+        <textarea formControlName="comentariosDesarrollo" rows="3"
+          placeholder="Notas del desarrollador sobre la atención de este defecto..."></textarea>
+      </div>
+    }
+
+    @if (!soloLectura) {
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+          {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Reportar Defecto') }}
+        </button>
+        @if (soloLectura || esSoloDesarrollo) {
+          <a routerLink="/defectos" class="btn btn-secondary">Volver</a>
+        }
+      </div>
+    } @else {
+      <div class="form-actions">
+        <a routerLink="/defectos" class="btn btn-secondary">Volver a Defectos</a>
+      </div>
+    }
   </form>
 </div>

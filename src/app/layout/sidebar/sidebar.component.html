@@ -1,37 +1,98 @@
 <nav class="sidebar">
   <div class="sidebar-divider"></div>
+
+  <p class="sidebar-section-label">Principal</p>
   <ul class="sidebar-menu">
     <li>
-      <a routerLink="/proyectos" routerLinkActive="active">
-        <span class="menu-icon">📁</span>
-        <span class="menu-label">Proyectos</span>
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <i class="bi bi-grid-1x2-fill menu-icon"></i>
+        <span class="menu-label">Dashboard</span>
       </a>
     </li>
-    <li>
-      <a routerLink="/requerimientos" routerLinkActive="active">
-        <span class="menu-icon">📋</span>
-        <span class="menu-label">Requerimientos</span>
-      </a>
-    </li>
-    <li>
-      <a routerLink="/casos-prueba" routerLinkActive="active">
-        <span class="menu-icon">🧪</span>
-        <span class="menu-label">Casos de Prueba</span>
-      </a>
-    </li>
+  </ul>
+
+  @if (!auth.esDesarrollador()) {
+    <p class="sidebar-section-label">Gestión QA</p>
+    <ul class="sidebar-menu">
+      <li>
+        <a routerLink="/proyectos" routerLinkActive="active">
+          <i class="bi bi-folder2-open menu-icon"></i>
+          <span class="menu-label">Proyectos</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/requerimientos" routerLinkActive="active">
+          <i class="bi bi-card-checklist menu-icon"></i>
+          <span class="menu-label">Requerimientos</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/casos-prueba" routerLinkActive="active">
+          <i class="bi bi-ui-checks menu-icon"></i>
+          <span class="menu-label">Casos de Prueba</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/planes-prueba" routerLinkActive="active">
+          <i class="bi bi-journal-check menu-icon"></i>
+          <span class="menu-label">Planes de Prueba</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/ciclos" routerLinkActive="active">
+          <i class="bi bi-arrow-repeat menu-icon"></i>
+          <span class="menu-label">Ciclos de Prueba</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/ejecuciones" routerLinkActive="active">
+          <i class="bi bi-play-circle menu-icon"></i>
+          <span class="menu-label">Ejecuciones</span>
+        </a>
+      </li>
+    </ul>
+  }
+
+  <ul class="sidebar-menu">
     <li>
       <a routerLink="/defectos" routerLinkActive="active">
-        <span class="menu-icon">🐛</span>
+        <i class="bi bi-bug menu-icon"></i>
         <span class="menu-label">Defectos</span>
       </a>
     </li>
-    @if (auth.esAdmin()) {
-    <li>
-      <a routerLink="/usuarios" routerLinkActive="active">
-        <span class="menu-icon">👥</span>
-        <span class="menu-label">Usuarios</span>
-      </a>
-    </li>
-    }
   </ul>
+
+  @if (auth.puedeVerReportes()) {
+    <p class="sidebar-section-label">Análisis</p>
+    <ul class="sidebar-menu">
+      <li>
+        <a routerLink="/reportes" routerLinkActive="active">
+          <i class="bi bi-bar-chart-fill menu-icon"></i>
+          <span class="menu-label">Reportes</span>
+        </a>
+      </li>
+    </ul>
+  }
+
+  @if (auth.esAdmin()) {
+    <p class="sidebar-section-label">Configuración</p>
+    <ul class="sidebar-menu">
+      <li>
+        <a routerLink="/usuarios" routerLinkActive="active">
+          <i class="bi bi-people-fill menu-icon"></i>
+          <span class="menu-label">Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/catalogos" routerLinkActive="active">
+          <i class="bi bi-collection-fill menu-icon"></i>
+          <span class="menu-label">Catálogos</span>
+        </a>
+      </li>
+    </ul>
+  }
+
+  <div class="sidebar-footer">
+    v2.0 &nbsp;·&nbsp; Sistema QA
+  </div>
 </nav>

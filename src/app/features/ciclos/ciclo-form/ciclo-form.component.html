@@ -1,0 +1,144 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ esEdicion ? 'Editar Ciclo de Prueba' : 'Nuevo Ciclo de Prueba' }}</h2>
+    <a routerLink="/ciclos" class="btn btn-secondary">Cancelar</a>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Proyecto *</label>
+        <select formControlName="proyectoId">
+          <option [value]="null">Seleccionar proyecto...</option>
+          @for (p of proyectos; track p.id) {
+            <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }} ({{ p.estado }})</option>
+          }
+        </select>
+        @if (errorEstado) {
+          <span class="field-error">{{ errorEstado }}</span>
+        }
+        @if (verificandoReqs) {
+          <span class="field-hint">Verificando requerimientos...</span>
+        }
+        @if (errorRequerimientos) {
+          <span class="field-error">{{ errorRequerimientos }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Plan de Pruebas (opcional)</label>
+      <select formControlName="planPruebaId">
+        <option [ngValue]="null">Sin plan asignado</option>
+        @for (p of planes; track p.id) {
+          <option [ngValue]="p.id">{{ p.nombre }} — {{ p.proyectoNombre }}</option>
+        }
+      </select>
+      <span class="field-hint">Asocia este ciclo a un plan para agruparlo en el reporte.</span>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre del Ciclo *</label>
+        <input type="text" formControlName="nombre"
+               placeholder="Ej: Sprint 3 – Regresión, Ciclo UAT, Smoke Test v2.1..." />
+      </div>
+      <div class="form-group">
+        <label>Ambiente *</label>
+        <select formControlName="ambiente">
+          <option value="">Seleccionar ambiente...</option>
+          @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea formControlName="descripcion" rows="2"
+                placeholder="Objetivos o alcance del ciclo..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha de Inicio</label>
+        <input type="date" formControlName="fechaInicio" />
+      </div>
+      <div class="form-group">
+        <label>Fecha de Fin Estimada</label>
+        <input type="date" formControlName="fechaFin" />
+      </div>
+    </div>
+
+    <!-- Checklist de casos previos (solo en creación) -->
+    @if (!esEdicion) {
+      @if (cargandoCasos) {
+        <div class="casos-historial-loading">Cargando casos del historial...</div>
+      } @else if (tieneHistorial) {
+        <div class="casos-historial">
+          <h4 class="casos-historial-titulo">Casos de Prueba del Ciclo Anterior</h4>
+          <p class="casos-historial-desc">
+            Selecciona los casos que serán planificados en este nuevo ciclo.
+          </p>
+
+          <!-- Requieren re-ejecución: Fallido / Bloqueado / Omitido (pre-checked) -->
+          @if (casosReejecucion.length > 0) {
+            <div class="casos-grupo">
+              <div class="casos-grupo-header">
+                <span class="casos-grupo-titulo">Requieren re-ejecución</span>
+                <span class="casos-grupo-subtitulo">Fallido / Bloqueado / Omitido — marcados por defecto</span>
+              </div>
+              @for (caso of casosReejecucion; track caso.id) {
+                <label class="caso-check" [class.caso-check--selected]="seleccionados.has(caso.id)">
+                  <input type="checkbox"
+                         [checked]="seleccionados.has(caso.id)"
+                         (change)="toggleCaso(caso.id)" />
+                  <div class="caso-check-info">
+                    <span class="caso-check-codigo">{{ caso.codigo }}</span>
+                    <span class="caso-check-nombre">{{ caso.nombre }}</span>
+                    <span class="caso-check-ciclo">{{ caso.cicloNombre }}</span>
+                  </div>
+                  <span class="badge {{ badgeResultado(caso.resultado) }}">{{ caso.resultado }}</span>
+                </label>
+              }
+            </div>
+          }
+
+          <!-- Casos aprobados (sin check por defecto, opcional agregarlos) -->
+          @if (casosAprobados.length > 0) {
+            <div class="casos-grupo">
+              <div class="casos-grupo-header">
+                <span class="casos-grupo-titulo">Casos aprobados</span>
+                <span class="casos-grupo-subtitulo">Opcionales — desmarcados por defecto</span>
+              </div>
+              @for (caso of casosAprobados; track caso.id) {
+                <label class="caso-check" [class.caso-check--selected]="seleccionados.has(caso.id)">
+                  <input type="checkbox"
+                         [checked]="seleccionados.has(caso.id)"
+                         (change)="toggleCaso(caso.id)" />
+                  <div class="caso-check-info">
+                    <span class="caso-check-codigo">{{ caso.codigo }}</span>
+                    <span class="caso-check-nombre">{{ caso.nombre }}</span>
+                    <span class="caso-check-ciclo">{{ caso.cicloNombre }}</span>
+                  </div>
+                  <span class="badge {{ badgeResultado(caso.resultado) }}">{{ caso.resultado }}</span>
+                </label>
+              }
+            </div>
+          }
+
+          <div class="casos-historial-resumen">
+            {{ seleccionados.size }} caso{{ seleccionados.size !== 1 ? 's' : '' }} seleccionado{{ seleccionados.size !== 1 ? 's' : '' }}
+          </div>
+        </div>
+      }
+    }
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando || !proyectoValido">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Ciclo') }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,258 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>Ejecuciones de Casos de Prueba</h2>
+    <span class="text-muted">Historial completo de ejecuciones</span>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-wrapper">
+    <div class="filters-row">
+      <div class="filter-field filter-field--wide">
+        <label class="filter-label">Proyecto</label>
+        <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
+          <option [ngValue]="undefined">Todos los proyectos</option>
+          @for (p of proyectos; track p.id) {
+            <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Resultado</label>
+        <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
+          <option value="">Todos</option>
+          @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Ambiente</label>
+        <select [(ngModel)]="ambienteFiltro" (change)="buscar()">
+          <option value="">Todos</option>
+          @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Tester</label>
+        <select [(ngModel)]="testerFiltroId" (change)="buscar()">
+          <option [value]="undefined">Todos</option>
+          @for (u of usuarios; track u.id) {
+            <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+          }
+        </select>
+      </div>
+
+      <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()">✕ Limpiar</button>
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="loading">Cargando ejecuciones...</div>
+  } @else {
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Caso de Prueba</th>
+            <th>Proyecto</th>
+            <th>Ciclo</th>
+            <th>Tester</th>
+            <th>Fecha</th>
+            <th>Ambiente</th>
+            <th>Versión</th>
+            <th>Resultado</th>
+            <th>Defecto</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of ejecuciones; track e.id) {
+            <tr>
+              <td class="td-center text-muted">{{ e.id }}</td>
+              <td class="td-nombre">
+                @if (e.casoPruebaCodigo) {
+                  <span class="tag-codigo">{{ e.casoPruebaCodigo }}</span>
+                }
+                {{ e.casoPruebaNombre }}
+              </td>
+              <td>
+                @if (e.proyectoCodigo) {
+                  <span class="tag-codigo">{{ e.proyectoCodigo }}</span>
+                }
+              </td>
+              <td>
+                @if (e.cicloNombre) {
+                  <span class="tag-codigo">{{ e.cicloNombre }}</span>
+                } @else { <span class="text-muted">—</span> }
+              </td>
+              <td>{{ e.testerNombre ?? '—' }}</td>
+              <td>{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ e.ambiente }}</td>
+              <td><span class="badge badge-version">{{ e.version }}</span></td>
+              <td>
+                <span class="badge {{ resultadoClase[e.resultado] }}">{{ e.resultado }}</span>
+              </td>
+              <td>
+                @if (e.defectoCodigo) {
+                  <span class="tag-codigo tag-codigo--defecto">{{ e.defectoCodigo }}</span>
+                } @else { <span class="text-muted">—</span> }
+              </td>
+              <td class="actions">
+                <button class="btn btn-sm btn-icon btn-info" title="Ver detalle"
+                        (click)="abrirVer(e)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="11" class="empty-row">No se encontraron ejecuciones</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ ejecuciones.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ─── Modal Ver Ejecución ─────────────────────────────────────────────── -->
+@if (modalVerAbierto() && ejecucionVer) {
+  <div class="modal-overlay" (click)="cerrarVer()">
+    <div class="modal-panel modal-panel--lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon"><i class="bi bi-eye"></i></span>
+          <div>
+            <h3 class="modal-title">Detalle de Ejecución</h3>
+            <p class="modal-subtitle">
+              @if (ejecucionVer.casoPruebaCodigo) {
+                <span class="tag-codigo">{{ ejecucionVer.casoPruebaCodigo }}</span>
+              }
+              {{ ejecucionVer.casoPruebaNombre }}
+            </p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarVer()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-grid">
+
+          <div class="detail-row">
+            <span class="detail-label">Proyecto</span>
+            <span class="detail-value">
+              @if (ejecucionVer.proyectoCodigo) {
+                <span class="tag-codigo">{{ ejecucionVer.proyectoCodigo }}</span>
+              }
+              {{ ejecucionVer.proyectoNombre ?? '—' }}
+            </span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Ciclo de Prueba</span>
+            <span class="detail-value">
+              @if (ejecucionVer.cicloNombre) {
+                <span class="tag-codigo">{{ ejecucionVer.cicloNombre }}</span>
+                <span class="text-muted" style="margin-left:.4rem;">{{ ejecucionVer.cicloEstado }}</span>
+              } @else { <span class="text-muted">—</span> }
+            </span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Tester</span>
+            <span class="detail-value">{{ ejecucionVer.testerNombre ?? '—' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Fecha</span>
+            <span class="detail-value">{{ ejecucionVer.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Ambiente</span>
+            <span class="detail-value">{{ ejecucionVer.ambiente }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Versión</span>
+            <span class="detail-value"><span class="badge badge-version">{{ ejecucionVer.version }}</span></span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Resultado</span>
+            <span class="detail-value">
+              <span class="badge {{ resultadoClase[ejecucionVer.resultado] }}">{{ ejecucionVer.resultado }}</span>
+            </span>
+          </div>
+
+        </div>
+
+        <div class="detail-section">
+          <h4 class="detail-section-title">Resultado Obtenido</h4>
+          <p class="detail-text">{{ ejecucionVer.resultadoObtenido || '—' }}</p>
+        </div>
+
+        @if (ejecucionVer.observaciones) {
+          <div class="detail-section">
+            <h4 class="detail-section-title">Observaciones</h4>
+            <p class="detail-text">{{ ejecucionVer.observaciones }}</p>
+          </div>
+        }
+
+        @if (ejecucionVer.evidenciaUrl) {
+          <div class="detail-section">
+            <h4 class="detail-section-title">Evidencia</h4>
+            <a [href]="ejecucionVer.evidenciaUrl" target="_blank" class="btn btn-sm btn-info">
+              <i class="bi bi-link-45deg"></i> Ver evidencia
+            </a>
+          </div>
+        }
+
+        @if (ejecucionVer.defectoCodigo) {
+          <div class="detail-section">
+            <h4 class="detail-section-title">Defecto Asociado</h4>
+            <div class="detail-grid">
+              <div class="detail-row">
+                <span class="detail-label">Código</span>
+                <span class="detail-value">
+                  <span class="tag-codigo tag-codigo--defecto">{{ ejecucionVer.defectoCodigo }}</span>
+                </span>
+              </div>
+              @if (ejecucionVer.defectoTitulo) {
+                <div class="detail-row">
+                  <span class="detail-label">Título</span>
+                  <span class="detail-value">{{ ejecucionVer.defectoTitulo }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarVer()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+}

@@ -1,60 +1,227 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Requerimientos</h2>
-    @if (auth.puedeEditar()) {
-      <a routerLink="/requerimientos/nuevo" class="btn btn-primary">+ Nuevo Requerimiento</a>
+    @if (auth.puedeEditar() && proyectoId) {
+      <button class="btn btn-primary" (click)="abrirModal()">+ Nuevo Requerimiento</button>
     }
   </div>
 
-  <div class="filters">
-    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar requerimiento..." />
-    <select [(ngModel)]="tipoFiltro" (change)="buscar()">
-      <option value="">Todos los tipos</option>
-      @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+  <!-- Selector de proyecto (paso 1) -->
+  <div class="project-selector">
+    <label for="proyectoFiltro"><strong>Proyecto</strong></label>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="onProyectoChange()" class="select-proyecto">
+      <option [value]="null">— Selecciona un proyecto —</option>
+      @for (p of proyectos; track p.id) {
+        <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+      }
     </select>
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
-    </select>
+    @if (proyectoSeleccionado) {
+      <span class="proyecto-meta">{{ proyectoSeleccionado.cliente }} · {{ proyectoSeleccionado.estado }}</span>
+    }
   </div>
 
-  @if (cargando) {
-    <div class="loading">Cargando requerimientos...</div>
+  @if (!proyectoId) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver y gestionar sus requerimientos.</p>
+    </div>
   } @else {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Título</th>
-          <th>Tipo</th>
-          <th>Prioridad</th>
-          <th>Estado</th>
-          <th>Proyecto</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of requerimientos; track r.id) {
+    <div class="filters">
+      <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar requerimiento..." />
+      <select [(ngModel)]="tipoFiltro" (change)="buscar()">
+        <option value="">Todos los tipos</option>
+        @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+      </select>
+      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+        <option value="">Todos los estados</option>
+        @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+      </select>
+      <button class="btn btn-secondary" (click)="buscar()">Buscar</button>
+    </div>
+
+    @if (cargando) {
+      <div class="loading">Cargando requerimientos...</div>
+    } @else {
+      <table class="data-table">
+        <thead>
           <tr>
-            <td>{{ r.codigo }}</td>
-            <td>{{ r.titulo }}</td>
-            <td>{{ r.tipo }}</td>
-            <td><span class="badge badge-prioridad-{{ r.prioridad | lowercase }}">{{ r.prioridad }}</span></td>
-            <td><span class="badge">{{ r.estado }}</span></td>
-            <td>{{ r.proyectoNombre }}</td>
-            <td class="actions">
-              @if (auth.puedeEditar()) {
-                <a [routerLink]="['/requerimientos', r.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
-              }
-              <a [routerLink]="['/casos-prueba']" [queryParams]="{requerimientoId: r.id}" class="btn btn-sm btn-info">
-                Ver Casos
-              </a>
-            </td>
+            <th>Código</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
-        } @empty {
-          <tr><td colspan="7" class="empty-row">No se encontraron requerimientos</td></tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (r of requerimientos; track r.id) {
+            <tr>
+              <td>{{ r.codigo }}</td>
+              <td>{{ r.titulo }}</td>
+              <td>{{ r.tipo }}</td>
+              <td><span class="badge badge-prioridad-{{ r.prioridad | lowercase }}">{{ r.prioridad }}</span></td>
+              <td><span class="badge">{{ r.estado }}</span></td>
+              <td class="actions">
+                <a routerLink="/casos-prueba"
+                   [queryParams]="{ proyectoId: proyectoId, requerimientoId: r.id }"
+                   class="btn btn-sm btn-icon btn-info" title="Ver casos de prueba">
+                  <i class="bi bi-list-check"></i>
+                </a>
+                @if (auth.puedeEditar()) {
+                  <a [routerLink]="['/requerimientos', r.id, 'editar']"
+                     [queryParams]="{ proyectoId: proyectoId }"
+                     class="btn btn-sm btn-icon btn-warning" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                    (click)="eliminar(r.id, r.titulo)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-row">No hay requerimientos para este proyecto</td></tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="pagination-footer">
+        <span class="pagination-info">{{ requerimientos.length }} de {{ total }} registros</span>
+        <div class="pagination-right">
+          <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+            <option [value]="10">10 / página</option>
+            <option [value]="20">20 / página</option>
+            <option [value]="50">50 / página</option>
+          </select>
+          @if (totalPaginas > 1) {
+            <div class="pagination">
+              @for (p of [].constructor(totalPaginas); track $index) {
+                <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                  (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
   }
 </div>
+
+<!-- ─── Modal Confirmación Eliminar ─────────────────────────────────────── -->
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <div><h3 class="modal-title">Eliminar requerimiento</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Estás seguro de que deseas eliminar el requerimiento <strong>{{ confirmPendiente.nombre }}</strong>?</p>
+        <p class="confirm-sub">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Modal Nuevo Requerimiento ─────────────────────────────────────── -->
+@if (modalAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📋</span>
+          <div>
+            <h3 class="modal-title">Nuevo Requerimiento</h3>
+            @if (proyectoSeleccionado) {
+              <p class="modal-subtitle">{{ proyectoNombreActual() }}</p>
+            }
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModal()">✕</button>
+      </div>
+
+      <div class="modal-body" [formGroup]="form">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Código <span class="req">*</span></label>
+            <input type="text" formControlName="codigo" placeholder="Ej: RF-001" />
+            @if (form.get('codigo')?.invalid && form.get('codigo')?.touched) {
+              <span class="field-error">Campo obligatorio</span>
+            }
+          </div>
+          <div class="form-group">
+            <label>Tipo <span class="req">*</span></label>
+            <select formControlName="tipo">
+              @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Título <span class="req">*</span></label>
+          <input type="text" formControlName="titulo" placeholder="Descripción breve del requerimiento" />
+          @if (form.get('titulo')?.invalid && form.get('titulo')?.touched) {
+            <span class="field-error">Campo obligatorio</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Descripción <span class="req">*</span></label>
+          <textarea formControlName="descripcion" rows="3"
+                    placeholder="Detalle completo del requerimiento..."></textarea>
+          @if (form.get('descripcion')?.invalid && form.get('descripcion')?.touched) {
+            <span class="field-error">Campo obligatorio</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Criterios de Aceptación <span class="req">*</span></label>
+          <textarea formControlName="criteriosAceptacion" rows="3"
+                    placeholder="¿Qué condiciones deben cumplirse para considerar este requerimiento aceptado?"></textarea>
+          @if (form.get('criteriosAceptacion')?.invalid && form.get('criteriosAceptacion')?.touched) {
+            <span class="field-error">Campo obligatorio</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prioridad <span class="req">*</span></label>
+            <select formControlName="prioridad">
+              @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estado <span class="req">*</span></label>
+            <select formControlName="estado">
+              @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+            </select>
+          </div>
+        </div>
+
+        @if (errorModal) {
+          <div class="alert alert-danger">{{ errorModal }}</div>
+        }
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModal()" [disabled]="guardando()">
+          Cancelar
+        </button>
+        <button class="btn btn-accent" (click)="guardar()" [disabled]="guardando()">
+          @if (guardando()) { Guardando... } @else { ✓ Guardar Requerimiento }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

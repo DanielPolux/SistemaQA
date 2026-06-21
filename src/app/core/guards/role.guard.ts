@@ -14,9 +14,12 @@ export const roleGuard = (rolesPermitidos: Rol[]): CanActivateFn => {
       return false;
     }
 
+    if (usuario.rol === Rol.ADMIN) return true;
+
     if (rolesPermitidos.includes(usuario.rol)) return true;
 
-    router.navigate(['/sin-permiso']);
+    if (usuario.rol === Rol.DEVELOPER) router.navigate(['/defectos']);
+    else router.navigate(['/proyectos']);
     return false;
   };
 };

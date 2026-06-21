@@ -12,15 +12,15 @@
   <!-- Filtros en dos filas -->
   <div class="filters-wrapper">
 
-    <!-- Fila 1: Proyecto y Requerimiento (dimensión principal) -->
+    <!-- Fila 1: Proyecto y Requerimiento -->
     <div class="filters-row">
       <div class="filter-field filter-field--wide">
         <label class="filter-label" for="filtroProyecto">Proyecto</label>
         <input id="filtroProyecto"
                type="text"
-               [(ngModel)]="proyectoFiltroTexto"
+               [ngModel]="proyectoFiltroTexto"
+               (ngModelChange)="onProyectoInput($event)"
                list="proyectosDatalist"
-               (change)="onProyectoChange($event)"
                placeholder="Escribe código o nombre del proyecto..."
                autocomplete="off" />
         <datalist id="proyectosDatalist">
@@ -87,6 +87,7 @@
       <thead>
         <tr>
           <th>Código CP</th>
+          <th>Proyecto</th>
           <th>Nombre del Caso de Prueba</th>
           <th>RF</th>
           <th>Tipo</th>
@@ -103,6 +104,7 @@
         @for (c of casos; track c.id) {
           <tr>
             <td><span class="tag-codigo">{{ c.codigo ?? '-' }}</span></td>
+            <td>{{ c.proyectoNombre ?? '-' }}</td>
             <td class="td-nombre">{{ c.nombre }}</td>
             <td>{{ c.requerimientoRf ?? '-' }}</td>
             <td>{{ c.tipo }}</td>
@@ -117,26 +119,602 @@
             <td>{{ c.fechaEjecucion ? (c.fechaEjecucion | date:'dd/MM/yyyy') : '-' }}</td>
             <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
             <td class="actions">
+              <button class="btn btn-sm btn-icon btn-info" title="Ver detalle"
+                      (click)="abrirVer(c.id)">
+                <i class="bi bi-eye"></i>
+              </button>
               @if (auth.puedeEditar()) {
-                <a [routerLink]="['/casos-prueba', c.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
-                <a [routerLink]="['/defectos', 'nuevo']" [queryParams]="{casoPruebaId: c.id}"
-                  class="btn btn-sm btn-danger">+ Defecto</a>
+                <button class="btn btn-sm btn-icon btn-warning" title="Editar"
+                        (click)="abrirEditar(c.id)">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                  (click)="eliminar(c.id, c.nombre, c.totalDefectos ?? 0)">
+                  <i class="bi bi-trash"></i>
+                </button>
               }
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="11" class="empty-row">No se encontraron casos de prueba</td></tr>
+          <tr><td colspan="12" class="empty-row">No se encontraron casos de prueba</td></tr>
         }
       </tbody>
     </table>
 
-    @if (totalPaginas > 1) {
-      <div class="pagination">
-        @for (p of [].constructor(totalPaginas); track $index) {
-          <button class="btn btn-sm" [class.active]="pagina === $index + 1"
-            (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ casos.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                (click)="pagina = $index + 1; cargar()">{{ $index + 1 }}</button>
+            }
+          </div>
         }
       </div>
-    }
+    </div>
   }
 </div>
+
+<!-- ─── Modal Confirmación Eliminar ─────────────────────────────────────── -->
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+
+      <div class="modal-header" [class.modal-header--warning]="confirmPendiente.bloqueado"
+                                [class.modal-header--danger]="!confirmPendiente.bloqueado">
+        <div class="modal-title-group">
+          <span class="modal-icon">{{ confirmPendiente.bloqueado ? '⚠' : '🗑' }}</span>
+          <div>
+            <h3 class="modal-title">
+              {{ confirmPendiente.bloqueado ? 'No se puede eliminar' : 'Eliminar caso de prueba' }}
+            </h3>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+
+      <div class="modal-body modal-body--confirm">
+        @if (confirmPendiente.bloqueado) {
+          <p class="confirm-msg">
+            El caso <strong>{{ confirmPendiente.nombre }}</strong> no puede eliminarse.
+          </p>
+          <p class="confirm-sub">{{ confirmPendiente.mensaje }}</p>
+        } @else {
+          <p class="confirm-msg">
+            ¿Estás seguro de que deseas eliminar el caso de prueba
+            <strong>{{ confirmPendiente.nombre }}</strong>?
+          </p>
+          <p class="confirm-sub">Esta acción no se puede deshacer.</p>
+        }
+      </div>
+
+      <div class="modal-footer">
+        @if (confirmPendiente.bloqueado) {
+          <button class="btn btn-primary" (click)="cerrarConfirmar()">Entendido</button>
+        } @else {
+          <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+          <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── Modal Ver Caso de Prueba ─────────────────────────────────────────── -->
+@if (modalVerAbierto()) {
+  <div class="modal-overlay" (click)="cerrarVer()">
+    <div class="modal-panel modal-panel--lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon"><i class="bi bi-eye"></i></span>
+          <div>
+            <h3 class="modal-title">Detalle del Caso de Prueba</h3>
+            @if (casoVer) {
+              <p class="modal-subtitle">
+                <span class="tag-codigo">{{ casoVer.codigo ?? 'Sin código' }}</span>
+                {{ casoVer.nombre }}
+              </p>
+            }
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarVer()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        @if (cargandoVer()) {
+          <div class="loading">Cargando...</div>
+        } @else if (casoVer) {
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Proyecto</span>
+              <span class="detail-value">{{ casoVer.proyectoNombre ?? '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Requerimiento RF</span>
+              <span class="detail-value">{{ casoVer.requerimientoRf ?? '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Tipo</span>
+              <span class="detail-value">{{ casoVer.tipo }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Prioridad</span>
+              <span class="detail-value">
+                <span class="badge badge-prioridad-{{ casoVer.prioridad | lowercase }}">{{ casoVer.prioridad }}</span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Estado QA</span>
+              <span class="detail-value">
+                <span class="badge {{ estadoQAClase[casoVer.estado] }}">{{ casoVer.estado }}</span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Resultado</span>
+              <span class="detail-value">
+                @if (casoVer.resultado) {
+                  <span class="badge {{ resultadoClase[casoVer.resultado] }}">{{ casoVer.resultado }}</span>
+                } @else { <span class="text-muted">—</span> }
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Responsable QA</span>
+              <span class="detail-value">{{ casoVer.responsableQaNombre ?? '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Fecha Ejecución</span>
+              <span class="detail-value">{{ casoVer.fechaEjecucion ? (casoVer.fechaEjecucion | date:'dd/MM/yyyy') : '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-section-title">Descripción</h4>
+            <p class="detail-text">{{ casoVer.descripcion }}</p>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-section-title">Pasos de Prueba</h4>
+            <pre class="detail-pre">{{ casoVer.pasosTexto || '—' }}</pre>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-section-title">Resultado Esperado</h4>
+            <p class="detail-text">{{ casoVer.resultadoEsperado }}</p>
+          </div>
+
+          @if (casoVer.observaciones) {
+            <div class="detail-section">
+              <h4 class="detail-section-title">Observaciones</h4>
+              <p class="detail-text">{{ casoVer.observaciones }}</p>
+            </div>
+          }
+
+          <div class="detail-section">
+            <h4 class="detail-section-title">Historial de Auditoría</h4>
+            @if (auditoriaVer.length === 0) {
+              <p class="text-muted">Sin registros de auditoría.</p>
+            } @else {
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Usuario</th>
+                    <th>Acción</th>
+                    <th>Campo</th>
+                    <th>Valor Anterior</th>
+                    <th>Valor Nuevo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of auditoriaVer; track r.id) {
+                    <tr>
+                      <td class="audit-fecha">{{ r.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td>{{ r.usuarioNombre ?? '—' }}</td>
+                      <td><span class="audit-accion">{{ r.accion }}</span></td>
+                      <td class="audit-campo">{{ r.campo ?? '—' }}</td>
+                      <td class="audit-valor">{{ r.valorAnterior ?? '—' }}</td>
+                      <td class="audit-valor">{{ r.valorNuevo ?? '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarVer()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── Modal Editar Caso de Prueba ──────────────────────────────────────── -->
+@if (modalEditarAbierto()) {
+  <div class="modal-overlay" (click)="cerrarEditar()">
+    <div class="modal-panel modal-panel--lg" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon"><i class="bi bi-pencil"></i></span>
+          <div><h3 class="modal-title">Editar Caso de Prueba</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarEditar()">✕</button>
+      </div>
+
+      <div class="modal-body" [formGroup]="formEditar">
+
+        <div class="form-row">
+          <div class="form-group form-group--sm">
+            <label>Código CP</label>
+            <input type="text" formControlName="codigo" placeholder="CP-001" />
+          </div>
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" formControlName="nombre" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Proyecto *</label>
+            <select formControlName="proyectoId">
+              <option [value]="null">Seleccionar...</option>
+              @for (p of proyectos; track p.id) {
+                <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Requerimiento RF</label>
+            <input type="text"
+                   formControlName="requerimientoRf"
+                   list="requerimientosEditarDatalist"
+                   (change)="onRequerimientoChangeEditar($event)"
+                   placeholder="Escribe o selecciona..."
+                   autocomplete="off" />
+            <datalist id="requerimientosEditarDatalist">
+              @for (r of requerimientosEditar; track r.id) {
+                <option value="{{ r.codigo }}">{{ r.codigo }} — {{ r.titulo }}</option>
+              }
+            </datalist>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select formControlName="tipo">
+              @for (t of tiposForm; track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Prioridad *</label>
+            <select formControlName="prioridad">
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción *</label>
+          <textarea formControlName="descripcion" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Pasos de Prueba *</label>
+          <textarea formControlName="pasos" rows="6"
+            placeholder="1. Paso uno&#10;2. Paso dos&#10;3. ..."></textarea>
+          <span class="field-hint">Un paso por línea, numerados (1. 2. 3. ...)</span>
+        </div>
+
+        <div class="form-group">
+          <label>Resultado Esperado *</label>
+          <textarea formControlName="resultadoEsperado" rows="3"></textarea>
+        </div>
+
+        @if (errorEditar) {
+          <div class="alert alert-danger">{{ errorEditar }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarEditar()" [disabled]="guardandoEditar()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="guardarEditar()"
+                [disabled]="formEditar.invalid || guardandoEditar()">
+          {{ guardandoEditar() ? 'Guardando...' : 'Actualizar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── Popup: Sin ciclo activo ──────────────────────────────────────────── -->
+@if (popupSinCicloAbierto()) {
+  <div class="modal-overlay" (click)="cerrarPopupSinCiclo()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+
+      <div class="modal-header modal-header--warning">
+        <div class="modal-title-group">
+          <span class="modal-icon">⚠️</span>
+          <div><h3 class="modal-title">Sin ciclo de prueba activo</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarPopupSinCiclo()">✕</button>
+      </div>
+
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">{{ popupSinCicloMsg }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="cerrarPopupSinCiclo()">Entendido</button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ─── Modal de Ejecución ──────────────────────────────────────────────── -->
+@if (modalAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">▶</span>
+          <div>
+            <h3 class="modal-title">Registrar Ejecución</h3>
+            @if (casoSeleccionado) {
+              <p class="modal-subtitle">
+                <span class="tag-codigo">{{ casoSeleccionado.codigo ?? 'Sin código' }}</span>
+                {{ casoSeleccionado.nombre }}
+              </p>
+            }
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModal()">✕</button>
+      </div>
+
+      @if (ejecucionExito()) {
+        <div class="modal-body" style="text-align:center; padding: 2rem 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">✅</div>
+          <h3 style="margin: 0 0 0.5rem; color: var(--color-success, #22c55e);">Ejecución y defecto registrados</h3>
+          <p style="margin: 0 0 1.25rem; color: var(--color-text-muted, #6b7280);">
+            El caso fue marcado como <strong>Fallido</strong> y el defecto fue creado con el código:
+          </p>
+          <div style="font-size: 1.8rem; font-weight: 700; letter-spacing: 0.06em; color: var(--color-danger, #ef4444); margin-bottom: 1rem;">
+            {{ ejecucionExito() }}
+          </div>
+          <p style="font-size: 0.82rem; color: var(--color-text-muted, #6b7280);">
+            Puedes ver el defecto en la sección <strong>Defectos</strong>.
+          </p>
+        </div>
+        <div class="modal-footer" style="justify-content:center;">
+          <button class="btn btn-primary" (click)="cerrarModal()">Aceptar</button>
+        </div>
+      } @else {
+      <div class="modal-body">
+
+        <!-- Banner ciclo activo -->
+        <div class="ciclo-banner ciclo-banner--activo">
+          <span class="ciclo-banner-icon">🔄</span>
+          <div>
+            <span class="ciclo-banner-label">Ciclo activo</span>
+            <span class="ciclo-banner-nombre">{{ cicloActivo?.nombre }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ambiente <span class="req">*</span></label>
+            <select [(ngModel)]="formEjecucion.ambiente">
+              <option value="">Selecciona ambiente...</option>
+              @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Versión</label>
+            <input type="text" [(ngModel)]="formEjecucion.version" readonly class="input-readonly" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tester</label>
+          <input type="text"
+                 [value]="(auth.usuarioActual()?.nombre ?? '') + ' ' + (auth.usuarioActual()?.apellido ?? '')"
+                 readonly class="input-readonly" />
+        </div>
+
+        <!-- Pasos de prueba -->
+        @if (pasosEjecucion.length > 0) {
+          <div class="pasos-ejecucion">
+            <div class="pasos-ejecucion-header">
+              <span class="pasos-ejecucion-title">
+                <i class="bi bi-list-check"></i> Pasos de Prueba
+              </span>
+              <span class="pasos-ejecucion-hint">Marca cada paso — el resultado se detecta automáticamente</span>
+            </div>
+            <div class="pasos-list">
+              @for (paso of pasosEjecucion; track paso.orden; let idx = $index) {
+                <div class="paso-item"
+                     [class.paso-item--ok]="paso.estado === 'ok'"
+                     [class.paso-item--no-ok]="paso.estado === 'no_ok'">
+                  <div class="paso-item-fila">
+                    <span class="paso-num">{{ paso.orden }}</span>
+                    <span class="paso-desc">{{ paso.descripcion }}</span>
+                    <div class="paso-acciones">
+                      <button type="button" class="paso-btn paso-btn--ok"
+                              [class.paso-btn--active]="paso.estado === 'ok'"
+                              (click)="marcarPaso(idx, 'ok')">
+                        <i class="bi bi-check-lg"></i> OK
+                      </button>
+                      <button type="button" class="paso-btn paso-btn--no-ok"
+                              [class.paso-btn--active]="paso.estado === 'no_ok'"
+                              (click)="marcarPaso(idx, 'no_ok')">
+                        <i class="bi bi-x-lg"></i> NO OK
+                      </button>
+                    </div>
+                  </div>
+                  <div class="paso-imagen-area">
+                    @if (paso.imagenes.length > 0) {
+                      <div class="paso-imagenes-lista">
+                        @for (img of paso.imagenes; track $index; let imgIdx = $index) {
+                          <div class="paso-imagen-item">
+                            <img [src]="img" class="paso-imagen-preview" alt="Evidencia {{ paso.orden }}-{{ imgIdx + 1 }}" />
+                            <button type="button" class="paso-imagen-remove"
+                                    (click)="limpiarImagenPaso(idx, imgIdx)" title="Quitar imagen">
+                              <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+                    <div class="paso-imagen-row">
+                      <div class="paso-imagen-zona" tabindex="0" (paste)="pegarImagenPaso(idx, $event)">
+                        <i class="bi bi-clipboard-image"></i>
+                        <span>Clic aquí y pega (Ctrl+V)</span>
+                      </div>
+                      <label [for]="'paso-img-tc-' + idx" class="paso-imagen-file-btn" title="Seleccionar imagen(es)">
+                        <i class="bi bi-folder2-open"></i>
+                      </label>
+                      <input [id]="'paso-img-tc-' + idx" type="file" accept="image/*" multiple style="display:none"
+                             (change)="onFileSelectedPaso($event, idx)" />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (pasosEjecucion.length === 0) {
+          <div class="form-group">
+            <label>Resultado <span class="req">*</span></label>
+            <select [(ngModel)]="formEjecucion.resultado">
+              <option value="">Selecciona resultado...</option>
+              @for (r of resultadosEjecucion; track r) { <option [value]="r">{{ r }}</option> }
+            </select>
+          </div>
+        }
+
+        <div class="form-group">
+          <label>Resultado Obtenido <span class="req">*</span></label>
+          <textarea [(ngModel)]="formEjecucion.resultadoObtenido"
+                    rows="3"
+                    placeholder="Describe el resultado real obtenido durante la ejecución..."></textarea>
+        </div>
+
+        @if (!esFallido) {
+          <div class="form-group">
+            <label>Evidencia (URL)</label>
+            <input type="text" [(ngModel)]="formEjecucion.evidenciaUrl"
+                   placeholder="https://... (screenshot, video, log, etc.)" />
+          </div>
+        }
+
+        @if (esFallido) {
+          <div class="defecto-section">
+            <div class="defecto-section-title">
+              <span class="badge badge-resultado-fallido" style="font-size:0.75rem;">Fallido</span>
+              Datos del Defecto
+            </div>
+
+            <div class="form-group">
+              <label>Título del Defecto <span class="req">*</span></label>
+              <input type="text" [(ngModel)]="formEjecucion.defTitulo"
+                     placeholder="Describe brevemente el defecto encontrado..." />
+            </div>
+
+            <div class="form-group">
+              <label>Descripción <span class="req">*</span></label>
+              <textarea [(ngModel)]="formEjecucion.defDescripcion" rows="2"
+                        placeholder="Descripción del defecto..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Pasos para Reproducir <span class="req">*</span></label>
+              <textarea [(ngModel)]="formEjecucion.defPasosReproduccion" rows="3"
+                        placeholder="1. Ingresar a...&#10;2. Hacer clic en..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Resultado Esperado</label>
+              <textarea [(ngModel)]="formEjecucion.defResultadoEsperado" rows="2"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Severidad <span class="req">*</span></label>
+                <select [(ngModel)]="formEjecucion.defSeveridad">
+                  <option value="">Seleccionar...</option>
+                  @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prioridad <span class="req">*</span></label>
+                <select [(ngModel)]="formEjecucion.defPrioridad">
+                  <option value="">Seleccionar...</option>
+                  @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Asignar a Desarrollador</label>
+              <select [(ngModel)]="formEjecucion.defAsignadoA">
+                <option [ngValue]="null">Sin asignar</option>
+                @for (d of desarrolladores; track d.id) {
+                  <option [ngValue]="d.id">{{ d.nombre }} {{ d.apellido }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Evidencia (URL)</label>
+              <input type="text" [(ngModel)]="formEjecucion.evidenciaUrl"
+                     placeholder="https://... (screenshot, video, log, etc.)" />
+            </div>
+          </div>
+        }
+
+        <div class="form-group">
+          <label>Observaciones</label>
+          <textarea [(ngModel)]="formEjecucion.observaciones"
+                    rows="2"
+                    placeholder="Notas adicionales sobre la ejecución..."></textarea>
+        </div>
+
+        @if (errorEjecucion) {
+          <div class="alert alert-danger">{{ errorEjecucion }}</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModal()" [disabled]="guardandoEjec()">
+          Cancelar
+        </button>
+        <button class="btn btn-accent" (click)="guardarEjecucion()" [disabled]="guardandoEjec()">
+          @if (guardandoEjec()) { Registrando... } @else { ✓ Registrar Ejecución }
+        </button>
+      </div>
+      }
+
+    </div>
+  </div>
+}

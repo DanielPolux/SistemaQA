@@ -1,0 +1,156 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="ce-header-left">
+      <a routerLink="/planes-prueba" class="btn btn-secondary btn-sm">← Volver</a>
+      <h2>{{ esEdicion ? 'Editar Plan de Pruebas' : 'Nuevo Plan de Pruebas' }}</h2>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
+
+    @if (error) { <div class="alert alert-danger">{{ error }}</div> }
+
+    <!-- ── Información general ───────────────────────────────────── -->
+    <div class="form-section-title">Información General</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Proyecto <span class="req">*</span></label>
+        <select formControlName="proyectoId" [attr.disabled]="esEdicion ? true : null">
+          <option [ngValue]="null">Selecciona un proyecto...</option>
+          @for (p of proyectos; track p.id) {
+            <option [ngValue]="p.id">{{ p.nombre }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Responsable (QA Lead)</label>
+        <select formControlName="responsableId">
+          <option [ngValue]="null">Sin asignar</option>
+          @for (u of responsables; track u.id) {
+            <option [ngValue]="u.id">{{ nombreUsuario(u) }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Nombre del Plan <span class="req">*</span></label>
+      <input type="text" formControlName="nombre"
+             placeholder="Ej: Plan de Pruebas — Sprint 3 / UAT v2.0" />
+    </div>
+
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea formControlName="descripcion" rows="2"
+                placeholder="Breve descripción del plan..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha Inicio</label>
+        <input type="date" formControlName="fechaInicio" />
+      </div>
+      <div class="form-group">
+        <label>Fecha Objetivo</label>
+        <input type="date" formControlName="fechaObjetivo" />
+      </div>
+    </div>
+
+    <!-- ── Requerimientos a cubrir ───────────────────────────────── -->
+    <div class="form-section-title" style="margin-top: 1.5rem">
+      Requerimientos a Cubrir
+      @if (requerimientos.length > 0) {
+        <span class="plan-req-count">
+          {{ requerimientosSeleccionados.size }} / {{ requerimientos.length }} seleccionados
+        </span>
+      }
+    </div>
+
+    @if (!form.get('proyectoId')?.value) {
+      <p class="field-hint" style="margin-bottom: 1rem">Selecciona un proyecto para ver sus requerimientos.</p>
+    } @else if (cargandoReqs) {
+      <div class="field-hint" style="margin-bottom: 1rem">Cargando requerimientos...</div>
+    } @else if (requerimientos.length === 0) {
+      <div class="alert alert-warning" style="margin-bottom: 1rem">
+        Este proyecto no tiene requerimientos registrados.
+      </div>
+    } @else {
+      <div class="plan-req-toolbar">
+        <button type="button" class="btn btn-sm btn-outline" (click)="seleccionarTodos()">
+          Seleccionar todos
+        </button>
+        <button type="button" class="btn btn-sm btn-outline" (click)="deseleccionarTodos()">
+          Deseleccionar todos
+        </button>
+      </div>
+      <div class="plan-req-checklist">
+        @for (r of requerimientos; track r.id) {
+          <label class="plan-req-item" [class.plan-req-item--checked]="requerimientosSeleccionados.has(r.id)">
+            <input type="checkbox"
+                   [checked]="requerimientosSeleccionados.has(r.id)"
+                   (change)="toggleReq(r.id)" />
+            <span class="plan-req-item-body">
+              <span class="tag-codigo">{{ r.codigo }}</span>
+              <span class="plan-req-titulo">{{ r.titulo }}</span>
+              <span class="badge {{ prioridadClase(r.prioridad) }}" style="font-size:10px;padding:1px 6px">
+                {{ r.prioridad }}
+              </span>
+            </span>
+          </label>
+        }
+      </div>
+    }
+
+    <!-- ── Objetivo y alcance ────────────────────────────────────── -->
+    <div class="form-section-title" style="margin-top: 1.5rem">Objetivo y Alcance</div>
+
+    <div class="form-group">
+      <label>Objetivo <span class="req">*</span></label>
+      <textarea formControlName="objetivo" rows="3"
+                placeholder="¿Qué se quiere validar con este plan? ¿Cuáles son los criterios de éxito?"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Alcance (Dentro del scope)</label>
+      <textarea formControlName="alcance" rows="3"
+                placeholder="Módulos, funcionalidades y flujos que SE INCLUYEN en este plan..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Fuera del Alcance</label>
+      <textarea formControlName="fueraAlcance" rows="2"
+                placeholder="Módulos o funcionalidades que NO se prueban en este plan..."></textarea>
+    </div>
+
+    <!-- ── Criterios ─────────────────────────────────────────────── -->
+    <div class="form-section-title" style="margin-top: 1.5rem">Criterios</div>
+
+    <div class="form-group">
+      <label>Criterios de Entrada</label>
+      <textarea formControlName="criteriosEntrada" rows="3"
+                placeholder="¿Qué condiciones deben cumplirse ANTES de iniciar las pruebas?&#10;Ej: Ambiente QA disponible, módulos deployados, datos de prueba cargados..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Criterios de Salida</label>
+      <textarea formControlName="criteriosSalida" rows="3"
+                placeholder="¿Qué condiciones indican que las pruebas han FINALIZADO con éxito?&#10;Ej: 95% de casos aprobados, 0 defectos críticos abiertos..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Riesgos</label>
+      <textarea formControlName="riesgos" rows="2"
+                placeholder="Riesgos identificados y su mitigación..."></textarea>
+    </div>
+
+    <!-- ── Acciones ──────────────────────────────────────────────── -->
+    <div class="form-actions">
+      <a routerLink="/planes-prueba" class="btn btn-outline">Cancelar</a>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+        {{ guardando ? 'Guardando...' : (esEdicion ? 'Guardar Cambios' : 'Crear Plan') }}
+      </button>
+    </div>
+
+  </form>
+</div>

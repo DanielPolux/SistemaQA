@@ -54,4 +54,14 @@ export class ProjectService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
+
+  uploadDocument(id: number, file: File): Observable<Proyecto> {
+    const fd = new FormData();
+    fd.append('archivo', file, file.name);
+    return this.http.post<Proyecto>(`${this.url}/${id}/documentos`, fd);
+  }
+
+  deleteDocument(id: number, itemId: string): Observable<Proyecto> {
+    return this.http.delete<Proyecto>(`${this.url}/${id}/documentos/${itemId}`);
+  }
 }

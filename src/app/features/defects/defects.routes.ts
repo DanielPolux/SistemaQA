@@ -12,5 +12,9 @@ export const DEFECTS_ROUTES: Routes = [
   {
     path: ':id/editar',
     loadComponent: () => import('./defect-form/defect-form.component').then(m => m.DefectFormComponent)
+  },
+  {
+    path: ':id',
+    loadComponent: () => import('./defect-detail/defect-detail.component').then(m => m.DefectDetailComponent)
   }
 ];

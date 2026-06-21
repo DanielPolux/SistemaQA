@@ -1,7 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Proyecto, EstadoProyecto } from '../../../core/models';
@@ -12,31 +14,47 @@ import { Proyecto, EstadoProyecto } from '../../../core/models';
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './project-list.component.html'
 })
-export class ProjectListComponent implements OnInit {
+export class ProjectListComponent implements OnInit, OnDestroy {
   private service = inject(ProjectService);
   auth = inject(AuthService);
 
   proyectos: Proyecto[] = [];
   total = 0;
-  pagina = 1;
+  pagina    = 1;
   porPagina = 10;
   busqueda = '';
   estadoFiltro = '';
   cargando = false;
+
+  private busquedaSubject = new Subject<string>();
+  private sub!: Subscription;
 
   readonly estados = Object.values(EstadoProyecto);
 
   readonly estadoClase: Record<EstadoProyecto, string> = {
     [EstadoProyecto.POR_ESTIMAR]:   'badge-por-estimar',
     [EstadoProyecto.ESTIMADO]:      'badge-estimado',
+    [EstadoProyecto.OBSERVADO]:     'badge-observado',
     [EstadoProyecto.PLANIFICADO]:   'badge-planificado',
     [EstadoProyecto.EN_EJECUCION]:  'badge-en-ejecucion',
-    [EstadoProyecto.OBSERVADO]:     'badge-observado',
+    [EstadoProyecto.FINALIZADO]:    'badge-finalizado',
     [EstadoProyecto.EN_PRODUCCION]: 'badge-en-produccion',
-    [EstadoProyecto.FINALIZADO]:    'badge-finalizado'
   };
 
-  ngOnInit(): void { this.cargar(); }
+  ngOnInit(): void {
+    this.sub = this.busquedaSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+    ).subscribe(() => { this.pagina = 1; this.cargar(); });
+    this.cargar();
+  }
+
+  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+
+  onBusquedaChange(valor: string): void {
+    this.busqueda = valor;
+    this.busquedaSubject.next(valor);
+  }
 
   cargar(): void {
     this.cargando = true;
@@ -57,7 +75,28 @@ export class ProjectListComponent implements OnInit {
 
   get totalPaginas(): number { return Math.ceil(this.total / this.porPagina); }
 
+  get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
+
   badgeEstado(estado: EstadoProyecto): string {
     return this.estadoClase[estado] ?? 'badge';
+  }
+
+  // ─── Modal confirmación eliminar ─────────────────────────────────────────
+  modalConfirmarAbierto = signal(false);
+  confirmPendiente: { id: number; nombre: string } | null = null;
+
+  eliminar(id: number, nombre: string): void {
+    this.confirmPendiente = { id, nombre };
+    this.modalConfirmarAbierto.set(true);
+  }
+
+  cerrarConfirmar(): void {
+    this.modalConfirmarAbierto.set(false);
+    this.confirmPendiente = null;
+  }
+
+  confirmarEliminar(): void {
+    if (!this.confirmPendiente) return;
+    this.service.delete(this.confirmPendiente.id).subscribe({ next: () => { this.cerrarConfirmar(); this.cargar(); } });
   }
 }

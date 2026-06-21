@@ -1,24 +1,41 @@
 <header class="app-header">
   <div class="header-brand">
     <a routerLink="/proyectos" class="brand-link">
-      <span class="brand-icon">QA</span>
-      <span class="brand-name">Sistema QA <span class="brand-company">DLWLatam</span></span>
+      <div class="brand-logo-wrap">
+        <img src="/assets/img/logo-dlw-blanco.jpg" alt="DLW LATAM" class="brand-logo"
+             onerror="this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" />
+      </div>
+      <span class="brand-icon" style="display:none">QA</span>
+      <span class="brand-name">Sistema QA</span>
     </a>
   </div>
 
-  <nav class="header-nav">
-    <a routerLink="/proyectos" routerLinkActive="active">Proyectos</a>
-    <a routerLink="/requerimientos" routerLinkActive="active">Requerimientos</a>
-    <a routerLink="/casos-prueba" routerLinkActive="active">Casos de Prueba</a>
-    <a routerLink="/defectos" routerLinkActive="active">Defectos</a>
-    <a routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
-  </nav>
+  <div class="header-spacer"></div>
 
   <div class="header-user">
+    <button class="btn-theme-toggle" (click)="theme.toggle()"
+            [title]="theme.oscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+      @if (theme.oscuro()) {
+        <i class="bi bi-sun-fill"></i>
+      } @else {
+        <i class="bi bi-moon-fill"></i>
+      }
+    </button>
+
     @if (usuario()) {
-      <span class="user-name">{{ usuario()?.nombre }} {{ usuario()?.apellido }}</span>
-      <span class="user-role">{{ usuario()?.rol }}</span>
-      <button class="btn btn-sm btn-outline" (click)="logout()">Salir</button>
+      <div class="header-divider"></div>
+      <div class="user-avatar">
+        {{ (usuario()?.nombre ?? '?')[0].toUpperCase() }}{{ usuario()?.apellido?.[0]?.toUpperCase() ?? '' }}
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ usuario()?.nombre }} {{ usuario()?.apellido }}</span>
+        <span class="user-role">{{ usuario()?.rol }}</span>
+      </div>
+      <div class="header-divider"></div>
+      <button class="btn-salir" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        Salir
+      </button>
     }
   </div>
 </header>

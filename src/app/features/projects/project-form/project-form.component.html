@@ -6,9 +6,31 @@
 
   @if (error) { <div class="alert alert-error">{{ error }}</div> }
 
+  @if (guardadoId) {
+    <div class="success-screen">
+      <div class="success-icon-circle">✓</div>
+      <h3 class="success-title">¡Proyecto creado exitosamente!</h3>
+      <p class="success-subtitle">
+        <span class="tag-codigo">{{ guardadoCodigo }}</span> {{ guardadoNombre }}
+      </p>
+      <div class="alert alert-info success-next-msg">
+        <strong>Próximo paso:</strong> Ahora debes generar los <strong>requerimientos</strong> del proyecto para poder continuar con el flujo de QA.
+      </div>
+      <div class="success-actions">
+        <a [routerLink]="['/requerimientos/nuevo']" [queryParams]="{ proyectoId: guardadoId }" class="btn btn-primary">
+          + Crear Requerimiento
+        </a>
+        <a [routerLink]="['/proyectos', guardadoId]" class="btn btn-outline">
+          Ver Proyecto
+        </a>
+      </div>
+    </div>
+  }
+
   @if (cargando) {
     <div class="loading">Cargando...</div>
   } @else {
+  @if (!guardadoId) {
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
     <!-- Identificación -->
@@ -17,7 +39,10 @@
       <div class="form-row">
         <div class="form-group form-group--sm">
           <label for="codigo">Código *</label>
-          <input id="codigo" type="text" formControlName="codigo" placeholder="PROJ-01" />
+          <input id="codigo" type="text" formControlName="codigo" placeholder="PROJ-01" maxlength="10" />
+          @if (form.get('codigo')?.hasError('maxlength')) {
+            <span class="field-error">Máximo 10 caracteres</span>
+          }
         </div>
         <div class="form-group">
           <label for="nombre">Nombre del Proyecto *</label>
@@ -48,25 +73,25 @@
           <label for="jefeProyectoId">Jefe de Proyecto *</label>
           <select id="jefeProyectoId" formControlName="jefeProyectoId">
             <option [value]="null">Seleccionar...</option>
-            @for (u of usuarios; track u.id) {
+            @for (u of jefesProyecto; track u.id) {
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
             }
           </select>
         </div>
         <div class="form-group">
-          <label for="jefeQAId">Jefe QA *</label>
-          <select id="jefeQAId" formControlName="jefeQAId">
+          <label for="jefeQaId">Jefe QA *</label>
+          <select id="jefeQaId" formControlName="jefeQaId">
             <option [value]="null">Seleccionar...</option>
-            @for (u of usuarios; track u.id) {
+            @for (u of jefesQA; track u.id) {
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
             }
           </select>
         </div>
         <div class="form-group">
-          <label for="responsableQAId">Responsable QA</label>
-          <select id="responsableQAId" formControlName="responsableQAId">
+          <label for="responsableQaId">Responsable QA</label>
+          <select id="responsableQaId" formControlName="responsableQaId">
             <option [value]="null">Sin asignar</option>
-            @for (u of usuarios; track u.id) {
+            @for (u of responsablesQA; track u.id) {
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
             }
           </select>
@@ -77,58 +102,174 @@
     <!-- Estado y Avance -->
     <div class="form-section">
       <h3 class="form-section-title">Estado y Avance</h3>
-      <div class="form-row form-row--4">
+      <div class="form-row" [class.form-row--2]="mostrarHorasQa">
         <div class="form-group">
           <label for="estado">Estado *</label>
           <select id="estado" formControlName="estado">
-            @for (e of estados; track e) {
+            @for (e of estadosDisponibles; track e) {
               <option [value]="e">{{ e }}</option>
             }
           </select>
         </div>
-        <div class="form-group">
-          <label for="iteracion">Iteración</label>
-          <input id="iteracion" type="number" formControlName="iteracion" placeholder="0" min="0" />
-        </div>
-        <div class="form-group">
-          <label for="porcentajeAvance">% Avance *</label>
-          <input id="porcentajeAvance" type="number" formControlName="porcentajeAvance" min="0" max="100" placeholder="0" />
-        </div>
-        <div class="form-group">
-          <label for="horasQA">Horas QA</label>
-          <input id="horasQA" type="number" formControlName="horasQA" placeholder="0" min="0" />
-        </div>
+        @if (mostrarHorasQa) {
+          <div class="form-group">
+            <label for="horasQa">Horas QA</label>
+            <input id="horasQa" type="number" formControlName="horasQa" placeholder="0" min="0" />
+          </div>
+        }
       </div>
+      @if (mostrarDocumentoUrl) {
+        <div class="form-group" style="margin-top: 12px;">
+          <label for="documentoUrl">{{ labelDocumentoUrl }}</label>
+          <input id="documentoUrl" type="text" formControlName="documentoUrl"
+            placeholder="https://..." />
+        </div>
+      }
     </div>
 
     <!-- Fechas -->
     <div class="form-section">
       <h3 class="form-section-title">Fechas</h3>
       <div class="form-row form-row--3">
+
+        <!-- Fecha Estimación: requerida en Estimado -->
         <div class="form-group">
-          <label for="fechaEstimacion">Fecha Estimación</label>
-          <input id="fechaEstimacion" type="date" formControlName="fechaEstimacion" />
+          <label for="fechaEstimacion">
+            Fecha Estimación
+            @if (estadoActual === 'Estimado') { <span class="required-mark">*</span> }
+          </label>
+          <input id="fechaEstimacion" type="date" formControlName="fechaEstimacion"
+            [class.input-error]="form.get('fechaEstimacion')?.invalid && form.get('fechaEstimacion')?.touched" />
+          @if (form.get('fechaEstimacion')?.hasError('required') && form.get('fechaEstimacion')?.touched) {
+            <span class="field-error">Requerida cuando el estado es Estimado</span>
+          }
         </div>
+
+        <!-- Fecha Inicio Planificada: requerida en Planificado -->
         <div class="form-group">
-          <label for="fechaInicioPlanificada">Fecha Inicio Planificada</label>
-          <input id="fechaInicioPlanificada" type="date" formControlName="fechaInicioPlanificada" />
+          <label for="fechaInicioPlanificada">
+            Fecha Inicio Planificada (Entrega)
+            @if (estadoActual === 'Planificado') { <span class="required-mark">*</span> }
+          </label>
+          <input id="fechaInicioPlanificada" type="date" formControlName="fechaInicioPlanificada"
+            [class.input-error]="form.get('fechaInicioPlanificada')?.invalid && form.get('fechaInicioPlanificada')?.touched" />
+          @if (form.get('fechaInicioPlanificada')?.hasError('required') && form.get('fechaInicioPlanificada')?.touched) {
+            <span class="field-error">Requerida cuando el estado es Planificado</span>
+          }
         </div>
+
+        <!-- Fecha Fin Planificada: requerida en Planificado -->
         <div class="form-group">
-          <label for="fechaFinPlanificada">Fecha Fin Planificada</label>
-          <input id="fechaFinPlanificada" type="date" formControlName="fechaFinPlanificada" />
+          <label for="fechaFinPlanificada">
+            Fecha Fin Planificada (Entrega)
+            @if (estadoActual === 'Planificado') { <span class="required-mark">*</span> }
+          </label>
+          <input id="fechaFinPlanificada" type="date" formControlName="fechaFinPlanificada"
+            [class.input-error]="form.get('fechaFinPlanificada')?.invalid && form.get('fechaFinPlanificada')?.touched" />
+          @if (form.get('fechaFinPlanificada')?.hasError('required') && form.get('fechaFinPlanificada')?.touched) {
+            <span class="field-error">Requerida cuando el estado es Planificado</span>
+          }
         </div>
+
       </div>
       <div class="form-row form-row--3">
         <div class="form-group"></div>
+
+        <!-- Fecha Inicio Real: requerida en En Ejecución -->
         <div class="form-group">
-          <label for="fechaInicioReal">Fecha Inicio Real</label>
-          <input id="fechaInicioReal" type="date" formControlName="fechaInicioReal" />
+          <label for="fechaInicioReal">
+            Fecha Inicio Real (Entrega)
+            @if (estadoActual === 'En Ejecución') { <span class="required-mark">*</span> }
+          </label>
+          <input id="fechaInicioReal" type="date" formControlName="fechaInicioReal"
+            [class.input-error]="form.get('fechaInicioReal')?.invalid && form.get('fechaInicioReal')?.touched" />
+          @if (form.get('fechaInicioReal')?.hasError('required') && form.get('fechaInicioReal')?.touched) {
+            <span class="field-error">Requerida cuando el estado es En Ejecución</span>
+          }
         </div>
+
+        <!-- Fecha Fin Real: requerida en En Ejecución -->
         <div class="form-group">
-          <label for="fechaFinReal">Fecha Fin Real</label>
-          <input id="fechaFinReal" type="date" formControlName="fechaFinReal" />
+          <label for="fechaFinReal">
+            Fecha Fin Real (Entrega)
+            @if (estadoActual === 'En Ejecución') { <span class="required-mark">*</span> }
+          </label>
+          <input id="fechaFinReal" type="date" formControlName="fechaFinReal"
+            [class.input-error]="form.get('fechaFinReal')?.invalid && form.get('fechaFinReal')?.touched" />
+          @if (form.get('fechaFinReal')?.hasError('required') && form.get('fechaFinReal')?.touched) {
+            <span class="field-error">Requerida cuando el estado es En Ejecución</span>
+          }
         </div>
+
       </div>
+    </div>
+
+    <!-- Documentos de Requerimientos -->
+    <div class="form-section">
+      <h3 class="form-section-title">
+        Documentos de Requerimientos
+        <span class="field-hint" style="font-weight:400; font-size:0.8rem; margin-left:8px;">
+          Opcional. Se almacenan en SharePoint cuando esté configurado.
+        </span>
+      </h3>
+
+      <!-- Documentos ya subidos (modo edición) -->
+      @if (documentosGuardados.length > 0) {
+        <div class="docs-list">
+          @for (doc of documentosGuardados; track doc.itemId) {
+            <div class="doc-item doc-item--saved">
+              <a [href]="doc.url" target="_blank" rel="noopener" class="doc-name" title="Abrir en SharePoint">
+                <i class="bi bi-file-earmark-text"></i> {{ doc.nombre }}
+              </a>
+              <span class="doc-size">{{ formatBytes(doc.tamano) }}</span>
+              <button type="button" class="btn btn-sm btn-icon btn-danger"
+                      title="Eliminar de SharePoint"
+                      [disabled]="eliminandoDoc === doc.itemId"
+                      (click)="eliminarDocumentoGuardado(doc.itemId)">
+                @if (eliminandoDoc === doc.itemId) {
+                  <span class="spinner-xs"></span>
+                } @else {
+                  <i class="bi bi-trash"></i>
+                }
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Archivos pendientes de subir -->
+      @if (archivosSeleccionados.length > 0) {
+        <div class="docs-list docs-list--pending">
+          <p class="docs-pending-label">Pendientes de subir:</p>
+          @for (f of archivosSeleccionados; track $index) {
+            <div class="doc-item doc-item--pending">
+              <span class="doc-name"><i class="bi bi-file-earmark-arrow-up"></i> {{ f.name }}</span>
+              <span class="doc-size">{{ formatBytes(f.size) }}</span>
+              <button type="button" class="btn btn-sm btn-icon btn-secondary"
+                      title="Quitar" (click)="quitarArchivoSeleccionado($index)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Selector de archivo -->
+      <label class="file-pick-zone">
+        <i class="bi bi-cloud-upload"></i>
+        Seleccionar archivo(s)
+        <input type="file" multiple hidden (change)="onArchivosSeleccionados($event)" />
+      </label>
+
+      @if (errorDocumentos) {
+        <div class="alert alert-error" style="margin-top:8px; white-space:pre-line;">{{ errorDocumentos }}</div>
+      }
+
+      @if (guardando && archivosSeleccionados.length > 0) {
+        <p class="docs-uploading">
+          <span class="spinner-xs"></span> Subiendo documentos a SharePoint...
+        </p>
+      }
     </div>
 
     <!-- Notas -->
@@ -148,5 +289,6 @@
       <a routerLink="/proyectos" class="btn btn-secondary">Cancelar</a>
     </div>
   </form>
+  }
   }
 </div>

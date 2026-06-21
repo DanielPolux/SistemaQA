@@ -24,7 +24,7 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Código</th>
+          <th>Defecto</th>
           <th>Título</th>
           <th>Caso de Prueba</th>
           <th>Severidad</th>
@@ -39,31 +39,63 @@
       <tbody>
         @for (d of defectos; track d.id) {
           <tr>
-            <td>{{ d.codigo }}</td>
+            <td>{{ d.codigoProyecto ?? '-' }}</td>
             <td>{{ d.titulo }}</td>
             <td>{{ d.casoPruebaCodigo ?? '-' }}</td>
-            <td><span class="badge badge-severidad-{{ d.severidad | lowercase }}">{{ d.severidad }}</span></td>
-            <td>{{ d.prioridad }}</td>
-            <td><span class="badge badge-estado-{{ d.estado | lowercase }}">{{ d.estado }}</span></td>
+            <td><span class="badge {{ severidadClase[d.severidad] }}">{{ d.severidad }}</span></td>
+            <td><span class="badge {{ prioridadClase[d.prioridad] }}">{{ d.prioridad }}</span></td>
+            <td><span class="badge {{ estadoClase[d.estado] }}">{{ d.estado }}</span></td>
             <td>{{ d.asignadoANombre ?? '-' }}</td>
             <td>
-              @if (auth.esDesarrollador()) {
-                <select class="select-inline"
-                        [value]="d.estadoDesarrollo ?? ''"
-                        (change)="onEstadoDesarrolloChange(d, $any($event.target).value)">
-                  <option value="">— Sin actualizar —</option>
-                  @for (ed of estadosDesarrollo; track ed) {
-                    <option [value]="ed">{{ ed }}</option>
-                  }
-                </select>
+              @if (d.estadoDesarrollo === 'Atendido') {
+                <span class="badge badge-dev-atendido">Atendido</span>
+              } @else if (d.estadoDesarrollo === 'No Aplica') {
+                <span class="badge badge-dev-noapl">No Aplica</span>
               } @else {
-                {{ d.estadoDesarrollo ?? '-' }}
+                <span class="text-muted">—</span>
               }
             </td>
             <td>{{ d.creadoEn | date:'dd/MM/yyyy' }}</td>
             <td class="actions">
-              @if (auth.puedeEditar()) {
-                <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-warning">Editar</a>
+              <button class="btn btn-sm btn-icon btn-word" title="Exportar a Word"
+                      (click)="generarWord(d)">
+                <i class="bi bi-file-earmark-word"></i>
+              </button>
+              @if (auth.esDesarrollador()) {
+                @if (d.estado === 'Nuevo' || d.estado === 'Asignado' || d.estado === 'En Progreso' || d.estado === 'Reabierto') {
+                  <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Responder defecto">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                } @else {
+                  <a [routerLink]="['/defectos', d.id]" class="btn btn-sm btn-icon btn-info" title="Ver detalle">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                }
+              } @else {
+                @if (d.estado === 'En Revisión') {
+                  <button class="btn btn-sm btn-icon btn-success" title="Verificado — Cerrar defecto"
+                          (click)="abrirVerificar(d, 'cerrar')">
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-warning" title="Sigue fallando — Reabrir defecto"
+                          (click)="abrirVerificar(d, 'reabrir')">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
+                }
+                <a [routerLink]="['/defectos', d.id]" class="btn btn-sm btn-icon btn-info" title="Ver detalle">
+                  <i class="bi bi-eye"></i>
+                </a>
+                @if (auth.puedeEditarDefecto()) {
+                  <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-icon btn-secondary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                }
+                @if (auth.puedeEliminarDefecto()) {
+                  <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                    (click)="eliminar(d.id, d.titulo)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
               }
             </td>
           </tr>
@@ -72,5 +104,92 @@
         }
       </tbody>
     </table>
+    <div class="pagination-footer">
+      <span class="pagination-info">{{ defectos.length }} de {{ total }} registros</span>
+      <div class="pagination-right">
+        <select class="pagination-size" [(ngModel)]="porPagina" (change)="buscar()">
+          <option [value]="10">10 / página</option>
+          <option [value]="20">20 / página</option>
+          <option [value]="50">50 / página</option>
+        </select>
+        @if (totalPaginas > 1) {
+          <div class="pagination">
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
+                (click)="cambiarPagina($index + 1)">{{ $index + 1 }}</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>
+
+<!-- ─── Modal Verificación (Cerrar / Reabrir) ────────────────────────────── -->
+@if (modalVerificarAbierto() && verificarPendiente) {
+  <div class="modal-overlay" (click)="cerrarModalVerificar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header" [class.modal-header--success]="verificarPendiente.accion === 'cerrar'"
+                                [class.modal-header--warning]="verificarPendiente.accion === 'reabrir'">
+        <div class="modal-title-group">
+          <span class="modal-icon">{{ verificarPendiente.accion === 'cerrar' ? '✅' : '🔄' }}</span>
+          <div>
+            <h3 class="modal-title">
+              {{ verificarPendiente.accion === 'cerrar' ? 'Cerrar defecto verificado' : 'Reabrir defecto' }}
+            </h3>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModalVerificar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        @if (verificarPendiente.accion === 'cerrar') {
+          <p class="confirm-msg">¿Confirmas que el defecto <strong>{{ verificarPendiente.titulo }}</strong> fue corregido y puede cerrarse?</p>
+          <p class="confirm-sub">El defecto pasará a estado <strong>Cerrado</strong>.</p>
+        } @else {
+          <p class="confirm-msg">El defecto <strong>{{ verificarPendiente.titulo }}</strong> sigue fallando.</p>
+          <p class="confirm-sub" style="margin-bottom:12px">Quedará en estado <strong>Asignado</strong> para que el desarrollador lo revise nuevamente.</p>
+          <div class="form-group" style="margin-bottom:0">
+            <label style="font-weight:600;font-size:13px">Comentario para el desarrollador <span class="req">*</span></label>
+            <textarea [(ngModel)]="comentarioReabrir" rows="3"
+                      placeholder="Describe qué sigue fallando, pasos realizados, resultado obtenido..."
+                      style="margin-top:6px"></textarea>
+          </div>
+        }
+      </div>
+      @if (errorVerificar) {
+        <div class="alert alert-error" style="margin: 8px 24px 0">{{ errorVerificar }}</div>
+      }
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModalVerificar()">Cancelar</button>
+        @if (verificarPendiente.accion === 'cerrar') {
+          <button class="btn btn-success" (click)="confirmarVerificar()">Cerrar Defecto</button>
+        } @else {
+          <button class="btn btn-warning" (click)="confirmarVerificar()">Reabrir Defecto</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Modal Confirmación Eliminar ─────────────────────────────────────── -->
+@if (modalConfirmarAbierto() && confirmPendiente) {
+  <div class="modal-overlay" (click)="cerrarConfirmar()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <div><h3 class="modal-title">Eliminar defecto</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmar()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Estás seguro de que deseas eliminar el defecto <strong>{{ confirmPendiente.nombre }}</strong>?</p>
+        <p class="confirm-sub">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

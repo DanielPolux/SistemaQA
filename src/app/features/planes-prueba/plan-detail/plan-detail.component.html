@@ -1,0 +1,261 @@
+<div class="page-container">
+
+  @if (cargando()) {
+    <div class="loading">Cargando plan...</div>
+  } @else if (error) {
+    <div class="alert alert-error">{{ error }}</div>
+  } @else if (plan) {
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="ce-header-left">
+        <a routerLink="/planes-prueba" class="btn btn-secondary btn-sm">← Volver</a>
+        <div class="ce-title-group">
+          <h2>{{ plan.nombre }}</h2>
+          <p class="ce-subtitle">
+            {{ plan.proyectoNombre }}
+            <span class="badge {{ estadoClase[plan.estado] }}" style="margin-left: 0.5rem">{{ plan.estado }}</span>
+          </p>
+        </div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-sm btn-word" title="Exportar a Word" (click)="exportarWord()">
+          <i class="bi bi-file-earmark-word"></i> Exportar Plan
+        </button>
+        @if (puedeGestionar()) {
+          <a [routerLink]="['/planes-prueba', plan.id, 'editar']" class="btn btn-secondary btn-sm">
+            <i class="bi bi-pencil"></i> Editar
+          </a>
+          @if (plan.estado === 'Activo') {
+            <button class="btn btn-sm btn-warning" (click)="cerrar()">
+              <i class="bi bi-lock"></i> Cerrar Plan
+            </button>
+          } @else {
+            <button class="btn btn-sm btn-success" (click)="reabrir()">
+              <i class="bi bi-unlock"></i> Reabrir
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="ce-stats" style="margin-bottom: 1.5rem">
+      <div class="ce-stat">
+        <span class="ce-stat-num">{{ plan.requerimientos?.length ?? 0 }}</span>
+        <span class="ce-stat-label">Requerimientos</span>
+      </div>
+      <div class="ce-stat ce-stat--success">
+        <span class="ce-stat-num">{{ reqsValidados }}</span>
+        <span class="ce-stat-label">Validados</span>
+      </div>
+      <div class="ce-stat ce-stat--danger">
+        <span class="ce-stat-num">{{ reqsConFallas }}</span>
+        <span class="ce-stat-label">Con fallas</span>
+      </div>
+      <div class="ce-stat">
+        <span class="ce-stat-num">{{ totalCiclos }}</span>
+        <span class="ce-stat-label">Ciclos</span>
+      </div>
+      <div class="ce-stat">
+        <span class="ce-stat-num">{{ totalEjecuciones }}</span>
+        <span class="ce-stat-label">Ejecuciones</span>
+      </div>
+      <div class="ce-stat ce-stat--success">
+        <span class="ce-stat-num">{{ porcentajeExito }}%</span>
+        <span class="ce-stat-label">Éxito</span>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="plan-detail-grid">
+
+      <!-- LEFT: Plan info -->
+      <div class="plan-detail-card">
+        <div class="plan-section-label">Información General</div>
+
+        <div class="plan-info-row">
+          <span class="plan-info-label">Responsable</span>
+          <span>{{ plan.responsableNombre ?? '—' }}</span>
+        </div>
+        <div class="plan-info-row">
+          <span class="plan-info-label">Fecha Inicio</span>
+          <span>{{ plan.fechaInicio ? (plan.fechaInicio | date:'dd/MM/yyyy') : '—' }}</span>
+        </div>
+        <div class="plan-info-row">
+          <span class="plan-info-label">Fecha Objetivo</span>
+          <span>{{ plan.fechaObjetivo ? (plan.fechaObjetivo | date:'dd/MM/yyyy') : '—' }}</span>
+        </div>
+
+        @if (plan.descripcion) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Descripción</div>
+          <p class="plan-text">{{ plan.descripcion }}</p>
+        }
+
+        <div class="plan-section-label" style="margin-top: 1.25rem">Objetivo</div>
+        <p class="plan-text">{{ plan.objetivo }}</p>
+
+        @if (plan.alcance) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Alcance</div>
+          <p class="plan-text">{{ plan.alcance }}</p>
+        }
+
+        @if (plan.fueraAlcance) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Fuera del Alcance</div>
+          <p class="plan-text plan-text--muted">{{ plan.fueraAlcance }}</p>
+        }
+
+        @if (plan.criteriosEntrada) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Criterios de Entrada</div>
+          <p class="plan-text">{{ plan.criteriosEntrada }}</p>
+        }
+
+        @if (plan.criteriosSalida) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Criterios de Salida</div>
+          <p class="plan-text plan-text--success">{{ plan.criteriosSalida }}</p>
+        }
+
+        @if (plan.riesgos) {
+          <div class="plan-section-label" style="margin-top: 1.25rem">Riesgos</div>
+          <p class="plan-text plan-text--warning">{{ plan.riesgos }}</p>
+        }
+      </div>
+
+      <!-- RIGHT: Requerimientos + Ciclos -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem">
+
+        <!-- Requerimientos con cobertura -->
+        <div>
+          <div class="plan-section-label">
+            Trazabilidad de Requerimientos
+            @if (puedeGestionar()) {
+              <a [routerLink]="['/planes-prueba', plan.id, 'editar']"
+                 class="btn btn-sm btn-outline" style="margin-left: auto; font-size: 11px">
+                <i class="bi bi-pencil"></i> Editar reqs
+              </a>
+            }
+          </div>
+
+          @if (!plan.requerimientos?.length) {
+            <div class="empty-row" style="padding: 1.25rem; text-align: center; color: var(--color-text-muted); font-size: 13px">
+              Sin requerimientos vinculados.
+              <a [routerLink]="['/planes-prueba', plan.id, 'editar']">Agregar requerimientos</a>
+            </div>
+          } @else {
+            <table class="data-table" style="margin-top: 0.5rem">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Requerimiento</th>
+                  <th>Prioridad</th>
+                  <th style="text-align:center">Casos</th>
+                  <th style="text-align:center">Ejecutados</th>
+                  <th style="text-align:center">OK</th>
+                  <th style="text-align:center">Fail</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of plan.requerimientos; track r.id) {
+                  <tr [class.plan-row-validado]="r.estadoValidacion === 'Validado'"
+                      [class.plan-row-falla]="r.estadoValidacion === 'Con fallas'">
+                    <td><span class="tag-codigo">{{ r.codigo }}</span></td>
+                    <td class="td-nombre">{{ r.titulo }}</td>
+                    <td>
+                      <span class="badge badge-prioridad-{{ r.prioridad | lowercase }}">{{ r.prioridad }}</span>
+                    </td>
+                    <td style="text-align:center">{{ r.totalCasos }}</td>
+                    <td style="text-align:center">{{ r.casosEjecutados }}</td>
+                    <td style="text-align:center">
+                      <span class="plan-aprobado">{{ r.casosAprobados }}</span>
+                    </td>
+                    <td style="text-align:center">
+                      @if (r.casosFallidos > 0) {
+                        <span class="plan-fallido">{{ r.casosFallidos }}</span>
+                      } @else {
+                        <span class="text-muted">0</span>
+                      }
+                    </td>
+                    <td>
+                      <span class="badge {{ validacionClase(r.estadoValidacion) }}">
+                        {{ r.estadoValidacion }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+
+        <!-- Ciclos de Prueba -->
+        <div>
+          <div class="plan-section-label">
+            Ciclos de Prueba
+            @if (puedeGestionar()) {
+              <a routerLink="/ciclos/nuevo" [queryParams]="{ proyectoId: plan.proyectoId }"
+                 class="btn btn-sm btn-primary" style="margin-left: auto; font-size: 11px">
+                + Nuevo Ciclo
+              </a>
+            }
+          </div>
+
+          @if (!plan.ciclos?.length) {
+            <div class="empty-row" style="padding: 1.25rem; text-align: center; color: var(--color-text-muted); font-size: 13px">
+              Sin ciclos vinculados. Al crear un ciclo, asígnalo a este plan.
+            </div>
+          } @else {
+            <table class="data-table" style="margin-top: 0.5rem">
+              <thead>
+                <tr>
+                  <th>Ciclo</th>
+                  <th>Ambiente</th>
+                  <th>Estado</th>
+                  <th>Ejec.</th>
+                  <th>OK</th>
+                  <th>Fail</th>
+                  <th>Fechas</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of plan.ciclos; track c.id) {
+                  <tr>
+                    <td class="td-nombre">{{ c.nombre }}</td>
+                    <td>{{ c.ambiente ?? '—' }}</td>
+                    <td>
+                      <span class="badge {{ cicloEstadoClase[c.estado] }}">{{ c.estado }}</span>
+                    </td>
+                    <td>{{ c.totalEjecuciones }}</td>
+                    <td><span class="plan-aprobado">{{ c.aprobados }}</span></td>
+                    <td>
+                      @if (c.fallidos > 0) {
+                        <span class="plan-fallido">{{ c.fallidos }}</span>
+                      } @else {
+                        <span class="text-muted">0</span>
+                      }
+                    </td>
+                    <td style="font-size: 11px; color: var(--color-text-muted)">
+                      @if (c.fechaInicio) { {{ c.fechaInicio | date:'dd/MM' }} }
+                      @if (c.fechaInicio && c.fechaFin) { → }
+                      @if (c.fechaFin) { {{ c.fechaFin | date:'dd/MM' }} }
+                      @if (!c.fechaInicio && !c.fechaFin) { — }
+                    </td>
+                    <td class="actions">
+                      <a [routerLink]="['/ciclos', c.id, 'ejecutar']"
+                         class="btn btn-sm btn-icon btn-info" title="Ver ejecución">
+                        <i class="bi bi-play-circle"></i>
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+
+      </div>
+    </div>
+
+  }
+</div>

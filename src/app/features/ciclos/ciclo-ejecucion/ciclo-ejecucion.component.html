@@ -1,0 +1,336 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="ce-header-left">
+      <a routerLink="/ciclos" class="btn btn-secondary btn-sm">← Volver</a>
+      <div class="ce-title-group">
+        <h2>Ejecución de Ciclo</h2>
+        @if (ciclo) {
+          <p class="ce-subtitle">
+            <strong>{{ ciclo.nombre }}</strong>
+            @if (ciclo.proyectoNombre) { — <span class="text-muted">{{ ciclo.proyectoNombre }}</span> }
+            <span class="badge {{ ciclo.estado === 'Activo' ? 'badge-ciclo-activo' : 'badge-ciclo-cerrado' }}"
+                  style="margin-left: 0.5rem;">{{ ciclo.estado }}</span>
+          </p>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+
+  <!-- Stats bar -->
+  @if (casos.length > 0) {
+    <div class="ce-stats">
+      <div class="ce-stat">
+        <span class="ce-stat-num">{{ casos.length }}</span>
+        <span class="ce-stat-label">Total casos</span>
+      </div>
+      <div class="ce-stat">
+        <span class="ce-stat-num">{{ totalEjecutados }}</span>
+        <span class="ce-stat-label">Ejecutados</span>
+      </div>
+      <div class="ce-stat ce-stat--success">
+        <span class="ce-stat-num">{{ totalAprobados }}</span>
+        <span class="ce-stat-label">Aprobados</span>
+      </div>
+      <div class="ce-stat ce-stat--danger">
+        <span class="ce-stat-num">{{ totalFallidos }}</span>
+        <span class="ce-stat-label">Fallidos / Bloqueados</span>
+      </div>
+    </div>
+  }
+
+  @if (ciclo?.estado === 'Cerrado') {
+    <div class="alert alert-warning" style="margin-bottom: 1rem;">
+      Este ciclo está cerrado. Reabre el ciclo para registrar ejecuciones.
+    </div>
+  }
+
+  <!-- Split panel layout -->
+  @if (cargando()) {
+    <div class="loading">Cargando casos del ciclo...</div>
+  } @else {
+    <div class="ciclo-exec-layout">
+
+      <!-- LEFT: Case list -->
+      <aside class="ciclo-exec-left">
+        <div class="ciclo-exec-left-header">
+          <span>Casos del ciclo</span>
+          <span class="ciclo-exec-count">{{ casos.length }}</span>
+        </div>
+        @for (c of casos; track c.id) {
+          <div class="ciclo-caso-item"
+               [class.ciclo-caso-item--selected]="casoSeleccionado?.id === c.id"
+               [class.ciclo-caso-item--aprobado]="c.resultadoCiclo === 'Aprobado'"
+               [class.ciclo-caso-item--fallido]="c.resultadoCiclo === 'Fallido' || c.resultadoCiclo === 'Bloqueado'"
+               (click)="seleccionarCaso(c)">
+            <div class="ciclo-caso-fila">
+              <span class="tag-codigo tag-codigo-xs">{{ c.codigo }}</span>
+              @if (c.resultadoCiclo) {
+                <span class="badge {{ resultadoClase[c.resultadoCiclo] }} badge-xs">{{ c.resultadoCiclo }}</span>
+              } @else {
+                <span class="badge badge-resultado-no-ejecutado badge-xs">Sin ejecutar</span>
+              }
+            </div>
+            <div class="ciclo-caso-nombre">{{ c.nombre }}</div>
+            @if (c.fechaEjecucion) {
+              <div class="ciclo-caso-fecha">{{ c.fechaEjecucion | date:'dd/MM HH:mm' }}</div>
+            }
+          </div>
+        } @empty {
+          <div class="ciclo-exec-empty-list">
+            No hay casos asociados a este ciclo.<br />
+            <a routerLink="/casos-prueba">Ir a Casos de Prueba</a>
+          </div>
+        }
+      </aside>
+
+      <!-- RIGHT: Form or states -->
+      <main class="ciclo-exec-right">
+
+        @if (!casoSeleccionado) {
+          <!-- Empty state -->
+          <div class="ciclo-exec-empty">
+            <i class="bi bi-arrow-left-circle" style="font-size:2.5rem;opacity:0.25"></i>
+            <p>Selecciona un caso de prueba de la lista para registrar su ejecución</p>
+          </div>
+
+        } @else if (ejecucionExito()) {
+          <!-- Success state (Fallido with defect) -->
+          <div class="ciclo-exec-exito">
+            <div style="font-size:2.5rem;margin-bottom:0.5rem">✅</div>
+            <h3>Ejecución y defecto registrados</h3>
+            <p>El caso fue marcado como <strong>Fallido</strong> y el defecto fue creado con el código:</p>
+            <div class="ciclo-exec-defecto-codigo">{{ ejecucionExito() }}</div>
+            <p style="font-size:0.82rem">Puedes ver el defecto en la sección <strong>Defectos</strong>.</p>
+            <button class="btn btn-primary" (click)="limpiarSeleccion()">← Seleccionar otro caso</button>
+          </div>
+
+        } @else {
+          <!-- Execution form -->
+          <div class="ciclo-exec-form">
+
+            <div class="ciclo-exec-form-header">
+              <span class="tag-codigo">{{ casoSeleccionado.codigo }}</span>
+              <h3>{{ casoSeleccionado.nombre }}</h3>
+            </div>
+
+            <!-- Ciclo banner -->
+            <div class="ciclo-banner ciclo-banner--activo">
+              <span class="ciclo-banner-icon">🔄</span>
+              <div>
+                <span class="ciclo-banner-label">Ciclo</span>
+                <span class="ciclo-banner-nombre">{{ ciclo?.nombre }}</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ambiente</label>
+                <input type="text" [(ngModel)]="formEjecucion.ambiente" readonly class="input-readonly" />
+              </div>
+              <div class="form-group">
+                <label>Versión</label>
+                <input type="text" [(ngModel)]="formEjecucion.version" readonly class="input-readonly" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Tester</label>
+              <input type="text"
+                     [value]="(auth.usuarioActual()?.nombre ?? '') + ' ' + (auth.usuarioActual()?.apellido ?? '')"
+                     readonly class="input-readonly" />
+            </div>
+
+            <!-- Steps -->
+            @if (pasosEjecucion.length > 0) {
+              <div class="pasos-ejecucion">
+                <div class="pasos-ejecucion-header">
+                  <span class="pasos-ejecucion-title">
+                    <i class="bi bi-list-check"></i> Pasos de Prueba
+                  </span>
+                  <span class="pasos-ejecucion-hint">Marca cada paso — el resultado se detecta automáticamente</span>
+                </div>
+                <div class="pasos-list">
+                  @for (paso of pasosEjecucion; track paso.orden; let idx = $index) {
+                    <div class="paso-item"
+                         [class.paso-item--ok]="paso.estado === 'ok'"
+                         [class.paso-item--no-ok]="paso.estado === 'no_ok'">
+                      <div class="paso-item-fila">
+                        <span class="paso-num">{{ paso.orden }}</span>
+                        <span class="paso-desc">{{ paso.descripcion }}</span>
+                        <div class="paso-acciones">
+                          <button type="button" class="paso-btn paso-btn--ok"
+                                  [class.paso-btn--active]="paso.estado === 'ok'"
+                                  (click)="marcarPaso(idx, 'ok')">
+                            <i class="bi bi-check-lg"></i> OK
+                          </button>
+                          <button type="button" class="paso-btn paso-btn--no-ok"
+                                  [class.paso-btn--active]="paso.estado === 'no_ok'"
+                                  (click)="marcarPaso(idx, 'no_ok')">
+                            <i class="bi bi-x-lg"></i> NO OK
+                          </button>
+                        </div>
+                      </div>
+                      <div class="paso-imagen-area">
+                        @if (paso.imagenes.length > 0) {
+                          <div class="paso-imagenes-lista">
+                            @for (img of paso.imagenes; track $index; let imgIdx = $index) {
+                              <div class="paso-imagen-item">
+                                <img [src]="img" class="paso-imagen-preview" alt="Evidencia {{ paso.orden }}-{{ imgIdx + 1 }}" />
+                                <button type="button" class="paso-imagen-remove"
+                                        (click)="limpiarImagenPaso(idx, imgIdx)" title="Quitar imagen">
+                                  <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                              </div>
+                            }
+                          </div>
+                        }
+                        <div class="paso-imagen-row">
+                          <div class="paso-imagen-zona" tabindex="0" (paste)="pegarImagenPaso(idx, $event)">
+                            <i class="bi bi-clipboard-image"></i>
+                            <span>Clic aquí y pega (Ctrl+V)</span>
+                          </div>
+                          <label [for]="'paso-img-ce-' + idx" class="paso-imagen-file-btn" title="Seleccionar imagen(es)">
+                            <i class="bi bi-folder2-open"></i>
+                          </label>
+                          <input [id]="'paso-img-ce-' + idx" type="file" accept="image/*" multiple style="display:none"
+                                 (change)="onFileSelectedPaso($event, idx)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (pasosEjecucion.length === 0) {
+              <div class="form-group">
+                <label>Resultado <span class="req">*</span></label>
+                <select [(ngModel)]="formEjecucion.resultado">
+                  <option value="">Selecciona resultado...</option>
+                  @for (r of resultadosEjecucion; track r) { <option [value]="r">{{ r }}</option> }
+                </select>
+              </div>
+            }
+
+            <div class="form-group">
+              <label>Resultado Obtenido <span class="req">*</span></label>
+              <textarea [(ngModel)]="formEjecucion.resultadoObtenido" rows="3"
+                        placeholder="Describe el resultado real obtenido..."></textarea>
+            </div>
+
+            @if (!esFallido) {
+              <div class="form-group">
+                <label>Evidencia (URL)</label>
+                <input type="text" [(ngModel)]="formEjecucion.evidenciaUrl"
+                       placeholder="https://... (screenshot, video, log, etc.)" />
+              </div>
+              <div class="form-group">
+                <label>Observaciones</label>
+                <textarea [(ngModel)]="formEjecucion.observaciones" rows="2"
+                          placeholder="Notas adicionales..."></textarea>
+              </div>
+            }
+
+            @if (esFallido) {
+              <div class="defecto-section">
+                <div class="defecto-section-title">
+                  <span class="badge badge-resultado-fallido" style="font-size:0.75rem;">Fallido</span>
+                  Datos del Defecto
+                </div>
+
+                <div class="form-group">
+                  <label>Título del Defecto <span class="req">*</span></label>
+                  <input type="text" [(ngModel)]="formEjecucion.defTitulo"
+                         placeholder="Describe brevemente el defecto encontrado..." />
+                </div>
+
+                <div class="form-group">
+                  <label>Descripción <span class="req">*</span></label>
+                  <textarea [(ngModel)]="formEjecucion.defDescripcion" rows="2"
+                            placeholder="Descripción del defecto..."></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>Pasos para Reproducir <span class="req">*</span></label>
+                  <textarea [(ngModel)]="formEjecucion.defPasosReproduccion" rows="3"
+                            placeholder="1. Ingresar a...&#10;2. Hacer clic en..."></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>Resultado Esperado</label>
+                  <textarea [(ngModel)]="formEjecucion.defResultadoEsperado" rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Severidad <span class="req">*</span></label>
+                    <select [(ngModel)]="formEjecucion.defSeveridad">
+                      <option value="">Seleccionar...</option>
+                      @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Prioridad <span class="req">*</span></label>
+                    <select [(ngModel)]="formEjecucion.defPrioridad">
+                      <option value="">Seleccionar...</option>
+                      @for (p of prioridades; track p) { <option [value]="p">{{ p }}</option> }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Asignar a Desarrollador</label>
+                  <select [(ngModel)]="formEjecucion.defAsignadoA">
+                    <option [ngValue]="null">Sin asignar</option>
+                    @if (mostrarPMEnDropdown && pmUsuario) {
+                      <option [ngValue]="pmUsuario.id">{{ pmUsuario.nombre }} {{ pmUsuario.apellido }} (PM)</option>
+                    }
+                    @for (d of desarrolladores; track d.id) {
+                      <option [ngValue]="d.id">{{ d.nombre }} {{ d.apellido }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Evidencia (URL)</label>
+                  <input type="text" [(ngModel)]="formEjecucion.evidenciaUrl"
+                         placeholder="https://..." />
+                </div>
+
+                <div class="form-group">
+                  <label>Observaciones</label>
+                  <textarea [(ngModel)]="formEjecucion.observaciones" rows="2"
+                            placeholder="Notas adicionales sobre el defecto..."></textarea>
+                </div>
+              </div>
+            }
+
+            @if (errorEjecucion) {
+              <div class="alert alert-danger">{{ errorEjecucion }}</div>
+            }
+
+            <div class="ciclo-exec-form-footer">
+              <button class="btn btn-outline" (click)="limpiarSeleccion()" [disabled]="guardandoEjec()">
+                ← Cancelar
+              </button>
+              @if (ciclo?.estado === 'Activo' && auth.puedeEjecutar()) {
+                <button class="btn btn-accent" (click)="guardarEjecucion()" [disabled]="guardandoEjec()">
+                  @if (guardandoEjec()) { Registrando... } @else { ✓ Registrar Ejecución }
+                </button>
+              } @else if (ciclo?.estado === 'Cerrado') {
+                <span class="text-muted" style="font-size:13px">El ciclo está cerrado.</span>
+              }
+            </div>
+
+          </div>
+        }
+
+      </main>
+    </div>
+  }
+
+</div>

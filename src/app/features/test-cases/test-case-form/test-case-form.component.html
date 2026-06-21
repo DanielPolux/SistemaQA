@@ -1,9 +1,8 @@
 <div class="page-container">
   <div class="page-header">
-    <h2>{{ esEdicion ? 'Editar Caso de Prueba' : 'Nuevo Caso de Prueba' }}</h2>
+    <h2>{{ soloLectura ? 'Ver Caso de Prueba' : (esEdicion ? 'Editar Caso de Prueba' : 'Nuevo Caso de Prueba') }}</h2>
     <div class="header-actions">
-      <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
-      <a routerLink="/casos-prueba" class="btn btn-secondary">Cancelar</a>
+      <a routerLink="/casos-prueba" class="btn btn-secondary">Volver</a>
     </div>
   </div>
 
@@ -17,7 +16,8 @@
       <div class="form-row">
         <div class="form-group form-group--sm">
           <label for="codigo">Código CP</label>
-          <input id="codigo" type="text" formControlName="codigo" placeholder="CP-001" />
+          <input id="codigo" type="text" formControlName="codigo"
+            class="input-readonly" readonly />
         </div>
         <div class="form-group">
           <label for="nombre">Nombre del Caso de Prueba *</label>
@@ -104,55 +104,13 @@
       </div>
     </div>
 
-    <!-- Estado y Ejecución -->
-    <div class="form-section">
-      <h3 class="form-section-title">Estado y Ejecución</h3>
-      <div class="form-row form-row--3">
-        <div class="form-group">
-          <label for="estado">Estado QA *</label>
-          <select id="estado" formControlName="estado">
-            @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="resultado">Resultado</label>
-          <select id="resultado" formControlName="resultado">
-            @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="fechaEjecucion">Fecha Ejecución</label>
-          <input id="fechaEjecucion" type="date" formControlName="fechaEjecucion" />
-        </div>
+    @if (!soloLectura) {
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
+          {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Caso de Prueba') }}
+        </button>
+        <a routerLink="/casos-prueba" class="btn btn-secondary">Cancelar</a>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="responsableQaId">Responsable QA</label>
-          <select id="responsableQaId" formControlName="responsableQaId">
-            <option [value]="null">Sin asignar</option>
-            @for (u of usuarios; track u.id) {
-              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="evidenciaUrl">Evidencia (URL)</label>
-          <input id="evidenciaUrl" type="text" formControlName="evidenciaUrl"
-            placeholder="https://... (captura, video, reporte)" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="observaciones">Observaciones</label>
-        <textarea id="observaciones" formControlName="observaciones" rows="3"
-          placeholder="Notas adicionales sobre la ejecución, bloqueos, etc."></textarea>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || guardando">
-        {{ guardando ? 'Guardando...' : (esEdicion ? 'Actualizar' : 'Crear Caso de Prueba') }}
-      </button>
-      <a routerLink="/casos-prueba" class="btn btn-secondary">Cancelar</a>
-    </div>
+    }
   </form>
 </div>

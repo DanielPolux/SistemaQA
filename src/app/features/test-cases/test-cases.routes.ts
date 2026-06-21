@@ -14,6 +14,10 @@ export const TEST_CASES_ROUTES: Routes = [
     loadComponent: () => import('./test-case-form/test-case-form.component').then(m => m.TestCaseFormComponent)
   },
   {
+    path: ':id/ver',
+    loadComponent: () => import('./test-case-form/test-case-form.component').then(m => m.TestCaseFormComponent)
+  },
+  {
     path: ':id/editar',
     loadComponent: () => import('./test-case-form/test-case-form.component').then(m => m.TestCaseFormComponent)
   }
