@@ -6,7 +6,7 @@ import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { RequirementService } from '../../../core/services/requirement.service';
-import { Proyecto, Usuario, Requerimiento } from '../../../core/models';
+import { Proyecto, Usuario, Requerimiento, TIPOS_PRUEBA, AMBIENTES_PLAN } from '../../../core/models';
 
 @Component({
   selector: 'app-plan-form',
@@ -32,10 +32,16 @@ export class PlanFormComponent implements OnInit {
   guardando    = false;
   error        = '';
 
+  readonly tiposPrueba  = TIPOS_PRUEBA;
+  readonly ambientesPlan = AMBIENTES_PLAN;
+
   form = this.fb.group({
     proyectoId:       [null as number | null, Validators.required],
     nombre:           ['', [Validators.required, Validators.maxLength(200)]],
     descripcion:      [''],
+    sprint:           [''],
+    tipoPrueba:       [''],
+    ambiente:         [''],
     objetivo:         ['', Validators.required],
     alcance:          [''],
     fueraAlcance:     [''],
@@ -61,6 +67,9 @@ export class PlanFormComponent implements OnInit {
           proyectoId:       p.proyectoId,
           nombre:           p.nombre,
           descripcion:      p.descripcion    ?? '',
+          sprint:           p.sprint         ?? '',
+          tipoPrueba:       p.tipoPrueba     ?? '',
+          ambiente:         p.ambiente       ?? '',
           objetivo:         p.objetivo,
           alcance:          p.alcance         ?? '',
           fueraAlcance:     p.fueraAlcance    ?? '',
@@ -71,12 +80,10 @@ export class PlanFormComponent implements OnInit {
           fechaInicio:      p.fechaInicio      ? String(p.fechaInicio).substring(0, 10)  : '',
           fechaObjetivo:    p.fechaObjetivo    ? String(p.fechaObjetivo).substring(0, 10): '',
         });
-        // Load project requirements and pre-check the already selected ones
         this.cargarRequerimientos(p.proyectoId, new Set(p.requerimientoIds ?? []));
       });
     }
 
-    // When project changes (create mode), load requirements
     if (!id) {
       this.form.get('proyectoId')!.valueChanges.subscribe(pid => {
         this.requerimientos = [];
@@ -133,6 +140,9 @@ export class PlanFormComponent implements OnInit {
       proyectoId:       val.proyectoId,
       nombre:           val.nombre,
       descripcion:      val.descripcion      || undefined,
+      sprint:           val.sprint           || undefined,
+      tipoPrueba:       val.tipoPrueba       || undefined,
+      ambiente:         val.ambiente         || undefined,
       objetivo:         val.objetivo,
       alcance:          val.alcance          || undefined,
       fueraAlcance:     val.fueraAlcance     || undefined,

@@ -1,7 +1,28 @@
 export enum EstadoPlan {
-  ACTIVO  = 'Activo',
-  CERRADO = 'Cerrado',
+  BORRADOR     = 'Borrador',
+  PLANIFICADO  = 'Planificado',
+  EN_EJECUCION = 'En ejecución',
+  CERRADO      = 'Cerrado',
 }
+
+export const TIPOS_PRUEBA = [
+  'Funcional',
+  'Regresión',
+  'Humo',
+  'Integración',
+  'UAT',
+  'Performance',
+  'Seguridad',
+  'Exploratorio',
+] as const;
+
+export const AMBIENTES_PLAN = [
+  'Desarrollo',
+  'QA',
+  'Staging',
+  'Pre-producción',
+  'Producción',
+] as const;
 
 export interface PlanPrueba {
   id: number;
@@ -16,6 +37,9 @@ export interface PlanPrueba {
   criteriosEntrada?: string;
   criteriosSalida?: string;
   riesgos?: string;
+  sprint?: string | null;
+  tipoPrueba?: string | null;
+  ambiente?: string | null;
   responsableId?: number | null;
   responsableNombre?: string | null;
   estado: EstadoPlan;
@@ -47,6 +71,41 @@ export interface PlanReqCobertura {
   casosAprobados: number;
   casosFallidos: number;
   estadoValidacion: 'Validado' | 'Con fallas' | 'En progreso' | 'Sin ejecutar' | 'Sin casos';
+}
+
+export interface TrazabilidadDefecto {
+  id: number;
+  codigoProyecto: string;
+  titulo: string;
+  estado: string;
+  severidad: string;
+}
+
+export interface TrazabilidadCaso {
+  id: number;
+  codigo: string;
+  titulo: string;
+  tipo: string;
+  prioridad: string;
+  ultimoResultado: string | null;
+  ultimaEjecucionFecha: string | null;
+  defectos: TrazabilidadDefecto[];
+}
+
+export interface TrazabilidadReq {
+  id: number;
+  codigo: string;
+  titulo: string;
+  prioridad: string;
+  estado: string;
+  casos: TrazabilidadCaso[];
+}
+
+export interface TrazabilidadPlan {
+  planId: number;
+  planNombre: string;
+  proyectoNombre: string | null;
+  requerimientos: TrazabilidadReq[];
 }
 
 export interface PlanCicloResumen {

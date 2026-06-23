@@ -96,11 +96,18 @@ export class CicloListComponent implements OnInit {
 
     this.validandoProyecto = true;
     forkJoin({
-      reqs:  this.requirementService.getByProyecto(proyectoId),
-      casos: this.testCaseService.getByProyecto(proyectoId),
+      reqs:   this.requirementService.getByProyecto(proyectoId),
+      casos:  this.testCaseService.getByProyecto(proyectoId),
+      activo: this.service.getActivoByProyecto(proyectoId),
     }).subscribe({
-      next: ({ reqs, casos }) => {
+      next: ({ reqs, casos, activo }) => {
         this.validandoProyecto = false;
+
+        if (activo) {
+          errores.push(
+            `Ya existe un ciclo activo: "${activo.nombre}". Debes cerrarlo antes de crear uno nuevo.`
+          );
+        }
 
         if (reqs.length === 0) {
           errores.push('El proyecto no tiene requerimientos registrados.');
@@ -168,12 +175,17 @@ export class CicloListComponent implements OnInit {
       pagina:     this.pagina,
       porPagina:  this.porPagina,
     }).subscribe({
-      next: (res) => { this.ciclos = res.datos; this.total = res.total; this.cargando = false; },
+      next: (res) => {
+        this.ciclos = res.datos; this.total = res.total; this.cargando = false;
+        if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
+      },
       error: ()   => { this.cargando = false; },
     });
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+  cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
+  get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
   cerrar(c: CicloPrueba): void {
     this.service.cerrar(c.id).subscribe(() => this.cargar());

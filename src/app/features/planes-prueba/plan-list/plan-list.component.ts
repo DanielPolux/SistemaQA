@@ -31,8 +31,10 @@ export class PlanListComponent implements OnInit {
   readonly estados = Object.values(EstadoPlan);
 
   readonly estadoClase: Record<string, string> = {
-    [EstadoPlan.ACTIVO]:  'badge-ciclo-activo',
-    [EstadoPlan.CERRADO]: 'badge-ciclo-cerrado',
+    [EstadoPlan.BORRADOR]:     'badge-plan-borrador',
+    [EstadoPlan.PLANIFICADO]:  'badge-plan-planificado',
+    [EstadoPlan.EN_EJECUCION]: 'badge-ciclo-activo',
+    [EstadoPlan.CERRADO]:      'badge-ciclo-cerrado',
   };
 
   modalConfirmarAbierto = signal(false);
@@ -51,12 +53,17 @@ export class PlanListComponent implements OnInit {
       pagina:     this.pagina,
       porPagina:  this.porPagina,
     }).subscribe({
-      next: (res) => { this.planes = res.datos; this.total = res.total; this.cargando = false; },
+      next: (res) => {
+        this.planes = res.datos; this.total = res.total; this.cargando = false;
+        if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
+      },
       error: ()   => { this.cargando = false; },
     });
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+  cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
+  get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
   cerrar(p: PlanPrueba): void {
     this.service.cerrar(p.id).subscribe(() => this.cargar());

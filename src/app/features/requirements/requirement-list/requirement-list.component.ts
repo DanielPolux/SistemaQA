@@ -94,12 +94,17 @@ export class RequirementListComponent implements OnInit {
       pagina:     this.pagina,
       porPagina:  this.porPagina
     }).subscribe({
-      next: (res) => { this.requerimientos = res.datos; this.total = res.total; this.cargando = false; },
+      next: (res) => {
+        this.requerimientos = res.datos; this.total = res.total; this.cargando = false;
+        if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
+      },
       error: ()   => { this.cargando = false; }
     });
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+  cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
+  get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
   // ─── Modal confirmación eliminar ─────────────────────────────────────────
   modalConfirmarAbierto = signal(false);

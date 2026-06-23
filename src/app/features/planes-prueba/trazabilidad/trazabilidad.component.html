@@ -1,0 +1,178 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="ce-header-left">
+      <a [routerLink]="['/planes-prueba', planId]" class="btn btn-secondary btn-sm">← Volver al Plan</a>
+      <div class="ce-title-group">
+        <h2>Matriz de Trazabilidad</h2>
+        @if (data()) {
+          <p class="ce-subtitle">{{ data()!.planNombre }} · {{ data()!.proyectoNombre }}</p>
+        }
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-sm btn-secondary" (click)="exportarCSV()" [disabled]="!data()">
+        <i class="bi bi-download"></i> Exportar CSV
+      </button>
+      <button class="btn btn-sm btn-word" (click)="exportarWord()" [disabled]="!data()">
+        <i class="bi bi-file-earmark-word"></i> Exportar Word
+      </button>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="loading">Cargando matriz...</div>
+  } @else if (error) {
+    <div class="alert alert-error">{{ error }}</div>
+  } @else if (data()) {
+
+    <!-- Stats -->
+    @if (stats(); as s) {
+      <div class="ce-stats traz-stats">
+        <div class="ce-stat">
+          <span class="ce-stat-num">{{ s.totalReqs }}</span>
+          <span class="ce-stat-label">Requerimientos</span>
+        </div>
+        <div class="ce-stat" [class.ce-stat--danger]="s.sinCasos > 0">
+          <span class="ce-stat-num">{{ s.sinCasos }}</span>
+          <span class="ce-stat-label">Sin casos</span>
+        </div>
+        <div class="ce-stat">
+          <span class="ce-stat-num">{{ s.totalCasos }}</span>
+          <span class="ce-stat-label">Total casos</span>
+        </div>
+        <div class="ce-stat" [class.ce-stat--success]="s.cobertura === 100">
+          <span class="ce-stat-num">{{ s.cobertura }}%</span>
+          <span class="ce-stat-label">Ejecutados</span>
+        </div>
+        <div class="ce-stat ce-stat--success">
+          <span class="ce-stat-num">{{ s.aprobados }}</span>
+          <span class="ce-stat-label">Aprobados</span>
+        </div>
+        <div class="ce-stat" [class.ce-stat--danger]="s.fallidos > 0">
+          <span class="ce-stat-num">{{ s.fallidos }}</span>
+          <span class="ce-stat-label">Fallidos</span>
+        </div>
+        <div class="ce-stat" [class.ce-stat--warning]="s.sinEjecutar > 0">
+          <span class="ce-stat-num">{{ s.sinEjecutar }}</span>
+          <span class="ce-stat-label">Sin ejecutar</span>
+        </div>
+      </div>
+    }
+
+    <!-- Filtros -->
+    <div class="traz-filtros">
+      <div class="traz-filtro-btns">
+        @for (f of FILTROS; track f.valor) {
+          <button class="btn btn-sm traz-filtro-btn"
+                  [class.active]="filtroResultado() === f.valor"
+                  (click)="filtroResultado.set(f.valor)">
+            {{ f.etiqueta }}
+          </button>
+        }
+      </div>
+      <input class="form-control traz-busqueda"
+             type="text"
+             placeholder="Buscar req o caso..."
+             [ngModel]="busqueda()"
+             (ngModelChange)="busqueda.set($event)" />
+    </div>
+
+    <!-- Tabla -->
+    @if (!requerimientosFiltrados().length) {
+      <div class="empty-row" style="padding: 2rem; text-align: center; color: var(--color-text-muted)">
+        Sin resultados con el filtro aplicado.
+      </div>
+    } @else {
+      <div class="traz-table-wrapper">
+        <table class="data-table traz-table">
+          <thead>
+            <tr>
+              <th class="traz-th-req">Requerimiento</th>
+              <th class="traz-th-caso">Caso de Prueba</th>
+              <th>Tipo</th>
+              <th>Prioridad</th>
+              <th>Resultado</th>
+              <th>Defectos</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (req of requerimientosFiltrados(); track req.id) {
+
+              <!-- Req header -->
+              <tr class="traz-req-header">
+                <td colspan="6">
+                  <div class="traz-req-info">
+                    <span class="tag-codigo">{{ req.codigo }}</span>
+                    <span class="traz-req-titulo">{{ req.titulo }}</span>
+                    <span class="badge badge-prioridad-{{ req.prioridad | lowercase }}" style="font-size:10px">
+                      {{ req.prioridad }}
+                    </span>
+                    <span class="traz-cobertura-chip">
+                      {{ coberturaReq(req) }}% ejecutado · {{ req.casos.length }} caso{{ req.casos.length !== 1 ? 's' : '' }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Sin casos -->
+              @if (!req.casos.length) {
+                <tr class="traz-caso-row traz-sin-casos">
+                  <td></td>
+                  <td colspan="5" class="traz-empty-cell">
+                    <span class="traz-resultado traz-resultado--sin-casos">Sin casos de prueba vinculados</span>
+                  </td>
+                </tr>
+              }
+
+              <!-- Casos -->
+              @for (caso of req.casos; track caso.id) {
+                <tr class="traz-caso-row">
+                  <td></td>
+                  <td>
+                    <div class="traz-caso-nombre">
+                      <span class="tag-codigo tag-codigo--sm">{{ caso.codigo }}</span>
+                      <span>{{ caso.titulo }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    @if (caso.tipo) {
+                      <span class="badge badge-tipo-{{ caso.tipo | lowercase }}">{{ caso.tipo }}</span>
+                    } @else { — }
+                  </td>
+                  <td>
+                    @if (caso.prioridad) {
+                      <span class="badge badge-prioridad-{{ caso.prioridad | lowercase }}">{{ caso.prioridad }}</span>
+                    } @else { — }
+                  </td>
+                  <td>
+                    <span class="traz-resultado {{ resultadoClase(caso.ultimoResultado) }}">
+                      <span class="traz-resultado-icono">{{ resultadoIcono(caso.ultimoResultado) }}</span>
+                      {{ caso.ultimoResultado ?? 'Sin ejecutar' }}
+                    </span>
+                  </td>
+                  <td class="traz-defectos-cell">
+                    @if (caso.defectos.length) {
+                      <div class="traz-defectos-list">
+                        @for (d of caso.defectos; track d.id) {
+                          <span class="traz-defecto-chip {{ defectoChipClase(d.estado) }}"
+                                [title]="d.titulo + ' · ' + d.estado">
+                            {{ d.codigoProyecto }}
+                          </span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  }
+</div>

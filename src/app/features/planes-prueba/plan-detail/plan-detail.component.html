@@ -19,6 +19,10 @@
         </div>
       </div>
       <div class="page-header-actions">
+        <a [routerLink]="['/planes-prueba', plan.id, 'trazabilidad']"
+           class="btn btn-sm btn-info">
+          <i class="bi bi-diagram-3"></i> Trazabilidad
+        </a>
         <button class="btn btn-sm btn-word" title="Exportar a Word" (click)="exportarWord()">
           <i class="bi bi-file-earmark-word"></i> Exportar Plan
         </button>
@@ -26,7 +30,7 @@
           <a [routerLink]="['/planes-prueba', plan.id, 'editar']" class="btn btn-secondary btn-sm">
             <i class="bi bi-pencil"></i> Editar
           </a>
-          @if (plan.estado === 'Activo') {
+          @if (plan.estado !== 'Cerrado') {
             <button class="btn btn-sm btn-warning" (click)="cerrar()">
               <i class="bi bi-lock"></i> Cerrar Plan
             </button>
@@ -78,6 +82,24 @@
           <span class="plan-info-label">Responsable</span>
           <span>{{ plan.responsableNombre ?? '—' }}</span>
         </div>
+        @if (plan.sprint) {
+          <div class="plan-info-row">
+            <span class="plan-info-label">Sprint / Versión</span>
+            <span>{{ plan.sprint }}</span>
+          </div>
+        }
+        @if (plan.tipoPrueba) {
+          <div class="plan-info-row">
+            <span class="plan-info-label">Tipo de Prueba</span>
+            <span>{{ plan.tipoPrueba }}</span>
+          </div>
+        }
+        @if (plan.ambiente) {
+          <div class="plan-info-row">
+            <span class="plan-info-label">Ambiente</span>
+            <span>{{ plan.ambiente }}</span>
+          </div>
+        }
         <div class="plan-info-row">
           <span class="plan-info-label">Fecha Inicio</span>
           <span>{{ plan.fechaInicio ? (plan.fechaInicio | date:'dd/MM/yyyy') : '—' }}</span>

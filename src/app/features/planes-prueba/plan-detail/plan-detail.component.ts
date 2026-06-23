@@ -26,8 +26,10 @@ export class PlanDetailComponent implements OnInit {
   readonly EstadoPlan = EstadoPlan;
 
   readonly estadoClase: Record<string, string> = {
-    [EstadoPlan.ACTIVO]:  'badge-ciclo-activo',
-    [EstadoPlan.CERRADO]: 'badge-ciclo-cerrado',
+    [EstadoPlan.BORRADOR]:     'badge-plan-borrador',
+    [EstadoPlan.PLANIFICADO]:  'badge-plan-planificado',
+    [EstadoPlan.EN_EJECUCION]: 'badge-ciclo-activo',
+    [EstadoPlan.CERRADO]:      'badge-ciclo-cerrado',
   };
 
   readonly cicloEstadoClase: Record<string, string> = {

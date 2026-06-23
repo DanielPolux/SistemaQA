@@ -15,6 +15,35 @@
 
   @if (!cargando() && s) {
 
+    <!-- ─── Sin proyectos ─────────────────────────────────────────────────── -->
+    @if (sinProyectos) {
+      <div class="dash-empty-state">
+        <div class="dash-empty-icon">
+          <i class="bi bi-folder-x"></i>
+        </div>
+        @if (esAdmin) {
+          <h3 class="dash-empty-title">No hay proyectos creados aún</h3>
+          <p class="dash-empty-desc">
+            Crea el primer proyecto para comenzar a gestionar el QA de tu equipo.
+          </p>
+          <a routerLink="/proyectos/nuevo" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Crear Proyecto
+          </a>
+        } @else {
+          <h3 class="dash-empty-title">No tienes proyectos asignados</h3>
+          <p class="dash-empty-desc">
+            Aún no has sido incluido en ningún proyecto.<br>
+            Contacta al Administrador o QA Lead para que te asignen a uno.
+          </p>
+          <a routerLink="/proyectos" class="btn btn-secondary">
+            <i class="bi bi-folder2-open"></i> Ver Proyectos
+          </a>
+        }
+      </div>
+    }
+
+    @if (!sinProyectos) {
+
     <!-- ─── KPI cards ───────────────────────────────────────────────────── -->
     <div class="kpi-grid">
       <div class="kpi-card kpi-blue">
@@ -298,6 +327,8 @@
       </div>
 
     </div>
+
+    } <!-- /!sinProyectos -->
 
   }
 </div>

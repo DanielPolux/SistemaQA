@@ -110,29 +110,38 @@ export class CicloFormComponent implements OnInit {
           return;
         }
 
-        // Verificar que todos los requerimientos tengan casos de prueba
         this.verificandoReqs = true;
-        forkJoin({
-          reqs:  this.requirementService.getByProyecto(Number(pid)),
-          casos: this.testCaseService.getByProyecto(Number(pid)),
-        }).subscribe({
-          next: ({ reqs, casos }) => {
-            this.verificandoReqs = false;
-            if (reqs.length === 0) {
-              this.cargarCasosPrevios(Number(pid));
+        this.service.getActivoByProyecto(Number(pid)).subscribe({
+          next: (cicloActivo) => {
+            if (cicloActivo) {
+              this.errorEstado = `El proyecto ya tiene un ciclo activo: "${cicloActivo.nombre}". Debes cerrarlo antes de crear uno nuevo.`;
+              this.verificandoReqs = false;
               return;
             }
-            const reqsConCaso = new Set(
-              casos.filter(c => c.requerimientoId).map(c => c.requerimientoId!)
-            );
-            const faltantes = reqs.filter(r => !reqsConCaso.has(r.id));
-            if (faltantes.length > 0) {
-              this.errorRequerimientos =
-                `Los siguientes requerimientos no tienen casos de prueba asociados: ` +
-                faltantes.map(r => r.codigo).join(', ') + '.';
-            } else {
-              this.cargarCasosPrevios(Number(pid));
-            }
+            forkJoin({
+              reqs:  this.requirementService.getByProyecto(Number(pid)),
+              casos: this.testCaseService.getByProyecto(Number(pid)),
+            }).subscribe({
+              next: ({ reqs, casos }) => {
+                this.verificandoReqs = false;
+                if (reqs.length === 0) {
+                  this.cargarCasosPrevios(Number(pid));
+                  return;
+                }
+                const reqsConCaso = new Set(
+                  casos.filter(c => c.requerimientoId).map(c => c.requerimientoId!)
+                );
+                const faltantes = reqs.filter(r => !reqsConCaso.has(r.id));
+                if (faltantes.length > 0) {
+                  this.errorRequerimientos =
+                    `Los siguientes requerimientos no tienen casos de prueba asociados: ` +
+                    faltantes.map(r => r.codigo).join(', ') + '.';
+                } else {
+                  this.cargarCasosPrevios(Number(pid));
+                }
+              },
+              error: () => { this.verificandoReqs = false; },
+            });
           },
           error: () => { this.verificandoReqs = false; },
         });

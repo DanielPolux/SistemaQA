@@ -6,16 +6,27 @@
     }
   </div>
 
-  <div class="filters">
-    <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar defecto..." />
-    <select [(ngModel)]="severidadFiltro" (change)="buscar()">
-      <option value="">Todas las severidades</option>
-      @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
-    </select>
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
-    </select>
+  <div class="filters-wrapper">
+    <div class="filters-row">
+      <div class="filter-field filter-field--wide">
+        <label class="filter-label">Proyecto</label>
+        <select [(ngModel)]="proyectoId" (change)="buscar()">
+          <option [ngValue]="undefined">Todos los proyectos</option>
+          @for (p of proyectos; track p.id) {
+            <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+          }
+        </select>
+      </div>
+      <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar defecto..." />
+      <select [(ngModel)]="severidadFiltro" (change)="buscar()">
+        <option value="">Todas las severidades</option>
+        @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+        <option value="">Todos los estados</option>
+        @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+      </select>
+    </div>
   </div>
 
   @if (cargando) {
@@ -114,10 +125,11 @@
         </select>
         @if (totalPaginas > 1) {
           <div class="pagination">
-            @for (p of [].constructor(totalPaginas); track $index) {
-              <button class="btn btn-sm" [class.active]="pagina === $index + 1"
-                (click)="cambiarPagina($index + 1)">{{ $index + 1 }}</button>
+            <button class="btn btn-sm" [disabled]="pagina === 1" (click)="cambiarPagina(pagina - 1)">&#8249;</button>
+            @for (p of paginas; track p) {
+              <button class="btn btn-sm" [class.active]="pagina === p" (click)="cambiarPagina(p)">{{ p }}</button>
             }
+            <button class="btn btn-sm" [disabled]="pagina === totalPaginas" (click)="cambiarPagina(pagina + 1)">&#8250;</button>
           </div>
         }
       </div>

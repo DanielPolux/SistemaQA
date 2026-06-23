@@ -95,10 +95,11 @@
         </select>
         @if (totalPaginas > 1) {
           <div class="pagination">
+            <button class="btn btn-sm" [disabled]="pagina === 1" (click)="cambiarPagina(pagina - 1)">&#8249;</button>
             @for (p of paginas; track p) {
-              <button class="btn btn-sm" [class.active]="pagina === p"
-                (click)="cambiarPagina(p)">{{ p }}</button>
+              <button class="btn btn-sm" [class.active]="pagina === p" (click)="cambiarPagina(p)">{{ p }}</button>
             }
+            <button class="btn btn-sm" [disabled]="pagina === totalPaginas" (click)="cambiarPagina(pagina + 1)">&#8250;</button>
           </div>
         }
       </div>

@@ -12,6 +12,11 @@ export const PLANES_PRUEBA_ROUTES: Routes = [
       import('./plan-form/plan-form.component').then(m => m.PlanFormComponent),
   },
   {
+    path: ':id/trazabilidad',
+    loadComponent: () =>
+      import('./trazabilidad/trazabilidad.component').then(m => m.TrazabilidadComponent),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./plan-detail/plan-detail.component').then(m => m.PlanDetailComponent),

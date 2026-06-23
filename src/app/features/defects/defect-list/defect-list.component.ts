@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DefectService } from '../../../core/services/defect.service';
+import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { WordExportService } from '../../../core/services/word-export.service';
-import { Defecto, EstadoDefecto, PrioridadDefecto, SeveridadDefecto } from '../../../core/models';
+import { Defecto, EstadoDefecto, PrioridadDefecto, SeveridadDefecto, Proyecto } from '../../../core/models';
 
 @Component({
   selector: 'app-defect-list',
@@ -14,12 +15,14 @@ import { Defecto, EstadoDefecto, PrioridadDefecto, SeveridadDefecto } from '../.
   templateUrl: './defect-list.component.html'
 })
 export class DefectListComponent implements OnInit {
-  private service      = inject(DefectService);
-  private route        = inject(ActivatedRoute);
-  private wordExport   = inject(WordExportService);
-  auth                 = inject(AuthService);
+  private service        = inject(DefectService);
+  private projectService = inject(ProjectService);
+  private route          = inject(ActivatedRoute);
+  private wordExport     = inject(WordExportService);
+  auth                   = inject(AuthService);
 
-  defectos: Defecto[] = [];
+  defectos: Defecto[]   = [];
+  proyectos: Proyecto[] = [];
   total     = 0;
   pagina    = 1;
   porPagina = 10;
@@ -63,6 +66,7 @@ export class DefectListComponent implements OnInit {
     this.proyectoId = this.route.snapshot.queryParams['proyectoId']
       ? Number(this.route.snapshot.queryParams['proyectoId'])
       : undefined;
+    this.projectService.getAll({ porPagina: 500 }).subscribe(r => { this.proyectos = r.datos; });
     this.cargar();
   }
 
@@ -88,13 +92,17 @@ export class DefectListComponent implements OnInit {
       pagina: this.pagina,
       porPagina: this.porPagina
     }).subscribe({
-      next: (res) => { this.defectos = res.datos; this.total = res.total; this.cargando = false; },
+      next: (res) => {
+        this.defectos = res.datos; this.total = res.total; this.cargando = false;
+        if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
+      },
       error: () => { this.cargando = false; }
     });
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
   cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
+  get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
   // ─── Modal confirmación eliminar ─────────────────────────────────────────
   modalConfirmarAbierto = signal(false);

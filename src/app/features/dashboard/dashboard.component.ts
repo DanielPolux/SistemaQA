@@ -66,9 +66,16 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  get usuario()   { return this.auth.usuarioActual(); }
-  get s()         { return this.stats(); }
-  get esTester()  { return this.auth.esTester(); }
+  get usuario()       { return this.auth.usuarioActual(); }
+  get s()             { return this.stats(); }
+  get esTester()      { return this.auth.esTester(); }
+  get esAdmin()       { return this.auth.esAdmin(); }
+
+  get sinProyectos(): boolean {
+    const s = this.stats();
+    if (!s) return false;
+    return s.resumen.proyectos_activos === 0 && s.resumen.casos_totales === 0;
+  }
 
   totalCasos(arr: { total: number }[]): number {
     return arr.reduce((s, x) => s + x.total, 0);

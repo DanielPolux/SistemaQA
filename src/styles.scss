@@ -782,6 +782,10 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .badge-ciclo-activo  { background: #F0FDF4; color: #166534; border-color: #86EFAC; font-weight: 700; }
 .badge-ciclo-cerrado { background: #F8FAFC; color: #475569; border-color: #CBD5E1; }
 
+/* ── PLAN DE PRUEBA — estados ────────────────────────────────── */
+.badge-plan-borrador    { background: #F8FAFC; color: #64748B; border-color: #CBD5E1; }
+.badge-plan-planificado { background: #EFF6FF; color: #1D4ED8; border-color: #93C5FD; font-weight: 600; }
+
 /* ── Desarrollo / Dev ─────────────────────────────────────────  */
 .badge-dev-atendido { background: #F0FDF4; color: #166534; border-color: #86EFAC; }
 .badge-dev-noapl    { background: #F3F4F6; color: #6B7280; border-color: #D1D5DB; }
@@ -1492,6 +1496,29 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   &:hover { background: #EEF3FB; }
 }
 
+/* ── Dashboard: estado vacío (sin proyectos) ─────────────── */
+.dash-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center;
+  padding: 4rem 2rem; margin-top: 1rem;
+  background: var(--color-bg-card);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  .dash-empty-icon {
+    font-size: 4rem; color: var(--color-text-muted);
+    margin-bottom: 1.25rem; line-height: 1;
+  }
+  .dash-empty-title {
+    font-size: 1.25rem; font-weight: 600;
+    color: var(--color-text); margin: 0 0 0.75rem;
+  }
+  .dash-empty-desc {
+    font-size: 0.9rem; color: var(--color-text-muted);
+    max-width: 420px; line-height: 1.6; margin: 0 0 1.75rem;
+  }
+}
+
 /* ────────────────────────────────────────────────────────────
    PASOS DE EJECUCIÓN — lista interactiva OK / NO OK
    ──────────────────────────────────────────────────────────── */
@@ -1649,7 +1676,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   grid-template-columns: 1fr 1fr;
 }
 
-/* Panel izquierdo — fondo azul corporativo con logo blanco */
+/* Panel izquierdo — fondo azul corporativo */
 .login-brand-panel {
   background: linear-gradient(160deg, #0D1B2A 0%, #162435 45%, var(--color-primary-dark) 80%, var(--color-primary) 100%);
   display: flex; flex-direction: column;
@@ -1670,12 +1697,16 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   }
 }
 
+/* Logo azul (fondo blanco) sobre card blanca integrada en el panel oscuro */
 .login-brand-logo-wrap {
-  width: 100%; max-width: 280px;
-  display: flex; align-items: center;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 20px 32px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12);
+  width: 100%; max-width: 260px;
+  display: flex; align-items: center; justify-content: center;
   position: relative; z-index: 1;
-  border-radius: 10px;
-  overflow: hidden;
+  margin-bottom: 36px;
 }
 
 .login-brand-logo {
@@ -1685,7 +1716,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
 .login-brand-title {
   color: white; font-size: 22px; font-weight: 700;
-  margin: 4px 0 12px; text-align: center;
+  margin: 0 0 12px; text-align: center;
   position: relative; z-index: 1;
   letter-spacing: -0.2px;
 }
@@ -2098,3 +2129,111 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 /* Filas coloreadas en tabla de requerimientos */
 .plan-row-validado td { background: rgba(220, 252, 231, 0.3); }
 .plan-row-falla    td { background: rgba(254, 226, 226, 0.3); }
+
+/* ── MATRIZ DE TRAZABILIDAD ─────────────────────────────────── */
+.traz-stats { margin-bottom: 1.25rem; }
+
+.traz-filtros {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.traz-filtro-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.traz-filtro-btn {
+  border: 1px solid var(--color-border-dark);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  &.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+}
+.traz-busqueda { max-width: 240px; }
+
+.traz-table-wrapper { overflow-x: auto; }
+
+.traz-table {
+  .traz-th-req  { width: 28%; }
+  .traz-th-caso { width: 28%; }
+}
+
+.traz-req-header td {
+  background: var(--color-primary-light);
+  border-top: 2px solid var(--color-primary);
+  padding: 8px 12px;
+}
+.traz-req-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.traz-req-titulo {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 13px;
+}
+.traz-cobertura-chip {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  padding: 1px 8px;
+  border-radius: 20px;
+}
+
+.traz-caso-row td { padding: 7px 12px; font-size: 13px; }
+.traz-caso-row:hover td { background: var(--color-surface-alt); }
+.traz-sin-casos td { color: var(--color-text-muted); font-style: italic; }
+.traz-empty-cell { padding-left: 4px; }
+
+.traz-caso-nombre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tag-codigo--sm { font-size: 10px; padding: 1px 5px; }
+
+/* Resultado chips */
+.traz-resultado {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.traz-resultado-icono { font-size: 11px; font-weight: 700; }
+.traz-resultado--aprobado  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.traz-resultado--fallido   { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+.traz-resultado--bloqueado { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
+.traz-resultado--omitido   { background: #F1F5F9; color: #64748B; border-color: #CBD5E1; }
+.traz-resultado--pendiente { background: #F1F5F9; color: #64748B; border-color: #CBD5E1; font-style: italic; }
+.traz-resultado--sin-casos { background: #FFF7ED; color: #C2410C; border-color: #FDBA74; font-style: italic; }
+
+/* Defecto chips */
+.traz-defectos-cell { max-width: 160px; }
+.traz-defectos-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.traz-defecto-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: default;
+}
+.traz-defecto-chip--nuevo       { background: #EFF6FF; color: #1D4ED8; border-color: #93C5FD; }
+.traz-defecto-chip--asignado    { background: #FFFBEB; color: #92400E; border-color: #FDE68A; }
+.traz-defecto-chip--en-progreso { background: #FFF7ED; color: #C2410C; border-color: #FDBA74; }
+.traz-defecto-chip--en-revision { background: #F5F3FF; color: #5B21B6; border-color: #DDD6FE; }
+.traz-defecto-chip--resuelto    { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.traz-defecto-chip--cerrado     { background: #F1F5F9; color: #475569; border-color: #CBD5E1; }
+.traz-defecto-chip--rechazado   { background: #F1F5F9; color: #94A3B8; border-color: #E2E8F0; text-decoration: line-through; }
+.traz-defecto-chip--reabierto   { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }

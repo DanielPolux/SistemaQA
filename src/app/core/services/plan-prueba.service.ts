@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PlanPrueba } from '../models';
+import { PlanPrueba, TrazabilidadPlan } from '../models';
 import { environment } from '../../../environments/environment';
 import { PaginatedResponse } from './project.service';
 
@@ -46,6 +46,10 @@ export class PlanPruebaService {
 
   reabrir(id: number): Observable<PlanPrueba> {
     return this.http.patch<PlanPrueba>(`${this.url}/${id}/reabrir`, {});
+  }
+
+  getTrazabilidad(id: number): Observable<TrazabilidadPlan> {
+    return this.http.get<TrazabilidadPlan>(`${this.url}/${id}/trazabilidad`);
   }
 
   delete(id: number): Observable<void> {
