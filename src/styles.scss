@@ -1212,6 +1212,8 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .audit-campo { color: var(--color-text-muted); font-style: italic; }
 .audit-valor { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audit-accion { display: inline-block; padding: 1px 8px; border-radius: var(--radius-full); background: #EFF6FF; color: #1D4ED8; font-size: 11px; font-weight: 700; }
+.audit-accion--ok  { background: #DCFCE7; color: #166534; }
+.audit-accion--err { background: #FEE2E2; color: #991B1B; }
 
 /* ────────────────────────────────────────────────────────────
    DASHBOARD

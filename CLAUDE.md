@@ -155,6 +155,19 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 - El defecto recién creado se auto-vincula a la última ejecución `Fallido` sin defecto para ese caso.
 - La grilla de defectos incluye filtro por **proyecto** (dropdown) además de severidad y estado.
 
+### Historial de Auditoría de Defectos
+- La vista `/defectos/:id` (`defect-detail.component`) muestra una sección "Historial de Auditoría" al pie.
+- Se carga con `AuditoriaService.getByDefecto(id)` en `ngOnInit` después de cargar el defecto.
+- Columnas: Fecha, Usuario, Acción, Detalle (`valorNuevo ?? valorAnterior`).
+- Las acciones usan badges de color: `audit-accion--ok` (verde) para "Correo Enviado", `audit-accion--err` (rojo) para "Error Correo", neutro para el resto.
+- El bloque de auditoría está **dentro** del `@if (!cargando && defecto)` — no mostrarlo cuando no hay defecto cargado.
+
+### Notificaciones por Correo (Defectos)
+- El backend envía correos automáticamente; el frontend no dispara ninguna llamada de correo.
+- Los eventos de correo quedan visibles en el Historial de Auditoría del defecto.
+- Flujo desde el modal de ejecución (`Fallido`): el backend crea ejecución + defecto en transacción, luego (fuera de la transacción) registra auditoría "Creado" y envía el correo.
+- El PM puede reasignar el defecto a un developer editando `asignadoA` desde el formulario de edición → el backend detecta el cambio y envía correo `[Defecto Asignado]`.
+
 ### Dashboard
 - Muestra KPIs, gráficas de casos por estado, defectos por severidad/estado, últimas ejecuciones y últimos defectos.
 - Si el usuario **no tiene proyectos asignados**, se muestra un estado vacío en lugar de las métricas:
@@ -202,6 +215,7 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 - Clases de utilidad globales: `.btn`, `.badge`, `.data-table`, `.form-group`, `.page-container`, `.stats-grid`.
 - Clases de ciclos: `.ciclo-banner`, `.ciclo-banner--activo` (verde), `.badge-ciclo-activo`, `.badge-ciclo-cerrado`.
 - Clases de defecto en modal: `.defecto-section`, `.defecto-section-title` (borde/fondo rojo).
+- Auditoría de defecto: `.audit-table`, `.audit-fecha`, `.audit-valor`, `.audit-accion`, `.audit-accion--ok` (verde), `.audit-accion--err` (rojo).
 - Dashboard vacío: `.dash-empty-state`, `.dash-empty-icon`, `.dash-empty-title`, `.dash-empty-desc`.
 - Login: `.login-brand-logo-wrap` (fondo blanco, borde redondeado, sombra) sobre panel oscuro.
 - **No crear archivos `.scss` por componente** a menos que el componente tenga estilos muy específicos y extensos.

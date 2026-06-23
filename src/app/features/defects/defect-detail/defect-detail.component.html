@@ -138,6 +138,35 @@
         }
       </div>
     }
+
+    <!-- Auditoría -->
+    <div class="detail-section">
+      <h3>Historial de Auditoría</h3>
+      @if (auditoria.length === 0) {
+        <p class="text-muted">Sin registros de auditoría.</p>
+      } @else {
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of auditoria; track r.id) {
+              <tr>
+                <td class="audit-fecha">{{ r.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ r.usuarioNombre ?? '—' }}</td>
+                <td><span [class]="accionClase(r.accion)">{{ r.accion }}</span></td>
+                <td class="audit-valor">{{ r.valorNuevo ?? r.valorAnterior ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
   }
 
   @if (!cargando && !defecto) {

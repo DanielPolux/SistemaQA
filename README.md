@@ -1,6 +1,6 @@
 # Sistema QA — Frontend
 
-Aplicación Angular 18 para gestión de calidad de software. Permite administrar proyectos, requerimientos, casos de prueba, ciclos de prueba, ejecuciones, defectos y planes de prueba con control de acceso por roles.
+Aplicación Angular 18 para gestión de calidad de software. Permite administrar proyectos, requerimientos, casos de prueba, ciclos de prueba, ejecuciones, defectos y planes de prueba con control de acceso por roles y notificaciones por correo.
 
 ---
 
@@ -12,6 +12,8 @@ Aplicación Angular 18 para gestión de calidad de software. Permite administrar
 - **Ciclos de Prueba** por proyecto — agrupan ejecuciones; se asignan automáticamente al registrar; solo puede haber uno activo por proyecto
 - **Ejecuciones** con creación inline de defecto cuando el resultado es `Fallido`
 - Reporte y seguimiento de **Defectos** con códigos globales (`DEF-XXXX`) y por proyecto (`INC-XXX`); filtro por proyecto, severidad y estado
+- **Historial de Auditoría** en el detalle de cada defecto — muestra creación, cambios de campo, estados de correo (verde/rojo)
+- **Notificaciones por correo** automáticas al crear y asignar defectos (ver flujo de correo más abajo)
 - **Planes de Prueba** con agrupación de ciclos, estado del plan y **Matriz de Trazabilidad** (req → caso → resultado)
 - **Exportación a Word** (.docx) para defectos individuales y matrices de trazabilidad de planes
 - **Dashboard con estado vacío** — muestra mensaje diferenciado según rol cuando el usuario no tiene proyectos asignados
@@ -69,10 +71,10 @@ src/app/
 │   │   ├── ciclo.service.ts
 │   │   ├── plan-prueba.service.ts
 │   │   ├── user.service.ts
-│   │   ├── auditoria.service.ts
-│   │   ├── word-export.service.ts        # Export Word para defectos
-│   │   ├── word-export-plan.service.ts   # Export Word para trazabilidad
-│   │   └── word-export.helpers.ts        # Utilidades compartidas DOCX
+│   │   ├── auditoria.service.ts         # Historial de auditoría
+│   │   ├── word-export.service.ts       # Export Word para defectos
+│   │   ├── word-export-plan.service.ts  # Export Word para trazabilidad
+│   │   └── word-export.helpers.ts       # Utilidades compartidas DOCX
 │   ├── guards/
 │   │   ├── auth.guard.ts
 │   │   └── role.guard.ts
@@ -86,7 +88,10 @@ src/app/
 │   ├── test-cases/              # Lista (modal ejecutar + ver + editar) + formulario
 │   ├── ciclos/                  # Lista + formulario de ciclos de prueba
 │   ├── ejecuciones/             # Lista con modal Ver detalle
-│   ├── defects/                 # Lista + formulario de defectos
+│   ├── defects/
+│   │   ├── defect-list/         # Lista con filtros
+│   │   ├── defect-form/         # Crear / editar defecto
+│   │   └── defect-detail/       # Detalle + Historial de Auditoría
 │   ├── planes-prueba/           # Lista + formulario + detalle + trazabilidad
 │   │   └── trazabilidad/        # Matriz req → caso → resultado con export Word/CSV
 │   ├── users/                   # CRUD usuarios (solo Admin)
@@ -112,6 +117,7 @@ src/app/
 | `/ciclos` | QA Lead / PM / Admin | Gestión de ciclos de prueba |
 | `/ejecuciones` | No Developer | Historial de ejecuciones |
 | `/defectos` | Todos | Lista y gestión de defectos |
+| `/defectos/:id` | Todos | Detalle del defecto + historial de auditoría |
 | `/planes-prueba` | QA Lead / PM / Admin | Gestión de planes de prueba |
 | `/planes-prueba/:id/trazabilidad` | QA Lead / PM / Admin | Matriz de trazabilidad |
 | `/usuarios` | Admin | Gestión de usuarios |
@@ -132,9 +138,30 @@ Proyecto → [Plan de Pruebas] → Ciclo de Prueba → Casos de Prueba → Ejecu
 5. El QA ejecuta los casos desde la grilla; el ciclo activo se asigna automáticamente
 6. Si el resultado es **Fallido**, se completan los campos del defecto en el mismo modal
 7. Se crea la ejecución y el defecto en una sola acción; se muestra el código `INC-XXX`
-8. El defecto se asigna a un desarrollador para resolución
-9. El QA verifica la corrección y cierra el defecto
-10. La **Matriz de Trazabilidad** del plan muestra la cobertura req → caso → resultado
+8. El backend envía correo automáticamente:
+   - Si se asignó al **PM**: correo naranja pidiendo que asigne al desarrollador
+   - Si se asignó al **Developer**: correo rojo con detalle completo + CC al PM
+9. El **PM asigna** el defecto al desarrollador desde la vista de edición → el developer recibe correo azul
+10. El developer trabaja el defecto, actualiza su estado de desarrollo (`Atendido` / `No Aplica`)
+11. El QA verifica la corrección y cierra el defecto
+12. La **Matriz de Trazabilidad** del plan muestra la cobertura req → caso → resultado
+13. El **Historial de Auditoría** en `/defectos/:id` muestra todos los cambios y correos enviados
+
+---
+
+## Notificaciones por Correo
+
+El sistema envía correos automáticos en los siguientes eventos de defecto:
+
+| Evento | Destinatario | Asunto |
+|--------|-------------|--------|
+| Defecto creado asignado a PM | PM | `[Defecto Pendiente de Asignación] INC-XXX` |
+| PM asigna a desarrollador | Developer | `[Defecto Asignado] INC-XXX` (con CC al PM) |
+| Defecto creado asignado a developer | Developer | `[Nuevo Defecto] INC-XXX` (con CC al PM) |
+| Cambio de estado del defecto | Reportador | `[Defecto <Estado>] DEF-XXXX` (con CC al asignado y PM) |
+| Developer actualiza estado de desarrollo | Reportador (QA) | `[Acción Requerida] Defecto marcado como Atendido` |
+
+Todos los envíos quedan registrados en el **Historial de Auditoría** del defecto con el resultado (Correo Enviado / Error Correo).
 
 ---
 
@@ -196,8 +223,12 @@ GET    /api/defectos/:id
 POST   /api/defectos
 PUT    /api/defectos/:id
 PATCH  /api/defectos/:id/estado
+PATCH  /api/defectos/:id/estado-desarrollo
 POST   /api/defectos/:id/comentarios
 DELETE /api/defectos/:id
+
+GET    /api/auditoria/defecto/:id
+GET    /api/auditoria/caso-prueba/:id
 
 GET    /api/planes-prueba          ?proyectoId&estado&pagina&porPagina
 GET    /api/planes-prueba/:id
