@@ -1,0 +1,7 @@
+{
+  "buildCommand": "node generate-env.js && npm run build:prod",
+  "outputDirectory": "dist/sistema-qa/browser",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
