@@ -74,7 +74,11 @@
 
   </div>
 
-  @if (cargando) {
+  @if (!proyectoId) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver sus casos de prueba.</p>
+    </div>
+  } @else if (cargando) {
     <div class="loading">Cargando casos de prueba...</div>
   } @else {
     <table class="data-table">

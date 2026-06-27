@@ -232,6 +232,7 @@ export class TestCaseListComponent implements OnInit {
         this.requirementService.getByProyecto(this.proyectoId!).subscribe(reqs => {
           this.requerimientos = reqs;
         });
+        this.cargar();
       }
     });
     this.userService.getAll({ porPagina: 500 }).subscribe(r => {
@@ -248,8 +249,6 @@ export class TestCaseListComponent implements OnInit {
         this.requirementService.getByProyecto(id).subscribe(r => { this.requerimientosEditar = r; });
       }
     });
-
-    this.cargar();
   }
 
   onProyectoChange(): void {
