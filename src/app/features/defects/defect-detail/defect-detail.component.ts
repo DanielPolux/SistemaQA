@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DefectService } from '../../../core/services/defect.service';
 import { AuditoriaService, AuditoriaRegistro } from '../../../core/services/auditoria.service';
 import { Defecto, EstadoDefecto, SeveridadDefecto, PrioridadDefecto } from '../../../core/models';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-defect-detail',
@@ -15,6 +16,7 @@ export class DefectDetailComponent implements OnInit {
   private route            = inject(ActivatedRoute);
   private service          = inject(DefectService);
   private auditoriaService = inject(AuditoriaService);
+  private toast            = inject(ToastService);
 
   defecto?: Defecto;
   auditoria: AuditoriaRegistro[] = [];
@@ -53,7 +55,7 @@ export class DefectDetailComponent implements OnInit {
         this.cargando = false;
         this.auditoriaService.getByDefecto(id).subscribe(r => { this.auditoria = r; });
       },
-      error: () => { this.cargando = false; }
+      error: () => { this.cargando = false; this.toast.error('No se pudo cargar el defecto'); }
     });
   }
 

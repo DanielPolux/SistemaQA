@@ -12,6 +12,7 @@ import {
   ResultadoEjecucion, AmbienteEjecucion,
   SeveridadDefecto, PrioridadDefecto,
 } from '../../../core/models';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-ciclo-ejecucion',
@@ -26,6 +27,7 @@ export class CicloEjecucionComponent implements OnInit {
   private ejecucionService = inject(EjecucionService);
   private userService      = inject(UserService);
   private projectService   = inject(ProjectService);
+  private toast            = inject(ToastService);
   auth                     = inject(AuthService);
 
   cicloId!: number;
@@ -125,7 +127,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.cargando.set(true);
     this.cicloService.getCasosDeCiclo(this.cicloId).subscribe({
       next: (casos) => { this.casos = casos; this.cargando.set(false); },
-      error: () => { this.cargando.set(false); },
+      error: () => { this.cargando.set(false); this.toast.error('Error al cargar los casos del ciclo'); },
     });
   }
 

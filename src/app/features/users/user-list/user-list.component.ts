@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../core/services/user.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Rol, Usuario } from '../../../core/models';
 
 @Component({
@@ -13,6 +14,7 @@ import { Rol, Usuario } from '../../../core/models';
 })
 export class UserListComponent implements OnInit {
   private service = inject(UserService);
+  private toast   = inject(ToastService);
 
   usuarios: Usuario[] = [];
   total     = 0;
@@ -40,7 +42,7 @@ export class UserListComponent implements OnInit {
         this.usuarios = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: () => { this.cargando = false; }
+      error: () => { this.cargando = false; this.toast.error('Error al cargar usuarios'); }
     });
   }
 

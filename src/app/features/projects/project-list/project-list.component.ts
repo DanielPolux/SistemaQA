@@ -6,6 +6,7 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Proyecto, EstadoProyecto } from '../../../core/models';
 
 @Component({
@@ -16,6 +17,7 @@ import { Proyecto, EstadoProyecto } from '../../../core/models';
 })
 export class ProjectListComponent implements OnInit, OnDestroy {
   private service = inject(ProjectService);
+  private toast   = inject(ToastService);
   auth = inject(AuthService);
 
   proyectos: Proyecto[] = [];
@@ -68,7 +70,7 @@ export class ProjectListComponent implements OnInit, OnDestroy {
         this.proyectos = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: () => { this.cargando = false; }
+      error: () => { this.cargando = false; this.toast.error('Error al cargar proyectos'); }
     });
   }
 

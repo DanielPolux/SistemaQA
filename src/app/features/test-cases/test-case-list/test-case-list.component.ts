@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuditoriaService, AuditoriaRegistro } from '../../../core/services/auditoria.service';
 import { EjecucionModalService } from './ejecucion-modal.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
   Proyecto, Requerimiento, Usuario, Rol,
@@ -31,6 +32,7 @@ export class TestCaseListComponent implements OnInit {
   private userService        = inject(UserService);
   private auditoriaService   = inject(AuditoriaService);
   private fb                 = inject(FormBuilder);
+  private toast              = inject(ToastService);
   auth                       = inject(AuthService);
   ejecucion                  = inject(EjecucionModalService);
 
@@ -298,7 +300,7 @@ export class TestCaseListComponent implements OnInit {
         this.casos = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: ()   => { this.cargando = false; },
+      error: ()   => { this.cargando = false; this.toast.error('Error al cargar casos de prueba'); },
     });
   }
 

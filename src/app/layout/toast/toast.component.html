@@ -1,0 +1,14 @@
+<div class="toast-container">
+  @for (t of toast.toasts(); track t.id) {
+    <div class="toast toast--{{ t.tipo }}" role="alert">
+      <span class="toast-icon">
+        @if (t.tipo === 'error')   { ✕ }
+        @if (t.tipo === 'success') { ✓ }
+        @if (t.tipo === 'warning') { ⚠ }
+        @if (t.tipo === 'info')    { ℹ }
+      </span>
+      <span class="toast-msg">{{ t.mensaje }}</span>
+      <button class="toast-close" (click)="toast.cerrar(t.id)" aria-label="Cerrar">✕</button>
+    </div>
+  }
+</div>

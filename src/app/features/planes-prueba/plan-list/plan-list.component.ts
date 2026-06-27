@@ -6,6 +6,7 @@ import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PlanPrueba, EstadoPlan, Proyecto } from '../../../core/models';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-plan-list',
@@ -16,6 +17,7 @@ import { PlanPrueba, EstadoPlan, Proyecto } from '../../../core/models';
 export class PlanListComponent implements OnInit {
   private service        = inject(PlanPruebaService);
   private projectService = inject(ProjectService);
+  private toast          = inject(ToastService);
   auth                   = inject(AuthService);
 
   planes: PlanPrueba[] = [];
@@ -57,7 +59,7 @@ export class PlanListComponent implements OnInit {
         this.planes = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: ()   => { this.cargando = false; },
+      error: ()   => { this.cargando = false; this.toast.error('Error al cargar planes de prueba'); },
     });
   }
 

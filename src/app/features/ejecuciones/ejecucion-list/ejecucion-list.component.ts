@@ -6,6 +6,7 @@ import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EjecucionCasoPrueba, Proyecto, Usuario, ResultadoEjecucion, AmbienteEjecucion } from '../../../core/models';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-ejecucion-list',
@@ -17,6 +18,7 @@ export class EjecucionListComponent implements OnInit {
   private service        = inject(EjecucionService);
   private projectService = inject(ProjectService);
   private userService    = inject(UserService);
+  private toast          = inject(ToastService);
   auth                   = inject(AuthService);
 
   ejecuciones: EjecucionCasoPrueba[] = [];
@@ -68,7 +70,7 @@ export class EjecucionListComponent implements OnInit {
         this.ejecuciones = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: ()   => { this.cargando = false; }
+      error: ()   => { this.cargando = false; this.toast.error('Error al cargar ejecuciones'); }
     });
   }
 

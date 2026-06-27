@@ -9,6 +9,7 @@ import {
   Requerimiento, EstadoRequerimiento, TipoRequerimiento,
   PrioridadRequerimiento, Proyecto
 } from '../../../core/models';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-requirement-list',
@@ -22,6 +23,7 @@ export class RequirementListComponent implements OnInit {
   private fb             = inject(FormBuilder);
   private route          = inject(ActivatedRoute);
   private router         = inject(Router);
+  private toast          = inject(ToastService);
   auth                   = inject(AuthService);
 
   proyectos: Proyecto[]           = [];
@@ -102,7 +104,7 @@ export class RequirementListComponent implements OnInit {
         this.requerimientos = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: ()   => { this.cargando = false; }
+      error: ()   => { this.cargando = false; this.toast.error('Error al cargar requerimientos'); }
     });
   }
 

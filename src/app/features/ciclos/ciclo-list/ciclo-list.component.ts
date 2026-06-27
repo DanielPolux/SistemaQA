@@ -8,6 +8,7 @@ import { ProjectService } from '../../../core/services/project.service';
 import { RequirementService } from '../../../core/services/requirement.service';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { CicloPrueba, EstadoCiclo, EstadoProyecto, Proyecto } from '../../../core/models';
 
 const ESTADOS_PERMITIDOS_CICLO = new Set<EstadoProyecto>([
@@ -33,6 +34,7 @@ export class CicloListComponent implements OnInit {
   private requirementService = inject(RequirementService);
   private testCaseService    = inject(TestCaseService);
   private router             = inject(Router);
+  private toast              = inject(ToastService);
   auth                       = inject(AuthService);
 
   ciclos: CicloPrueba[] = [];
@@ -178,7 +180,7 @@ export class CicloListComponent implements OnInit {
         this.ciclos = res.datos; this.total = res.total; this.cargando = false;
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
-      error: ()   => { this.cargando = false; },
+      error: ()   => { this.cargando = false; this.toast.error('Error al cargar ciclos de prueba'); },
     });
   }
 
