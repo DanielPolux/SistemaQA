@@ -31,6 +31,8 @@ export interface CasoCiclo {
   pasos?: any[];
   resultadoEsperado?: string;
   proyectoId?: number;
+  requerimientoId?: number | null;
+  requerimientoEstado?: string | null;
   resultadoCiclo?: 'Aprobado' | 'Fallido' | 'Bloqueado' | 'Omitido';
   ejecucionId?: number;
   fechaEjecucion?: string;

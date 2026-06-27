@@ -334,3 +334,24 @@
   }
 
 </div>
+
+<!-- ─── Popup bloqueo de ejecución ─────────────────────────────────────── -->
+@if (popupBloqueadoAbierto()) {
+  <div class="modal-overlay" (click)="cerrarPopupBloqueado()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--warning">
+        <div class="modal-title-group">
+          <span class="modal-icon">⚠</span>
+          <div><h3 class="modal-title">No se puede ejecutar</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarPopupBloqueado()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">{{ popupBloqueadoMsg }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="cerrarPopupBloqueado()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}

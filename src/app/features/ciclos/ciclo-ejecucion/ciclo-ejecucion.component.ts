@@ -8,7 +8,7 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 import {
-  CicloPrueba, EstadoCiclo, Usuario, Rol,
+  CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
   SeveridadDefecto, PrioridadDefecto,
 } from '../../../core/models';
@@ -36,8 +36,13 @@ export class CicloEjecucionComponent implements OnInit {
   usuarios: Usuario[] = [];
   desarrolladores: Usuario[] = [];
   pmProyectoId: number | null = null;
+  proyectoEstado: EstadoProyecto | null = null;
   cargando = signal(false);
   error = '';
+
+  // ─── Popup bloqueo ejecución ──────────────────────────────────────────────
+  popupBloqueadoAbierto = signal(false);
+  popupBloqueadoMsg     = '';
 
   get pmUsuario(): Usuario | null {
     if (!this.pmProyectoId) return null;
@@ -114,7 +119,8 @@ export class CicloEjecucionComponent implements OnInit {
       next: (c) => {
         this.ciclo = c;
         this.projectService.getById(c.proyectoId).subscribe(p => {
-          this.pmProyectoId = p.jefeProyectoId ?? null;
+          this.pmProyectoId   = p.jefeProyectoId ?? null;
+          this.proyectoEstado = p.estado;
         });
       },
       error: () => { this.error = 'No se pudo cargar el ciclo.'; },
@@ -131,8 +137,43 @@ export class CicloEjecucionComponent implements OnInit {
     });
   }
 
+  private abrirPopupBloqueado(msg: string): void {
+    this.popupBloqueadoMsg = msg;
+    this.popupBloqueadoAbierto.set(true);
+  }
+
+  cerrarPopupBloqueado(): void {
+    this.popupBloqueadoAbierto.set(false);
+  }
+
   seleccionarCaso(caso: CasoCiclo): void {
     if (this.casoSeleccionado?.id === caso.id && !this.ejecucionExito()) return;
+
+    if (this.proyectoEstado && this.proyectoEstado !== EstadoProyecto.EN_EJECUCION) {
+      this.abrirPopupBloqueado(
+        `El proyecto está en estado "${this.proyectoEstado}". ` +
+        `Solo se pueden ejecutar casos cuando el proyecto está en "En Ejecución".`
+      );
+      return;
+    }
+
+    if (this.ciclo && !this.ciclo.planPruebaId) {
+      this.abrirPopupBloqueado(
+        `El ciclo "${this.ciclo.nombre}" no está vinculado a un plan de prueba. ` +
+        `Asocia el ciclo a un plan antes de registrar ejecuciones.`
+      );
+      return;
+    }
+
+    if (caso.requerimientoId && caso.requerimientoEstado && caso.requerimientoEstado !== 'Aprobado') {
+      this.abrirPopupBloqueado(
+        `El requerimiento asociado a "${caso.nombre}" no está Aprobado ` +
+        `(estado actual: "${caso.requerimientoEstado}"). ` +
+        `Aprueba el requerimiento antes de ejecutar este caso.`
+      );
+      return;
+    }
+
     this.ejecucionExito.set(null);
     this.casoSeleccionado = caso;
     this.errorEjecucion = '';
