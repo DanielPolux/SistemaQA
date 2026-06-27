@@ -47,7 +47,7 @@ export class RequirementListComponent implements OnInit {
 
   form = this.fb.group({
     proyectoId:          [null as number | null, Validators.required],
-    codigo:              ['', Validators.required],
+    codigo:              [{ value: '', disabled: true }],
     titulo:              ['', Validators.required],
     descripcion:         ['', Validators.required],
     criteriosAceptacion: ['', Validators.required],
