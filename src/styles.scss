@@ -1728,6 +1728,15 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   text-align: center; line-height: 1.6;
   max-width: 300px; position: relative; z-index: 1;
 }
+.login-manual-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 20px; padding: 8px 18px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px; color: rgba(255,255,255,0.85); font-size: 13px;
+  text-decoration: none; transition: background 0.2s, color 0.2s;
+  position: relative; z-index: 1;
+  &:hover { background: rgba(255,255,255,0.22); color: #fff; }
+}
 
 /* Panel derecho — fondo gris suave con tarjeta Material */
 .login-form-panel {
