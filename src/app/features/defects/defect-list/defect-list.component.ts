@@ -66,8 +66,10 @@ export class DefectListComponent implements OnInit {
     this.proyectoId = this.route.snapshot.queryParams['proyectoId']
       ? Number(this.route.snapshot.queryParams['proyectoId'])
       : undefined;
-    this.projectService.getAll({ porPagina: 500 }).subscribe(r => { this.proyectos = r.datos; });
-    this.cargar();
+    this.projectService.getAll({ porPagina: 500 }).subscribe(r => {
+      this.proyectos = r.datos;
+      if (this.proyectoId) this.cargar();
+    });
   }
 
   private get asignadoFiltro(): number | undefined {
@@ -81,6 +83,7 @@ export class DefectListComponent implements OnInit {
   }
 
   cargar(): void {
+    if (!this.proyectoId) return;
     this.cargando = true;
     this.service.getAll({
       proyectoId: this.proyectoId,

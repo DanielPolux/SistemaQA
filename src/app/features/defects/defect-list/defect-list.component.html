@@ -6,30 +6,38 @@
     }
   </div>
 
-  <div class="filters-wrapper">
-    <div class="filters-row">
-      <div class="filter-field filter-field--wide">
-        <label class="filter-label">Proyecto</label>
-        <select [(ngModel)]="proyectoId" (change)="buscar()">
-          <option [ngValue]="undefined">Todos los proyectos</option>
-          @for (p of proyectos; track p.id) {
-            <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
-          }
-        </select>
-      </div>
-      <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar defecto..." />
-      <select [(ngModel)]="severidadFiltro" (change)="buscar()">
-        <option value="">Todas las severidades</option>
-        @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
-      </select>
-      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-        <option value="">Todos los estados</option>
-        @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
-      </select>
-    </div>
+  <!-- Selector de proyecto (paso 1) -->
+  <div class="project-selector">
+    <label for="proyectoFiltro"><strong>Proyecto</strong></label>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="buscar()" class="select-proyecto">
+      <option [ngValue]="undefined">— Selecciona un proyecto —</option>
+      @for (p of proyectos; track p.id) {
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+      }
+    </select>
   </div>
 
-  @if (cargando) {
+  @if (proyectoId) {
+    <div class="filters-wrapper">
+      <div class="filters-row">
+        <input type="text" [(ngModel)]="busqueda" (keyup.enter)="buscar()" placeholder="Buscar defecto..." />
+        <select [(ngModel)]="severidadFiltro" (change)="buscar()">
+          <option value="">Todas las severidades</option>
+          @for (s of severidades; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+        <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+          <option value="">Todos los estados</option>
+          @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </div>
+    </div>
+  }
+
+  @if (!proyectoId) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver sus defectos.</p>
+    </div>
+  } @else if (cargando) {
     <div class="loading">Cargando defectos...</div>
   } @else {
     <table class="data-table">
