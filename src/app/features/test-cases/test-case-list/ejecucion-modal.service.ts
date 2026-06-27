@@ -74,6 +74,13 @@ export class EjecucionModalService {
         );
         return;
       }
+      if (!ciclo.planPruebaId) {
+        this.abrirPopupSinCiclo(
+          `El ciclo activo "${ciclo.nombre}" no está vinculado a un plan de prueba. ` +
+          `Asocia el ciclo a un plan de prueba antes de registrar ejecuciones.`
+        );
+        return;
+      }
       this.cicloActivo      = ciclo;
       this.casoSeleccionado = caso;
       this.pasosEjecucion   = ((caso as any).pasos ?? []).map((p: any) => ({
