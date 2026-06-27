@@ -4,50 +4,56 @@
     <span class="text-muted">Historial completo de ejecuciones</span>
   </div>
 
-  <!-- Filtros -->
-  <div class="filters-wrapper">
-    <div class="filters-row">
-      <div class="filter-field filter-field--wide">
-        <label class="filter-label">Proyecto</label>
-        <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
-          <option [ngValue]="undefined">Todos los proyectos</option>
-          @for (p of proyectos; track p.id) {
-            <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="filter-field">
-        <label class="filter-label">Resultado</label>
-        <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
-          <option value="">Todos</option>
-          @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
-        </select>
-      </div>
-
-      <div class="filter-field">
-        <label class="filter-label">Ambiente</label>
-        <select [(ngModel)]="ambienteFiltro" (change)="buscar()">
-          <option value="">Todos</option>
-          @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
-        </select>
-      </div>
-
-      <div class="filter-field">
-        <label class="filter-label">Tester</label>
-        <select [(ngModel)]="testerFiltroId" (change)="buscar()">
-          <option [value]="undefined">Todos</option>
-          @for (u of usuarios; track u.id) {
-            <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
-          }
-        </select>
-      </div>
-
-      <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()">✕ Limpiar</button>
-    </div>
+  <!-- Selector de proyecto (paso 1) -->
+  <div class="project-selector">
+    <label for="proyectoFiltro"><strong>Proyecto</strong></label>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoFiltroId" (change)="buscar()" class="select-proyecto">
+      <option [ngValue]="undefined">— Selecciona un proyecto —</option>
+      @for (p of proyectos; track p.id) {
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+      }
+    </select>
   </div>
 
-  @if (cargando) {
+  @if (proyectoFiltroId) {
+    <div class="filters-wrapper">
+      <div class="filters-row">
+        <div class="filter-field">
+          <label class="filter-label">Resultado</label>
+          <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
+            <option value="">Todos</option>
+            @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label class="filter-label">Ambiente</label>
+          <select [(ngModel)]="ambienteFiltro" (change)="buscar()">
+            <option value="">Todos</option>
+            @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label class="filter-label">Tester</label>
+          <select [(ngModel)]="testerFiltroId" (change)="buscar()">
+            <option [value]="undefined">Todos</option>
+            @for (u of usuarios; track u.id) {
+              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+            }
+          </select>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()">✕ Limpiar</button>
+      </div>
+    </div>
+  }
+
+  @if (!proyectoFiltroId) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver sus ejecuciones.</p>
+    </div>
+  } @else if (cargando) {
     <div class="loading">Cargando ejecuciones...</div>
   } @else {
     <div class="table-scroll">

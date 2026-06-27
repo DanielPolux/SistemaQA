@@ -51,10 +51,10 @@ export class EjecucionListComponent implements OnInit {
     this.userService.getAll({ porPagina: 500 }).subscribe(r => {
       this.usuarios = r.datos;
     });
-    this.cargar();
   }
 
   cargar(): void {
+    if (!this.proyectoFiltroId) return;
     this.cargando = true;
     this.service.getAll({
       proyectoId:  this.proyectoFiltroId,
