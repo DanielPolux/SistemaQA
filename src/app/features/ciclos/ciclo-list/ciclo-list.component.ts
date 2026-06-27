@@ -164,7 +164,6 @@ export class CicloListComponent implements OnInit {
 
   ngOnInit(): void {
     this.projectService.getAll({ porPagina: 500 }).subscribe(r => { this.proyectos = r.datos; });
-    this.cargar();
   }
 
   cargar(): void {

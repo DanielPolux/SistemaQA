@@ -6,20 +6,31 @@
     }
   </div>
 
-  <div class="filters">
-    <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
-      <option [ngValue]="undefined">Todos los proyectos</option>
+  <!-- Selector de proyecto (paso 1) -->
+  <div class="project-selector">
+    <label for="proyectoFiltro"><strong>Proyecto</strong></label>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoFiltroId" (change)="buscar()" class="select-proyecto">
+      <option [ngValue]="undefined">— Selecciona un proyecto —</option>
       @for (p of proyectos; track p.id) {
         <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
       }
     </select>
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
-    </select>
   </div>
 
-  @if (cargando) {
+  @if (proyectoFiltroId) {
+    <div class="filters">
+      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
+        <option value="">Todos los estados</option>
+        @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+      </select>
+    </div>
+  }
+
+  @if (!proyectoFiltroId) {
+    <div class="empty-state">
+      <p>Selecciona un proyecto para ver sus ciclos de prueba.</p>
+    </div>
+  } @else if (cargando) {
     <div class="loading">Cargando ciclos...</div>
   } @else {
     <table class="data-table">
