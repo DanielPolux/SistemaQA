@@ -67,11 +67,10 @@
                   <i class="bi bi-list-check"></i>
                 </a>
                 @if (auth.puedeEditar()) {
-                  <a [routerLink]="['/requerimientos', r.id, 'editar']"
-                     [queryParams]="{ proyectoId: proyectoId }"
-                     class="btn btn-sm btn-icon btn-warning" title="Editar">
+                  <button class="btn btn-sm btn-icon btn-warning" title="Editar"
+                    (click)="abrirModalEditar(r)">
                     <i class="bi bi-pencil"></i>
-                  </a>
+                  </button>
                   <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
                     (click)="eliminar(r.id, r.titulo)">
                     <i class="bi bi-trash"></i>
@@ -140,7 +139,7 @@
         <div class="modal-title-group">
           <span class="modal-icon">📋</span>
           <div>
-            <h3 class="modal-title">Nuevo Requerimiento</h3>
+            <h3 class="modal-title">{{ editandoId() ? 'Editar Requerimiento' : 'Nuevo Requerimiento' }}</h3>
             @if (proyectoSeleccionado) {
               <p class="modal-subtitle">{{ proyectoNombreActual() }}</p>
             }
@@ -217,7 +216,7 @@
           Cancelar
         </button>
         <button class="btn btn-accent" (click)="guardar()" [disabled]="guardando()">
-          @if (guardando()) { Guardando... } @else { ✓ Guardar Requerimiento }
+          @if (guardando()) { Guardando... } @else { ✓ {{ editandoId() ? 'Actualizar' : 'Guardar Requerimiento' }} }
         </button>
       </div>
 

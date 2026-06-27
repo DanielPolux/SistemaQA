@@ -42,9 +42,10 @@ export class RequirementListComponent implements OnInit {
   readonly tipos      = Object.values(TipoRequerimiento);
   readonly prioridades= Object.values(PrioridadRequerimiento);
 
-  // ─── Modal crear requerimiento ───────────────────────────────────────────
+  // ─── Modal crear / editar requerimiento ──────────────────────────────────
   modalAbierto = signal(false);
   guardando    = signal(false);
+  editandoId   = signal<number | null>(null);
   errorModal   = '';
 
   form = this.fb.group({
@@ -132,6 +133,7 @@ export class RequirementListComponent implements OnInit {
   }
 
   abrirModal(): void {
+    this.editandoId.set(null);
     this.errorModal = '';
     this.form.reset({
       proyectoId:          this.proyectoId,
@@ -151,8 +153,25 @@ export class RequirementListComponent implements OnInit {
     this.modalAbierto.set(true);
   }
 
+  abrirModalEditar(req: Requerimiento): void {
+    this.editandoId.set(req.id);
+    this.errorModal = '';
+    this.form.patchValue({
+      proyectoId:          req.proyectoId ?? this.proyectoId,
+      codigo:              req.codigo,
+      titulo:              req.titulo,
+      descripcion:         req.descripcion,
+      criteriosAceptacion: req.criteriosAceptacion,
+      tipo:                req.tipo,
+      prioridad:           req.prioridad,
+      estado:              req.estado,
+    });
+    this.modalAbierto.set(true);
+  }
+
   cerrarModal(): void {
     this.modalAbierto.set(false);
+    this.editandoId.set(null);
     this.errorModal = '';
   }
 
@@ -164,7 +183,12 @@ export class RequirementListComponent implements OnInit {
     this.guardando.set(true);
     this.errorModal = '';
 
-    this.service.create(this.form.getRawValue() as any).subscribe({
+    const id = this.editandoId();
+    const op = id
+      ? this.service.update(id, this.form.getRawValue() as any)
+      : this.service.create(this.form.getRawValue() as any);
+
+    op.subscribe({
       next: () => {
         this.guardando.set(false);
         this.cerrarModal();
