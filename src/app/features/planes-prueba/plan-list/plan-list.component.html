@@ -10,7 +10,7 @@
     <select [(ngModel)]="proyectoFiltroId" (change)="buscar()">
       <option [ngValue]="undefined">Todos los proyectos</option>
       @for (p of proyectos; track p.id) {
-        <option [ngValue]="p.id">{{ p.nombre }}</option>
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
       }
     </select>
     <select [(ngModel)]="estadoFiltro" (change)="buscar()">
@@ -41,7 +41,7 @@
             <td class="td-nombre">
               <a [routerLink]="['/planes-prueba', p.id]" class="link-primary">{{ p.nombre }}</a>
             </td>
-            <td>{{ p.proyectoNombre ?? '—' }}</td>
+            <td>{{ p.proyectoCodigo ? p.proyectoCodigo + ' — ' + p.proyectoNombre : (p.proyectoNombre ?? '—') }}</td>
             <td>{{ p.responsableNombre ?? '—' }}</td>
             <td>
               <span class="badge {{ estadoClase[p.estado] }}">{{ p.estado }}</span>

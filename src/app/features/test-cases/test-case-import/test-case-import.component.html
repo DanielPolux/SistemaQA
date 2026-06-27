@@ -7,7 +7,7 @@
   <!-- Selección de proyecto (requerida) -->
   <div class="import-project-selector">
     <label for="proyectoImport"><strong>Proyecto de destino *</strong></label>
-    <select id="proyectoImport" [(ngModel)]="proyectoId" class="select-proyecto">
+    <select id="proyectoImport" [(ngModel)]="proyectoId" (change)="onProyectoChange()" class="select-proyecto">
       <option [ngValue]="null">Seleccionar proyecto...</option>
       @for (p of proyectos; track p.id) {
         <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>

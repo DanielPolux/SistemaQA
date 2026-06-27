@@ -59,11 +59,15 @@ export class RequirementListComponent implements OnInit {
   ngOnInit(): void {
     this.projectService.getAll({ porPagina: 200 }).subscribe(r => {
       this.proyectos = r.datos;
-      const qpId = this.route.snapshot.queryParams['proyectoId'];
+      const qp = this.route.snapshot.queryParams;
+      const qpId = qp['proyectoId'];
       if (qpId) {
         this.proyectoId = Number(qpId);
         this.proyectoSeleccionado = this.proyectos.find(p => p.id === this.proyectoId) ?? null;
         this.cargar();
+        if (qp['openModal'] === 'true') {
+          this.abrirModal();
+        }
       }
     });
   }
@@ -137,6 +141,11 @@ export class RequirementListComponent implements OnInit {
       prioridad:           PrioridadRequerimiento.MEDIA,
       estado:              EstadoRequerimiento.PENDIENTE,
     });
+    if (this.proyectoId) {
+      this.service.getNextCodigo(this.proyectoId).subscribe(r => {
+        this.form.get('codigo')?.setValue(r.codigo, { emitEvent: false });
+      });
+    }
     this.modalAbierto.set(true);
   }
 

@@ -5,9 +5,10 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { RequirementService } from '../../../core/services/requirement.service';
 import {
   EstadoCasoPrueba, PrioridadCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
-  ImportacionResultado, Proyecto, Paso
+  ImportacionResultado, Proyecto, Paso, Requerimiento
 } from '../../../core/models';
 
 interface FilaPrevia {
@@ -22,6 +23,7 @@ interface FilaPrevia {
   resultadoEsperado: string;
   pasosDePrueba: string;
   requerimientoRF: string;
+  requerimientoId: number | null;
   resultado: string;
   observaciones: string;
   evidenciaUrl: string;
@@ -36,8 +38,9 @@ interface FilaPrevia {
   templateUrl: './test-case-import.component.html'
 })
 export class TestCaseImportComponent implements OnInit {
-  private service        = inject(TestCaseService);
-  private projectService = inject(ProjectService);
+  private service            = inject(TestCaseService);
+  private projectService     = inject(ProjectService);
+  private requirementService = inject(RequirementService);
 
   // Valores permitidos — alineados con el backend
   private readonly TIPOS_VALIDOS      = Object.values(TipoPrueba);
@@ -52,19 +55,35 @@ export class TestCaseImportComponent implements OnInit {
     'Requerimiento RF', 'Resultado', 'Observaciones', 'Evidencia URL'
   ];
 
-  proyectos: Proyecto[]      = [];
-  proyectoId: number | null  = null;
-  archivo: File | null       = null;
-  filas: FilaPrevia[]        = [];
-  importando                 = false;
+  proyectos: Proyecto[]              = [];
+  proyectoActual: Proyecto | null    = null;
+  requerimientosProyecto: Requerimiento[] = [];
+  proyectoId: number | null          = null;
+  archivo: File | null               = null;
+  filas: FilaPrevia[]                = [];
+  private rawRows: string[][]        = [];
+  importando                         = false;
   resultadoImport: ImportacionResultado | null = null;
-  errorArchivo               = '';
+  errorArchivo                       = '';
 
   get filasValidas(): FilaPrevia[]  { return this.filas.filter(f => f.valido); }
   get filasConError(): FilaPrevia[] { return this.filas.filter(f => !f.valido); }
 
   ngOnInit(): void {
     this.projectService.getAll({ porPagina: 200 }).subscribe(r => { this.proyectos = r.datos; });
+  }
+
+  onProyectoChange(): void {
+    this.proyectoActual = this.proyectos.find(p => p.id === Number(this.proyectoId)) ?? null;
+    this.requerimientosProyecto = [];
+    if (this.proyectoId) {
+      this.requirementService.getAll({ proyectoId: this.proyectoId, porPagina: 500 }).subscribe(r => {
+        this.requerimientosProyecto = r.datos;
+        if (this.rawRows.length) this.parsearFilas(this.rawRows);
+      });
+    } else if (this.rawRows.length) {
+      this.parsearFilas(this.rawRows);
+    }
   }
 
   // ─── Plantilla ───────────────────────────────────────────────────────────
@@ -144,6 +163,8 @@ export class TestCaseImportComponent implements OnInit {
   }
 
   private parsearFilas(rows: string[][]): void {
+    this.rawRows = rows;
+
     const headerIdx = rows.findIndex(r =>
       r.some(c => String(c).includes('Nombre del Caso de Prueba'))
     );
@@ -182,10 +203,26 @@ export class TestCaseImportComponent implements OnInit {
       if (resultado && !this.RESULTADOS_VALIDOS.includes(resultado as ResultadoCasoPrueba))
         errores.push(`Resultado inválido: "${resultado}". Valores: ${this.RESULTADOS_VALIDOS.join(', ')}`);
 
+      // Validate Clave Proyecto against selected project
+      if (claveProyecto && this.proyectoActual && claveProyecto !== this.proyectoActual.codigo) {
+        errores.push(`Clave Proyecto "${claveProyecto}" no coincide con el proyecto seleccionado (${this.proyectoActual.codigo})`);
+      }
+
+      // Resolve Requerimiento RF → requerimientoId
+      let requerimientoId: number | null = null;
+      if (requerimientoRF) {
+        const req = this.requerimientosProyecto.find(r => r.codigo === requerimientoRF);
+        if (req) {
+          requerimientoId = req.id;
+        } else if (this.requerimientosProyecto.length > 0) {
+          errores.push(`Requerimiento "${requerimientoRF}" no existe en el proyecto seleccionado`);
+        }
+      }
+
       return {
         fila: headerIdx + i + 2,
         codigoCP, nombreCasoPrueba, claveProyecto, tipoPrueba, descripcionCasoPrueba,
-        prioridad, estadoQA, resultadoEsperado, pasosDePrueba, requerimientoRF,
+        prioridad, estadoQA, resultadoEsperado, pasosDePrueba, requerimientoRF, requerimientoId,
         resultado, observaciones, evidenciaUrl,
         errores,
         valido: errores.length === 0
@@ -201,20 +238,21 @@ export class TestCaseImportComponent implements OnInit {
     this.resultadoImport = null;
 
     const casos = this.filasValidas.map(f => ({
-      codigo:            f.codigoCP        || undefined,
+      codigo:            f.codigoCP           || undefined,
       nombre:            f.nombreCasoPrueba,
       proyectoId:        this.proyectoId!,
-      claveProyecto:     f.claveProyecto   || undefined,
-      tipo:              f.tipoPrueba as TipoPrueba,
+      claveProyecto:     f.claveProyecto      || undefined,
+      tipo:              f.tipoPrueba          as TipoPrueba,
       descripcion:       f.descripcionCasoPrueba,
-      prioridad:         f.prioridad       as PrioridadCasoPrueba,
-      estado:            f.estadoQA        as EstadoCasoPrueba,
-      resultado:        (f.resultado       as ResultadoCasoPrueba) || ResultadoCasoPrueba.SIN_EJECUTAR,
+      prioridad:         f.prioridad           as PrioridadCasoPrueba,
+      estado:            f.estadoQA            as EstadoCasoPrueba,
+      resultado:        (f.resultado           as ResultadoCasoPrueba) || ResultadoCasoPrueba.SIN_EJECUTAR,
       resultadoEsperado: f.resultadoEsperado,
       pasos:             this.parsearPasos(f.pasosDePrueba),
-      requerimientoRf:   f.requerimientoRF || undefined,
-      observaciones:     f.observaciones   || undefined,
-      evidenciaUrl:      f.evidenciaUrl    || undefined
+      requerimientoRf:   f.requerimientoRF    || undefined,
+      requerimientoId:   f.requerimientoId    ?? undefined,
+      observaciones:     f.observaciones      || undefined,
+      evidenciaUrl:      f.evidenciaUrl       || undefined
     }));
 
     this.service.importarDesdeExcel({ casos }).subscribe({
@@ -244,6 +282,7 @@ export class TestCaseImportComponent implements OnInit {
   limpiar(): void {
     this.archivo = null;
     this.filas   = [];
+    this.rawRows = [];
     this.resultadoImport = null;
     this.errorArchivo    = '';
   }

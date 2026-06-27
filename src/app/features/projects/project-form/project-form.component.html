@@ -17,7 +17,7 @@
         <strong>Próximo paso:</strong> Ahora debes generar los <strong>requerimientos</strong> del proyecto para poder continuar con el flujo de QA.
       </div>
       <div class="success-actions">
-        <a [routerLink]="['/requerimientos/nuevo']" [queryParams]="{ proyectoId: guardadoId }" class="btn btn-primary">
+        <a [routerLink]="['/requerimientos']" [queryParams]="{ proyectoId: guardadoId, openModal: 'true' }" class="btn btn-primary">
           + Crear Requerimiento
         </a>
         <a [routerLink]="['/proyectos', guardadoId]" class="btn btn-outline">

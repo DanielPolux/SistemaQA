@@ -8,7 +8,7 @@ Aplicación Angular 18 para gestión de calidad de software. Permite administrar
 
 - Gestión de **Proyectos** con estados y múltiples responsables (jefe de proyecto, jefe QA, responsable QA)
 - Gestión de **Requerimientos** por proyecto con criterios de aceptación
-- Creación y ejecución de **Casos de Prueba** con pasos detallados e historial de auditoría
+- Creación y ejecución de **Casos de Prueba** con pasos detallados e historial de auditoría; importación masiva desde Excel con validación de Clave Proyecto, resolución de código RF a FK de requerimiento y preservación del Código CP
 - **Ciclos de Prueba** por proyecto — agrupan ejecuciones; se asignan automáticamente al registrar; solo puede haber uno activo por proyecto
 - **Ejecuciones** con creación inline de defecto cuando el resultado es `Fallido`
 - Reporte y seguimiento de **Defectos** con códigos globales (`DEF-XXXX`) y por proyecto (`INC-XXX`); filtro por proyecto, severidad y estado
@@ -114,6 +114,7 @@ src/app/
 | `/proyectos` | No Developer | Lista y gestión de proyectos |
 | `/requerimientos` | No Developer | Lista y gestión de requerimientos |
 | `/casos-prueba` | No Developer | Lista, ejecución y gestión de casos |
+| `/casos-prueba/importar` | QA Lead / Admin | Importación masiva desde Excel |
 | `/ciclos` | QA Lead / PM / Admin | Gestión de ciclos de prueba |
 | `/ejecuciones` | No Developer | Historial de ejecuciones |
 | `/defectos` | Todos | Lista y gestión de defectos |
@@ -131,7 +132,7 @@ src/app/
 Proyecto → [Plan de Pruebas] → Ciclo de Prueba → Casos de Prueba → Ejecutar → [Fallido → Defecto] → Resolución
 ```
 
-1. Se crea un **Proyecto** con sus responsables
+1. Se crea un **Proyecto** con sus responsables; al guardar, el sistema redirige automáticamente al módulo de Requerimientos con el proyecto preseleccionado y el modal de creación abierto
 2. Opcionalmente se crea un **Plan de Pruebas** para agrupar ciclos
 3. Se abre un **Ciclo de Prueba** activo para el proyecto (solo uno a la vez por proyecto)
 4. Se crean **Casos de Prueba** vinculados a requerimientos
