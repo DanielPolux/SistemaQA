@@ -161,6 +161,19 @@ export class TestCaseListComponent implements OnInit {
     requerimientoId:   [null as number | null],
   });
 
+  abrirNuevo(): void {
+    this.casoEditarId = null;
+    this.errorEditar = '';
+    this.requerimientosEditar = [];
+    this.formEditar.reset();
+    this.formEditar.patchValue({
+      tipo:       TipoPrueba.FUNCIONAL,
+      prioridad:  'Media',
+      proyectoId: this.proyectoId ?? null,
+    });
+    this.modalEditarAbierto.set(true);
+  }
+
   abrirEditar(id: number): void {
     this.casoEditarId = id;
     this.errorEditar = '';
@@ -203,12 +216,15 @@ export class TestCaseListComponent implements OnInit {
   }
 
   guardarEditar(): void {
-    if (this.formEditar.invalid || !this.casoEditarId) return;
+    if (this.formEditar.invalid) return;
     this.guardandoEditar.set(true);
     this.errorEditar = '';
     const val     = this.formEditar.value;
     const payload = { ...val, pasos: textoPasos(val.pasos as string) };
-    this.service.update(this.casoEditarId, payload as any).subscribe({
+    const op = this.casoEditarId
+      ? this.service.update(this.casoEditarId, payload as any)
+      : this.service.create(payload as any);
+    op.subscribe({
       next: () => {
         this.guardandoEditar.set(false);
         this.cerrarEditar();
@@ -250,6 +266,11 @@ export class TestCaseListComponent implements OnInit {
       this.formEditar.patchValue({ requerimientoRf: '', requerimientoId: null }, { emitEvent: false });
       if (id) {
         this.requirementService.getByProyecto(id).subscribe(r => { this.requerimientosEditar = r; });
+        if (!this.casoEditarId) {
+          this.service.getNextCodigo(id).subscribe(r => {
+            this.formEditar.patchValue({ codigo: r.codigo }, { emitEvent: false });
+          });
+        }
       }
     });
   }

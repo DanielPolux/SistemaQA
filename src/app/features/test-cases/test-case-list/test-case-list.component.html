@@ -9,7 +9,7 @@
       }
       @if (auth.puedeEditar()) {
         <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
-        <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>
+        <button class="btn btn-primary" (click)="abrirNuevo()">+ Nuevo Caso</button>
       }
     </div>
   </div>
@@ -352,7 +352,7 @@
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon"><i class="bi bi-pencil"></i></span>
-          <div><h3 class="modal-title">Editar Caso de Prueba</h3></div>
+          <div><h3 class="modal-title">{{ casoEditarId ? 'Editar Caso de Prueba' : 'Nuevo Caso de Prueba' }}</h3></div>
         </div>
         <button class="modal-close" (click)="cerrarEditar()">✕</button>
       </div>
@@ -441,7 +441,7 @@
         </button>
         <button class="btn btn-primary" (click)="guardarEditar()"
                 [disabled]="formEditar.invalid || guardandoEditar()">
-          {{ guardandoEditar() ? 'Guardando...' : 'Actualizar' }}
+          {{ guardandoEditar() ? 'Guardando...' : (casoEditarId ? 'Actualizar' : 'Guardar Caso') }}
         </button>
       </div>
 
