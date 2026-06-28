@@ -1147,6 +1147,36 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .ce-row--aprobado td { background: rgba(22,163,74,0.03); }
 .ce-row--fallido  td { background: rgba(220,38,38,0.03); }
 
+/* Progress bar (ciclo-ejecucion) */
+.ce-progress-wrap { margin-bottom: 20px; }
+.ce-progress-bar {
+  height: 10px; border-radius: var(--radius-full); overflow: hidden;
+  background: var(--color-border); display: flex;
+}
+.ce-progress-seg { height: 100%; transition: width 0.4s ease; }
+.ce-progress-aprobado  { background: var(--color-success); }
+.ce-progress-fallido   { background: var(--color-danger); }
+.ce-progress-pendiente { background: transparent; }
+.ce-progress-legend {
+  display: flex; gap: 14px; margin-top: 6px; flex-wrap: wrap;
+  font-size: 12px; align-items: center;
+}
+.ce-pl-item { display: flex; align-items: center; gap: 5px; color: var(--color-text-muted);
+  &::before { content: ''; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+}
+.ce-pl-aprobado::before  { background: var(--color-success); }
+.ce-pl-fallido::before   { background: var(--color-danger); }
+.ce-pl-pendiente::before { background: var(--color-border); }
+.ce-pl-completado { margin-left: auto; font-weight: 700; color: var(--color-primary); }
+
+/* Pagination inside ciclo-exec left panel */
+.ciclo-exec-pagination {
+  display: flex; gap: 4px; padding: 8px 10px;
+  border-top: 1px solid var(--color-border); justify-content: center; flex-wrap: wrap;
+  .btn { min-width: 28px; padding: 2px 6px; font-size: 12px; }
+  .btn.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+}
+
 /* ────────────────────────────────────────────────────────────
    CHECKLIST CASOS PREVIOS (ciclo-form)
    ──────────────────────────────────────────────────────────── */

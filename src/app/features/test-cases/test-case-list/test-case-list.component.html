@@ -2,6 +2,11 @@
   <div class="page-header">
     <h2>Casos de Prueba</h2>
     <div class="header-actions">
+      @if (casos.length > 0) {
+        <button class="btn btn-secondary btn-sm" (click)="exportarExcel()" title="Exportar a Excel">
+          <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+      }
       @if (auth.puedeEditar()) {
         <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
         <a routerLink="/casos-prueba/nuevo" class="btn btn-primary">+ Nuevo Caso</a>

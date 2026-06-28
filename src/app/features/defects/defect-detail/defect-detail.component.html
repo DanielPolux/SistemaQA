@@ -11,9 +11,16 @@
         <h2>Detalle de Defecto</h2>
       }
     </div>
-    <a routerLink="/defectos" class="btn btn-secondary">
-      <i class="bi bi-arrow-left"></i> Volver
-    </a>
+    <div style="display:flex;gap:8px;align-items:center;">
+      @if (defecto && puedeReabrir) {
+        <button class="btn btn-warning" (click)="abrirModalReabrir()">
+          <i class="bi bi-arrow-clockwise"></i> Reabrir
+        </button>
+      }
+      <a routerLink="/defectos" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
   </div>
 
   @if (cargando) { <div class="loading">Cargando defecto...</div> }
@@ -173,3 +180,37 @@
     <div class="alert alert-error">No se encontró el defecto solicitado.</div>
   }
 </div>
+
+<!-- ─── Modal Reabrir Defecto ─────────────────────────────────────────────── -->
+@if (modalReabrirAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModalReabrir()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--warning">
+        <div class="modal-title-group">
+          <span class="modal-icon">🔄</span>
+          <div><h3 class="modal-title">Reabrir defecto</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarModalReabrir()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px;margin-bottom:12px">
+          El defecto pasará al estado <strong>Reabierto</strong>. Indica al desarrollador qué sigue fallando.
+        </p>
+        <div class="form-group">
+          <label>Comentario para el desarrollador <span class="req">*</span></label>
+          <textarea [(ngModel)]="comentarioReabrir" rows="4"
+                    placeholder="Describe qué sigue fallando o qué debe corregirse..."></textarea>
+        </div>
+        @if (errorReabrir) {
+          <div class="alert alert-danger">{{ errorReabrir }}</div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModalReabrir()" [disabled]="guardandoReabrir">Cancelar</button>
+        <button class="btn btn-warning" (click)="confirmarReabrir()" [disabled]="guardandoReabrir">
+          @if (guardandoReabrir) { Guardando... } @else { Reabrir Defecto }
+        </button>
+      </div>
+    </div>
+  </div>
+}

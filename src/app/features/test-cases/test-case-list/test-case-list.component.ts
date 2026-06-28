@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { RequirementService } from '../../../core/services/requirement.service';
@@ -312,6 +313,23 @@ export class TestCaseListComponent implements OnInit {
 
   nombreUsuario(u: Usuario): string {
     return `${u.nombre} ${u.apellido}`;
+  }
+
+  exportarExcel(): void {
+    const rows = this.casos.map((c: any) => ({
+      'Código':       c.codigo,
+      'Nombre':       c.nombre,
+      'Tipo':         c.tipo ?? '',
+      'Prioridad':    c.prioridad ?? '',
+      'Estado QA':    c.estado ?? '',
+      'Resultado':    c.ultimoResultado ?? '',
+      'Requerimiento': c.requerimientoCodigo ?? '',
+      'Asignado A':   c.responsableQaNombre ?? '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Casos de Prueba');
+    XLSX.writeFile(wb, 'casos_prueba.xlsx');
   }
 }
 

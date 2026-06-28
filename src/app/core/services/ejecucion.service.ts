@@ -11,6 +11,8 @@ export interface FiltroEjecucion {
   resultado?: string;
   ambiente?: string;
   testerId?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
   pagina?: number;
   porPagina?: number;
 }

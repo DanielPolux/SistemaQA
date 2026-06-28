@@ -1,9 +1,16 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Defectos</h2>
-    @if (auth.puedeEditar()) {
-      <a routerLink="/defectos/nuevo" class="btn btn-primary">+ Reportar Defecto</a>
-    }
+    <div style="display:flex;gap:8px;align-items:center;">
+      @if (auth.puedeEditar()) {
+        <a routerLink="/defectos/nuevo" class="btn btn-primary">+ Reportar Defecto</a>
+      }
+      @if (defectos.length > 0) {
+        <button class="btn btn-secondary btn-sm" title="Exportar a Excel" (click)="exportarExcel()">
+          <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+      }
+    </div>
   </div>
 
   <!-- Selector de proyecto (paso 1) -->

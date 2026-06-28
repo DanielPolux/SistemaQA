@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 import { DefectService } from '../../../core/services/defect.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -132,6 +133,24 @@ export class DefectListComponent implements OnInit {
     this.wordExport.exportarDefecto(d);
   }
 
+  exportarExcel(): void {
+    const rows = this.defectos.map(d => ({
+      'Defecto':      d.codigoProyecto ?? d.codigo,
+      'Título':       d.titulo,
+      'Caso':         d.casoPruebaCodigo ?? '',
+      'Severidad':    d.severidad,
+      'Prioridad':    d.prioridad,
+      'Estado':       d.estado,
+      'Asignado A':   d.asignadoANombre ?? '',
+      'Estado Dev':   d.estadoDesarrollo ?? '',
+      'Reportado':    d.creadoEn ? new Date(d.creadoEn).toLocaleDateString('es-PE') : '',
+    }));
+    const ws  = XLSX.utils.json_to_sheet(rows);
+    const wb  = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Defectos');
+    XLSX.writeFile(wb, 'defectos.xlsx');
+  }
+
   // ─── Modal verificación (Cerrar / Reabrir) ───────────────────────────────
   modalVerificarAbierto = signal(false);
   verificarPendiente: { id: number; titulo: string; accion: 'cerrar' | 'reabrir' } | null = null;
@@ -162,7 +181,7 @@ export class DefectListComponent implements OnInit {
       return;
     }
 
-    const nuevoEstado  = accion === 'cerrar' ? EstadoDefecto.CERRADO : EstadoDefecto.ASIGNADO;
+    const nuevoEstado  = accion === 'cerrar' ? EstadoDefecto.CERRADO : EstadoDefecto.REABIERTO;
     const comentario   = accion === 'reabrir' ? this.comentarioReabrir.trim() : undefined;
 
     this.service.cambiarEstado(id, nuevoEstado, comentario).subscribe({

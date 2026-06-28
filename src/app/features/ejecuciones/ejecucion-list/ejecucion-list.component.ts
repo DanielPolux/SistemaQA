@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
@@ -35,6 +36,8 @@ export class EjecucionListComponent implements OnInit {
   resultadoFiltro  = '';
   ambienteFiltro   = '';
   testerFiltroId?: number;
+  fechaDesde = '';
+  fechaHasta = '';
 
   readonly resultados = Object.values(ResultadoEjecucion);
   readonly ambientes  = Object.values(AmbienteEjecucion);
@@ -63,6 +66,8 @@ export class EjecucionListComponent implements OnInit {
       resultado:   this.resultadoFiltro  || undefined,
       ambiente:    this.ambienteFiltro   || undefined,
       testerId:    this.testerFiltroId,
+      fechaDesde:  this.fechaDesde       || undefined,
+      fechaHasta:  this.fechaHasta       || undefined,
       pagina:      this.pagina,
       porPagina:   this.porPagina,
     }).subscribe({
@@ -83,7 +88,28 @@ export class EjecucionListComponent implements OnInit {
     this.resultadoFiltro  = '';
     this.ambienteFiltro   = '';
     this.testerFiltroId   = undefined;
+    this.fechaDesde       = '';
+    this.fechaHasta       = '';
     this.buscar();
+  }
+
+  exportarExcel(): void {
+    const rows = this.ejecuciones.map((e: any) => ({
+      'ID':           e.id,
+      'Caso':         `${e.casoPruebaCodigo ?? ''} ${e.casoPruebaNombre ?? ''}`.trim(),
+      'Proyecto':     e.proyectoCodigo ?? '',
+      'Ciclo':        e.cicloNombre ?? '',
+      'Tester':       e.testerNombre ?? '',
+      'Fecha':        e.fecha ? new Date(e.fecha).toLocaleString('es-PE') : '',
+      'Ambiente':     e.ambiente,
+      'Versión':      e.version,
+      'Resultado':    e.resultado,
+      'Defecto':      e.defectoCodigo ?? '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ejecuciones');
+    XLSX.writeFile(wb, 'ejecuciones.xlsx');
   }
 
   get totalPaginas(): number { return Math.ceil(this.total / this.porPagina); }

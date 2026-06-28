@@ -66,10 +66,10 @@
                 <i class="bi bi-eye"></i>
               </a>
               @if (puedeGestionar()) {
-                <a [routerLink]="['/planes-prueba', p.id, 'editar']"
-                   class="btn btn-sm btn-icon btn-secondary" title="Editar">
+                <button class="btn btn-sm btn-icon btn-secondary" title="Editar"
+                        (click)="abrirModalEditar(p)">
                   <i class="bi bi-pencil"></i>
-                </a>
+                </button>
                 @if (p.estado !== 'Cerrado') {
                   <button class="btn btn-sm btn-icon btn-warning" title="Cerrar plan"
                           (click)="cerrar(p)">
@@ -124,7 +124,7 @@
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-icon">📋</span>
-          <div><h3 class="modal-title">Nuevo Plan de Prueba</h3></div>
+          <div><h3 class="modal-title">{{ editandoId() ? 'Editar Plan de Prueba' : 'Nuevo Plan de Prueba' }}</h3></div>
         </div>
         <button class="modal-close" (click)="cerrarModal()">✕</button>
       </div>
@@ -275,7 +275,7 @@
       <div class="modal-footer">
         <button class="btn btn-outline" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
         <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando()">
-          @if (guardando()) { Guardando... } @else { ✓ Crear Plan }
+          @if (guardando()) { Guardando... } @else { ✓ {{ editandoId() ? 'Actualizar Plan' : 'Crear Plan' }} }
         </button>
       </div>
 

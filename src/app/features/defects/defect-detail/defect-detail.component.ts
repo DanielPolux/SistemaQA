@@ -1,15 +1,17 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DefectService } from '../../../core/services/defect.service';
 import { AuditoriaService, AuditoriaRegistro } from '../../../core/services/auditoria.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Defecto, EstadoDefecto, SeveridadDefecto, PrioridadDefecto } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-defect-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './defect-detail.component.html'
 })
 export class DefectDetailComponent implements OnInit {
@@ -17,6 +19,7 @@ export class DefectDetailComponent implements OnInit {
   private service          = inject(DefectService);
   private auditoriaService = inject(AuditoriaService);
   private toast            = inject(ToastService);
+  auth                     = inject(AuthService);
 
   defecto?: Defecto;
   auditoria: AuditoriaRegistro[] = [];
@@ -46,6 +49,51 @@ export class DefectDetailComponent implements OnInit {
     [PrioridadDefecto.MEDIA]:   'badge-pri-media',
     [PrioridadDefecto.BAJA]:    'badge-pri-baja',
   };
+
+  // ─── Reopen modal ────────────────────────────────────────────────────────
+  modalReabrirAbierto = signal(false);
+  comentarioReabrir   = '';
+  errorReabrir        = '';
+  guardandoReabrir    = false;
+
+  get puedeReabrir(): boolean {
+    return this.auth.puedeEditar() &&
+      (this.defecto?.estado === EstadoDefecto.EN_REVISION ||
+       this.defecto?.estado === EstadoDefecto.RESUELTO   ||
+       this.defecto?.estado === EstadoDefecto.CERRADO);
+  }
+
+  abrirModalReabrir(): void {
+    this.comentarioReabrir = '';
+    this.errorReabrir      = '';
+    this.guardandoReabrir  = false;
+    this.modalReabrirAbierto.set(true);
+  }
+
+  cerrarModalReabrir(): void {
+    this.modalReabrirAbierto.set(false);
+  }
+
+  confirmarReabrir(): void {
+    if (!this.comentarioReabrir.trim()) {
+      this.errorReabrir = 'Debes ingresar un comentario para el desarrollador.';
+      return;
+    }
+    this.guardandoReabrir = true;
+    this.errorReabrir     = '';
+    this.service.cambiarEstado(this.defecto!.id, EstadoDefecto.REABIERTO, this.comentarioReabrir.trim()).subscribe({
+      next: (d) => {
+        this.defecto = d;
+        this.guardandoReabrir = false;
+        this.cerrarModalReabrir();
+        this.auditoriaService.getByDefecto(d.id).subscribe(r => { this.auditoria = r; });
+      },
+      error: (err) => {
+        this.guardandoReabrir = false;
+        this.errorReabrir = err?.error?.message || 'Error al reabrir el defecto.';
+      },
+    });
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));

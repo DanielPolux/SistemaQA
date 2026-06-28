@@ -54,10 +54,11 @@ export class PlanListComponent implements OnInit {
     [EstadoPlan.CERRADO]:      'badge-ciclo-cerrado',
   };
 
-  // ─── Modal crear plan ─────────────────────────────────────────────────────
+  // ─── Modal crear / editar plan ───────────────────────────────────────────
   modalAbierto = signal(false);
   guardando    = signal(false);
   errorModal   = '';
+  editandoId   = signal<number | null>(null);
 
   form = this.fb.group({
     proyectoId:    [null as number | null, Validators.required],
@@ -114,6 +115,7 @@ export class PlanListComponent implements OnInit {
   // ─── Modal crear ──────────────────────────────────────────────────────────
   abrirModal(): void {
     this.errorModal = '';
+    this.editandoId.set(null);
     this.requerimientos = [];
     this.requerimientosSeleccionados.clear();
     this.form.reset({
@@ -121,12 +123,49 @@ export class PlanListComponent implements OnInit {
       tipoPrueba: '', ambiente: '', objetivo: '', alcance: '',
       fueraAlcance: '', responsableId: null, fechaInicio: '', fechaObjetivo: '',
     });
+    this.form.get('proyectoId')!.enable();
+    this.modalAbierto.set(true);
+  }
+
+  abrirModalEditar(plan: PlanPrueba): void {
+    this.errorModal = '';
+    this.editandoId.set(plan.id);
+    this.requerimientos = [];
+    this.requerimientosSeleccionados.clear();
+    this.form.reset({
+      proyectoId:    plan.proyectoId ?? null,
+      nombre:        plan.nombre,
+      descripcion:   plan.descripcion    ?? '',
+      sprint:        plan.sprint         ?? '',
+      tipoPrueba:    plan.tipoPrueba     ?? '',
+      ambiente:      plan.ambiente       ?? '',
+      objetivo:      plan.objetivo       ?? '',
+      alcance:       plan.alcance        ?? '',
+      fueraAlcance:  plan.fueraAlcance   ?? '',
+      responsableId: plan.responsableId  ?? null,
+      fechaInicio:   plan.fechaInicio  ? String(plan.fechaInicio).substring(0, 10)  : '',
+      fechaObjetivo: plan.fechaObjetivo ? String(plan.fechaObjetivo).substring(0, 10) : '',
+    });
+    this.form.get('proyectoId')!.disable();
+    if (plan.proyectoId) {
+      this.cargandoReqs = true;
+      this.requirementService.getAll({ proyectoId: plan.proyectoId, porPagina: 500 }).subscribe({
+        next: (res) => {
+          this.requerimientos = res.datos;
+          this.requerimientosSeleccionados = new Set((plan as any).requerimientoIds ?? []);
+          this.cargandoReqs = false;
+        },
+        error: () => { this.cargandoReqs = false; },
+      });
+    }
     this.modalAbierto.set(true);
   }
 
   cerrarModal(): void {
     this.modalAbierto.set(false);
+    this.editandoId.set(null);
     this.errorModal = '';
+    this.form.get('proyectoId')!.enable();
   }
 
   private cargarRequerimientos(proyectoId: number): void {
@@ -178,11 +217,15 @@ export class PlanListComponent implements OnInit {
       fechaObjetivo:    val.fechaObjetivo    || undefined,
       requerimientoIds: Array.from(this.requerimientosSeleccionados),
     };
-    this.service.create(payload).subscribe({
+    const op = this.editandoId()
+      ? this.service.update(this.editandoId()!, payload)
+      : this.service.create(payload);
+
+    op.subscribe({
       next: () => { this.guardando.set(false); this.cerrarModal(); this.cargar(); },
       error: (err) => {
         this.guardando.set(false);
-        this.errorModal = err?.error?.message || 'Error al crear el plan.';
+        this.errorModal = err?.error?.message || 'Error al guardar el plan.';
       },
     });
   }

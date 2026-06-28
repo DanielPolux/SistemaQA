@@ -1,7 +1,14 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Ejecuciones de Casos de Prueba</h2>
-    <span class="text-muted">Historial completo de ejecuciones</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="text-muted">Historial completo de ejecuciones</span>
+      @if (ejecuciones.length > 0) {
+        <button class="btn btn-secondary btn-sm" (click)="exportarExcel()" title="Exportar a Excel">
+          <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+      }
+    </div>
   </div>
 
   <!-- Selector de proyecto (paso 1) -->
@@ -42,6 +49,16 @@
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
             }
           </select>
+        </div>
+
+        <div class="filter-field">
+          <label class="filter-label">Desde</label>
+          <input type="date" [(ngModel)]="fechaDesde" (change)="buscar()" />
+        </div>
+
+        <div class="filter-field">
+          <label class="filter-label">Hasta</label>
+          <input type="date" [(ngModel)]="fechaHasta" (change)="buscar()" />
         </div>
 
         <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()">✕ Limpiar</button>

@@ -1,15 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { CicloService } from '../../../core/services/ciclo.service';
+import { CicloService, CasoPrevio } from '../../../core/services/ciclo.service';
+import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { RequirementService } from '../../../core/services/requirement.service';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { CicloPrueba, EstadoCiclo, EstadoProyecto, Proyecto } from '../../../core/models';
+import { AmbienteEjecucion, CicloPrueba, EstadoCiclo, EstadoProyecto, PlanPrueba, Proyecto } from '../../../core/models';
 
 const ESTADOS_PERMITIDOS_CICLO = new Set<EstadoProyecto>([
   EstadoProyecto.PLANIFICADO,
@@ -25,14 +26,16 @@ const ESTADOS_EJECUTAR_CICLO = new Set<EstadoProyecto>([
 @Component({
   selector: 'app-ciclo-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   templateUrl: './ciclo-list.component.html',
 })
 export class CicloListComponent implements OnInit {
   private service            = inject(CicloService);
+  private planService        = inject(PlanPruebaService);
   private projectService     = inject(ProjectService);
   private requirementService = inject(RequirementService);
   private testCaseService    = inject(TestCaseService);
+  private fb                 = inject(FormBuilder);
   private router             = inject(Router);
   private toast              = inject(ToastService);
   auth                       = inject(AuthService);
@@ -53,6 +56,9 @@ export class CicloListComponent implements OnInit {
     [EstadoCiclo.ACTIVO]:  'badge-ciclo-activo',
     [EstadoCiclo.CERRADO]: 'badge-ciclo-cerrado',
   };
+
+  planes: PlanPrueba[]       = [];
+  readonly ambientes = Object.values(AmbienteEjecucion);
 
   // ─── Modal pre-validación "+ Nuevo Ciclo" ────────────────────────────────
   modalNuevoAbierto   = signal(false);
@@ -136,8 +142,94 @@ export class CicloListComponent implements OnInit {
   continuarNuevoCiclo(): void {
     if (!this.puedeContinuar || !this.proyectoSelId) return;
     this.cerrarModalNuevo();
-    this.router.navigate(['/ciclos/nuevo'], {
-      queryParams: { proyectoId: this.proyectoSelId },
+    this.abrirModalForm(this.proyectoSelId);
+  }
+
+  // ─── Modal formulario ciclo ────────────────────────────────────────────────
+  modalFormAbierto  = signal(false);
+  guardandoCiclo    = signal(false);
+  errorFormCiclo    = '';
+  cargandoCasos     = false;
+  tieneHistorial    = false;
+  casosReejecucion: CasoPrevio[] = [];
+  casosAprobados:   CasoPrevio[] = [];
+  seleccionados = new Set<number>();
+
+  formCiclo = this.fb.group({
+    planPruebaId: [null as number | null],
+    nombre:       ['', [Validators.required, Validators.maxLength(200)]],
+    descripcion:  [''],
+    ambiente:     ['', Validators.required],
+    fechaInicio:  [''],
+    fechaFin:     [''],
+  });
+
+  private abrirModalForm(proyectoId: number): void {
+    this.errorFormCiclo = '';
+    this.seleccionados  = new Set();
+    this.tieneHistorial = false;
+    this.casosReejecucion = [];
+    this.casosAprobados   = [];
+    this.formCiclo.reset({ planPruebaId: null, nombre: '', descripcion: '', ambiente: '', fechaInicio: '', fechaFin: '' });
+    this.modalFormAbierto.set(true);
+    this.cargandoCasos = true;
+    this.service.getCasosPrevios(proyectoId).subscribe({
+      next: ({ tieneHistorial, casos }) => {
+        this.tieneHistorial   = tieneHistorial;
+        this.casosReejecucion = casos.filter(c => c.resultado !== 'Aprobado');
+        this.casosAprobados   = casos.filter(c => c.resultado === 'Aprobado');
+        this.seleccionados    = new Set(this.casosReejecucion.map(c => c.id));
+        this.cargandoCasos    = false;
+      },
+      error: () => { this.cargandoCasos = false; },
+    });
+    this.planService.getAll({ proyectoId, porPagina: 200 }).subscribe(r => { this.planes = r.datos; });
+  }
+
+  cerrarModalForm(): void {
+    this.modalFormAbierto.set(false);
+    this.formCiclo.reset();
+  }
+
+  toggleCaso(id: number): void {
+    if (this.seleccionados.has(id)) this.seleccionados.delete(id);
+    else this.seleccionados.add(id);
+  }
+
+  badgeResultado(resultado: string): string {
+    const map: Record<string, string> = {
+      Fallido: 'badge-hist-fallido', Bloqueado: 'badge-hist-bloqueado',
+      Omitido: 'badge-hist-omitido', Aprobado: 'badge-hist-aprobado',
+    };
+    return map[resultado] ?? 'badge';
+  }
+
+  guardarCiclo(): void {
+    if (this.formCiclo.invalid) { this.formCiclo.markAllAsTouched(); return; }
+    this.guardandoCiclo.set(true);
+    this.errorFormCiclo = '';
+    const val = this.formCiclo.getRawValue();
+    const payload: any = {
+      proyectoId:   this.proyectoSelId,
+      planPruebaId: val.planPruebaId || undefined,
+      nombre:       val.nombre,
+      descripcion:  val.descripcion || undefined,
+      ambiente:     val.ambiente,
+      fechaInicio:  val.fechaInicio || undefined,
+      fechaFin:     val.fechaFin    || undefined,
+    };
+    if (this.seleccionados.size > 0) payload.casosIds = Array.from(this.seleccionados);
+
+    this.service.create(payload).subscribe({
+      next: () => {
+        this.guardandoCiclo.set(false);
+        this.cerrarModalForm();
+        this.cargar();
+      },
+      error: (err) => {
+        this.guardandoCiclo.set(false);
+        this.errorFormCiclo = err?.error?.message || 'Error al crear el ciclo.';
+      },
     });
   }
 

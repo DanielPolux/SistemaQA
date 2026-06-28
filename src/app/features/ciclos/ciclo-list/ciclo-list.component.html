@@ -183,6 +183,136 @@
   </div>
 }
 
+<!-- ─── Modal Formulario Nuevo Ciclo (paso 2) ─────────────────────────── -->
+@if (modalFormAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModalForm()">
+    <div class="modal-panel modal-panel--lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🔄</span>
+          <div><h3 class="modal-title">Nuevo Ciclo de Prueba</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarModalForm()">✕</button>
+      </div>
+
+      <div class="modal-body" [formGroup]="formCiclo">
+
+        <div class="form-group">
+          <label>Plan de Pruebas</label>
+          <select formControlName="planPruebaId">
+            <option [ngValue]="null">Sin plan asignado</option>
+            @for (p of planes; track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+          <span class="field-hint">Asocia este ciclo a un plan para incluirlo en el reporte de trazabilidad.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre del Ciclo <span class="req">*</span></label>
+            <input type="text" formControlName="nombre"
+                   placeholder="Ej: Sprint 3 — Regresión, Ciclo UAT..." />
+            @if (formCiclo.get('nombre')?.invalid && formCiclo.get('nombre')?.touched) {
+              <span class="field-error">Campo obligatorio</span>
+            }
+          </div>
+          <div class="form-group">
+            <label>Ambiente <span class="req">*</span></label>
+            <select formControlName="ambiente">
+              <option value="">Seleccionar ambiente...</option>
+              @for (a of ambientes; track a) { <option [value]="a">{{ a }}</option> }
+            </select>
+            @if (formCiclo.get('ambiente')?.invalid && formCiclo.get('ambiente')?.touched) {
+              <span class="field-error">Campo obligatorio</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea formControlName="descripcion" rows="2"
+                    placeholder="Objetivos o alcance del ciclo..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha de Inicio</label>
+            <input type="date" formControlName="fechaInicio" />
+          </div>
+          <div class="form-group">
+            <label>Fecha de Fin Estimada</label>
+            <input type="date" formControlName="fechaFin" />
+          </div>
+        </div>
+
+        @if (cargandoCasos) {
+          <div class="casos-historial-loading">Cargando casos del historial...</div>
+        } @else if (tieneHistorial) {
+          <div class="casos-historial">
+            <h4 class="casos-historial-titulo">Casos de Prueba del Ciclo Anterior</h4>
+            <p class="casos-historial-desc">Selecciona los casos para planificar en este nuevo ciclo.</p>
+
+            @if (casosReejecucion.length > 0) {
+              <div class="casos-grupo">
+                <div class="casos-grupo-header">
+                  <span class="casos-grupo-titulo">Requieren re-ejecución</span>
+                  <span class="casos-grupo-subtitulo">Fallido / Bloqueado / Omitido — marcados por defecto</span>
+                </div>
+                @for (caso of casosReejecucion; track caso.id) {
+                  <label class="caso-check" [class.caso-check--selected]="seleccionados.has(caso.id)">
+                    <input type="checkbox" [checked]="seleccionados.has(caso.id)" (change)="toggleCaso(caso.id)" />
+                    <div class="caso-check-info">
+                      <span class="caso-check-codigo">{{ caso.codigo }}</span>
+                      <span class="caso-check-nombre">{{ caso.nombre }}</span>
+                    </div>
+                    <span class="badge {{ badgeResultado(caso.resultado) }}">{{ caso.resultado }}</span>
+                  </label>
+                }
+              </div>
+            }
+
+            @if (casosAprobados.length > 0) {
+              <div class="casos-grupo">
+                <div class="casos-grupo-header">
+                  <span class="casos-grupo-titulo">Casos aprobados</span>
+                  <span class="casos-grupo-subtitulo">Opcionales — desmarcados por defecto</span>
+                </div>
+                @for (caso of casosAprobados; track caso.id) {
+                  <label class="caso-check" [class.caso-check--selected]="seleccionados.has(caso.id)">
+                    <input type="checkbox" [checked]="seleccionados.has(caso.id)" (change)="toggleCaso(caso.id)" />
+                    <div class="caso-check-info">
+                      <span class="caso-check-codigo">{{ caso.codigo }}</span>
+                      <span class="caso-check-nombre">{{ caso.nombre }}</span>
+                    </div>
+                    <span class="badge {{ badgeResultado(caso.resultado) }}">{{ caso.resultado }}</span>
+                  </label>
+                }
+              </div>
+            }
+
+            <div class="casos-historial-resumen">
+              {{ seleccionados.size }} caso{{ seleccionados.size !== 1 ? 's' : '' }} seleccionado{{ seleccionados.size !== 1 ? 's' : '' }}
+            </div>
+          </div>
+        }
+
+        @if (errorFormCiclo) {
+          <div class="alert alert-danger">{{ errorFormCiclo }}</div>
+        }
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarModalForm()" [disabled]="guardandoCiclo()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardarCiclo()" [disabled]="guardandoCiclo()">
+          @if (guardandoCiclo()) { Creando... } @else { ✓ Crear Ciclo }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 @if (popupBloqueoAbierto()) {
   <div class="modal-overlay" (click)="cerrarPopupBloqueo()">
     <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">

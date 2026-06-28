@@ -95,6 +95,29 @@ export class CicloEjecucionComponent implements OnInit {
     return this.formEjecucion.resultado === ResultadoEjecucion.FALLIDO;
   }
 
+  // ─── Pagination for case list ────────────────────────────────────────────
+  paginaCiclo    = 1;
+  porPaginaCiclo = 20;
+
+  get totalPaginasCiclo(): number { return Math.ceil(this.casos.length / this.porPaginaCiclo); }
+
+  get casosVisibles(): CasoCiclo[] {
+    const start = (this.paginaCiclo - 1) * this.porPaginaCiclo;
+    return this.casos.slice(start, start + this.porPaginaCiclo);
+  }
+
+  get paginasCiclo(): number[] {
+    return Array.from({ length: this.totalPaginasCiclo }, (_, i) => i + 1);
+  }
+
+  cambiarPaginaCiclo(p: number): void {
+    this.paginaCiclo = p;
+    this.casoSeleccionado = null;
+    this.ejecucionExito.set(null);
+    this.errorEjecucion = '';
+  }
+
+  // ─── Stats ───────────────────────────────────────────────────────────────
   get totalEjecutados(): number {
     return this.casos.filter(c => c.resultadoCiclo != null).length;
   }
@@ -105,6 +128,21 @@ export class CicloEjecucionComponent implements OnInit {
 
   get totalFallidos(): number {
     return this.casos.filter(c => c.resultadoCiclo === 'Fallido' || c.resultadoCiclo === 'Bloqueado').length;
+  }
+
+  get porcentajeCompletado(): number {
+    if (!this.casos.length) return 0;
+    return Math.round((this.totalEjecutados / this.casos.length) * 100);
+  }
+
+  get porcentajeAprobado(): number {
+    if (!this.casos.length) return 0;
+    return Math.round((this.totalAprobados / this.casos.length) * 100);
+  }
+
+  get porcentajeFallido(): number {
+    if (!this.casos.length) return 0;
+    return Math.round((this.totalFallidos / this.casos.length) * 100);
   }
 
   ngOnInit(): void {
