@@ -155,6 +155,13 @@ export class CicloListComponent implements OnInit {
       this.popupBloqueoAbierto.set(true);
       return;
     }
+    if (!c.planPruebaId) {
+      this.popupBloqueoMsg =
+        `El ciclo "${c.nombre}" no está vinculado a un plan de prueba. ` +
+        `Asocia el ciclo a un plan antes de registrar ejecuciones.`;
+      this.popupBloqueoAbierto.set(true);
+      return;
+    }
     this.router.navigate(['/ciclos', c.id, 'ejecutar']);
   }
 
