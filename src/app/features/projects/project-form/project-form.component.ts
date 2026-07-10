@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
-import { DocumentoRequerimiento, EstadoProyecto, Rol, Usuario } from '../../../core/models';
+import { EstadoProyecto, Rol, Usuario } from '../../../core/models';
 
 @Component({
   selector: 'app-project-form',
@@ -30,12 +30,6 @@ export class ProjectFormComponent implements OnInit {
   guardadoId?: number;
   guardadoCodigo = '';
   guardadoNombre = '';
-
-  // ─── Documentos de requerimientos ────────────────────────────────────────
-  archivosSeleccionados: File[]             = [];
-  documentosGuardados:   DocumentoRequerimiento[] = [];
-  errorDocumentos = '';
-  eliminandoDoc: string | null = null;
 
   private estadoOriginal?: EstadoProyecto;
 
@@ -85,6 +79,7 @@ export class ProjectFormComponent implements OnInit {
     // Otros
     repositorioUrl: [''],
     documentoUrl:   [''],
+    rutaSharepoint: ['', Validators.required],
     notas: [''],
   });
 
@@ -171,69 +166,6 @@ export class ProjectFormComponent implements OnInit {
     return date ? new Date(date).toISOString().split('T')[0] : '';
   }
 
-  // ─── Gestión de archivos ─────────────────────────────────────────────────
-
-  onArchivosSeleccionados(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-    const nuevos = Array.from(input.files);
-    this.archivosSeleccionados = [...this.archivosSeleccionados, ...nuevos];
-    this.errorDocumentos = '';
-    input.value = '';
-  }
-
-  quitarArchivoSeleccionado(index: number): void {
-    this.archivosSeleccionados = this.archivosSeleccionados.filter((_, i) => i !== index);
-  }
-
-  eliminarDocumentoGuardado(itemId: string): void {
-    this.eliminandoDoc = itemId;
-    this.service.deleteDocument(this.proyectoId!, itemId).subscribe({
-      next: (p) => {
-        this.documentosGuardados = p.documentosRequerimientos ?? [];
-        this.eliminandoDoc = null;
-      },
-      error: (err) => {
-        this.errorDocumentos = err.error?.message || 'Error al eliminar el documento';
-        this.eliminandoDoc = null;
-      }
-    });
-  }
-
-  formatBytes(bytes: number): string {
-    if (bytes < 1024)        return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  private get totalDocumentos(): number {
-    return this.documentosGuardados.length + this.archivosSeleccionados.length;
-  }
-
-  private subirArchivosSecuencial(proyectoId: number, archivos: File[], index = 0): void {
-    if (index >= archivos.length) {
-      this.guardando = false;
-      if (this.esEdicion) {
-        this.router.navigate(['/proyectos', proyectoId]);
-      } else {
-        const p = { id: proyectoId, codigo: this.guardadoCodigo, nombre: this.guardadoNombre };
-        // guardadoId already set, success screen already showing
-      }
-      return;
-    }
-    this.service.uploadDocument(proyectoId, archivos[index]).subscribe({
-      next: (p) => {
-        this.documentosGuardados = p.documentosRequerimientos ?? [];
-        this.subirArchivosSecuencial(proyectoId, archivos, index + 1);
-      },
-      error: (err) => {
-        this.errorDocumentos +=
-          `\nError al subir "${archivos[index].name}": ${err.error?.message || 'Error'}`;
-        this.subirArchivosSecuencial(proyectoId, archivos, index + 1);
-      }
-    });
-  }
-
   // ─── Submit ──────────────────────────────────────────────────────────────
 
   onSubmit(): void {
@@ -241,7 +173,6 @@ export class ProjectFormComponent implements OnInit {
 
     this.guardando = true;
     this.error = '';
-    this.errorDocumentos = '';
 
     const raw = this.form.value as any;
     const toNum  = (v: any) => (v !== null && v !== undefined && v !== '') ? +v : undefined;
@@ -266,16 +197,13 @@ export class ProjectFormComponent implements OnInit {
 
     op.subscribe({
       next: (p) => {
-        if (!this.esEdicion) {
+        this.guardando = false;
+        if (this.esEdicion) {
+          this.router.navigate(['/proyectos', p.id]);
+        } else {
           this.guardadoId     = p.id;
           this.guardadoCodigo = p.codigo;
           this.guardadoNombre = p.nombre;
-        }
-        if (this.archivosSeleccionados.length > 0) {
-          this.subirArchivosSecuencial(p.id, this.archivosSeleccionados);
-        } else {
-          this.guardando = false;
-          if (this.esEdicion) this.router.navigate(['/proyectos', p.id]);
         }
       },
       error: (err) => {

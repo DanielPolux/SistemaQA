@@ -204,72 +204,22 @@
       </div>
     </div>
 
-    <!-- Documentos de Requerimientos -->
+    <!-- Evidencias SharePoint -->
     <div class="form-section">
-      <h3 class="form-section-title">
-        Documentos de Requerimientos
-        <span class="field-hint" style="font-weight:400; font-size:0.8rem; margin-left:8px;">
-          Opcional. Se almacenan en SharePoint cuando esté configurado.
-        </span>
-      </h3>
-
-      <!-- Documentos ya subidos (modo edición) -->
-      @if (documentosGuardados.length > 0) {
-        <div class="docs-list">
-          @for (doc of documentosGuardados; track doc.itemId) {
-            <div class="doc-item doc-item--saved">
-              <a [href]="doc.url" target="_blank" rel="noopener" class="doc-name" title="Abrir en SharePoint">
-                <i class="bi bi-file-earmark-text"></i> {{ doc.nombre }}
-              </a>
-              <span class="doc-size">{{ formatBytes(doc.tamano) }}</span>
-              <button type="button" class="btn btn-sm btn-icon btn-danger"
-                      title="Eliminar de SharePoint"
-                      [disabled]="eliminandoDoc === doc.itemId"
-                      (click)="eliminarDocumentoGuardado(doc.itemId)">
-                @if (eliminandoDoc === doc.itemId) {
-                  <span class="spinner-xs"></span>
-                } @else {
-                  <i class="bi bi-trash"></i>
-                }
-              </button>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Archivos pendientes de subir -->
-      @if (archivosSeleccionados.length > 0) {
-        <div class="docs-list docs-list--pending">
-          <p class="docs-pending-label">Pendientes de subir:</p>
-          @for (f of archivosSeleccionados; track $index) {
-            <div class="doc-item doc-item--pending">
-              <span class="doc-name"><i class="bi bi-file-earmark-arrow-up"></i> {{ f.name }}</span>
-              <span class="doc-size">{{ formatBytes(f.size) }}</span>
-              <button type="button" class="btn btn-sm btn-icon btn-secondary"
-                      title="Quitar" (click)="quitarArchivoSeleccionado($index)">
-                <i class="bi bi-x"></i>
-              </button>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Selector de archivo -->
-      <label class="file-pick-zone">
-        <i class="bi bi-cloud-upload"></i>
-        Seleccionar archivo(s)
-        <input type="file" multiple hidden (change)="onArchivosSeleccionados($event)" />
-      </label>
-
-      @if (errorDocumentos) {
-        <div class="alert alert-error" style="margin-top:8px; white-space:pre-line;">{{ errorDocumentos }}</div>
-      }
-
-      @if (guardando && archivosSeleccionados.length > 0) {
-        <p class="docs-uploading">
-          <span class="spinner-xs"></span> Subiendo documentos a SharePoint...
-        </p>
-      }
+      <h3 class="form-section-title">Evidencias del Proyecto</h3>
+      <div class="form-group">
+        <label for="rutaSharepoint">Ruta SharePoint <span class="required-mark">*</span></label>
+        <input id="rutaSharepoint" type="text" formControlName="rutaSharepoint"
+          placeholder="https://empresa.sharepoint.com/sites/QA/Proyecto-001"
+          [class.input-error]="form.get('rutaSharepoint')?.invalid && form.get('rutaSharepoint')?.touched" />
+        <small class="field-hint">
+          URL de la carpeta SharePoint donde se almacenarán todas las evidencias del proyecto
+          (capturas, reportes, documentos de prueba, etc.).
+        </small>
+        @if (form.get('rutaSharepoint')?.hasError('required') && form.get('rutaSharepoint')?.touched) {
+          <span class="field-error">La ruta SharePoint es obligatoria</span>
+        }
+      </div>
     </div>
 
     <!-- Notas -->

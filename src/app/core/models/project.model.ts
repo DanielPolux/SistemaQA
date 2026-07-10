@@ -1,11 +1,3 @@
-export interface DocumentoRequerimiento {
-  itemId: string;
-  nombre: string;
-  url: string;
-  tamano: number;
-  subidoEn: string;
-}
-
 export enum EstadoProyecto {
   POR_ESTIMAR   = 'Por estimar',
   ESTIMADO      = 'Estimado',
@@ -51,8 +43,8 @@ export interface Proyecto {
   // Otros
   repositorioUrl?: string;         // Repositorio URL
   documentoUrl?: string;           // URL documento estimación / planificación
+  rutaSharepoint: string;          // Carpeta SharePoint de evidencias (obligatorio)
   notas?: string;                  // Notas
-  documentosRequerimientos?: DocumentoRequerimiento[];
 
   // Auditoría (SharePoint las genera automáticamente)
   creadoEn: Date;

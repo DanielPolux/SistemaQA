@@ -89,6 +89,18 @@
 
     </div>
 
+    <!-- Evidencias SharePoint -->
+    <div class="detail-section">
+      <h3>Evidencias del Proyecto</h3>
+      @if (proyecto.rutaSharepoint) {
+        <a [href]="proyecto.rutaSharepoint" target="_blank" rel="noopener" class="repo-link">
+          <i class="bi bi-folder2-open"></i> {{ proyecto.rutaSharepoint }}
+        </a>
+      } @else {
+        <p class="text-muted">Sin ruta SharePoint configurada.</p>
+      }
+    </div>
+
     <!-- Repositorio -->
     @if (proyecto.repositorioUrl) {
       <div class="detail-section">
