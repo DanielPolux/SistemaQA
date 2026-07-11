@@ -109,7 +109,6 @@ export class ProjectFormComponent implements OnInit {
       this.service.getById(this.proyectoId).subscribe({
         next: (p) => {
           this.estadoOriginal    = p.estado as EstadoProyecto;
-          this.documentosGuardados = p.documentosRequerimientos ?? [];
           this.form.patchValue({
             ...p,
             fechaEstimacion:        this.toDateStr(p.fechaEstimacion),
