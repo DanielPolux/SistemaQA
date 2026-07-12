@@ -7,19 +7,25 @@ Aplicación Angular 18 para gestión de calidad de software. Permite administrar
 ## Características
 
 - Gestión de **Proyectos** con estados y múltiples responsables (jefe de proyecto, jefe QA, responsable QA)
-- Gestión de **Requerimientos** por proyecto con criterios de aceptación
-- Creación y ejecución de **Casos de Prueba** con pasos detallados e historial de auditoría; importación masiva desde Excel con validación de Clave Proyecto, resolución de código RF a FK de requerimiento y preservación del Código CP
-- **Ciclos de Prueba** por proyecto — agrupan ejecuciones; se asignan automáticamente al registrar; solo puede haber uno activo por proyecto
-- **Ejecuciones** con creación inline de defecto cuando el resultado es `Fallido`
-- Reporte y seguimiento de **Defectos** con códigos globales (`DEF-XXXX`) y por proyecto (`INC-XXX`); filtro por proyecto, severidad y estado
+- Gestión de **Requerimientos** por proyecto con criterios de aceptación; edición en modal inline
+- Creación y ejecución de **Casos de Prueba** con pasos detallados e historial de cambios; creación en modal inline; importación masiva desde Excel con validación de Clave Proyecto, resolución de código RF a FK de requerimiento y preservación del Código CP
+- **Ciclos de Prueba** por proyecto — agrupan ejecuciones; se asignan automáticamente al registrar; solo puede haber uno activo por proyecto; creación en modal inline; **barra de progreso** (aprobados / fallidos / sin ejecutar) en la vista de ejecución
+- **Ejecuciones** con creación inline de defecto cuando el resultado es `Fallido`; filtros de **fecha desde/hasta**; exportación a Excel
+- Reporte y seguimiento de **Defectos** con códigos globales (`DEF-XXXX`) y por proyecto (`INC-XXX`); filtro por proyecto, severidad y estado; **reapertura** con estado `Reabierto` y comentario obligatorio; exportación a Excel
 - **Historial de Auditoría** en el detalle de cada defecto — muestra creación, cambios de campo, estados de correo (verde/rojo)
+- **Historial de cambios en Casos de Prueba** — visible en el modal "Ver" de la grilla
 - **Notificaciones por correo** automáticas al crear y asignar defectos (ver flujo de correo más abajo)
-- **Planes de Prueba** con agrupación de ciclos, estado del plan y **Matriz de Trazabilidad** (req → caso → resultado)
+- **Planes de Prueba** con agrupación de ciclos; creación y edición en modal inline; **Matriz de Trazabilidad** (req → caso → resultado)
 - **Exportación a Word** (.docx) para defectos individuales y matrices de trazabilidad de planes
+- **Exportación a Excel** (.xlsx) en grillas de Casos de Prueba, Defectos y Ejecuciones
 - **Dashboard con estado vacío** — muestra mensaje diferenciado según rol cuando el usuario no tiene proyectos asignados
 - **Filtrado por usuario** — non-admin solo ve los datos de proyectos en los que participa (todos los módulos)
+- **Selección de proyecto obligatoria** — los grids de Casos de Prueba, Ciclos, Ejecuciones y Defectos no cargan hasta elegir proyecto
+- **Bloqueos de ejecución** — el botón Ejecutar se bloquea si el proyecto no está activo, el requerimiento no está aprobado o el ciclo no tiene plan vinculado
 - **Control de acceso por roles** (Admin, QA Lead, QA Tester, Developer, Project Manager)
 - **Paginación** con botones Anterior/Siguiente en todos los listados y corrección automática de página vacía
+- **Toast de errores globales** — los errores HTTP se muestran automáticamente sin lógica extra en cada componente
+- **Manual de usuario** descargable desde la página de login
 - **Autenticación JWT** con interceptor automático
 
 ---
@@ -133,10 +139,10 @@ Proyecto → [Plan de Pruebas] → Ciclo de Prueba → Casos de Prueba → Ejecu
 ```
 
 1. Se crea un **Proyecto** con sus responsables; al guardar, el sistema redirige automáticamente al módulo de Requerimientos con el proyecto preseleccionado y el modal de creación abierto
-2. Opcionalmente se crea un **Plan de Pruebas** para agrupar ciclos
-3. Se abre un **Ciclo de Prueba** activo para el proyecto (solo uno a la vez por proyecto)
-4. Se crean **Casos de Prueba** vinculados a requerimientos
-5. El QA ejecuta los casos desde la grilla; el ciclo activo se asigna automáticamente
+2. Se crea un **Plan de Pruebas** para agrupar ciclos (modal inline en la lista de planes)
+3. Se abre un **Ciclo de Prueba** activo para el proyecto (solo uno a la vez), vinculado al plan (modal inline en la lista de ciclos)
+4. Se crean **Casos de Prueba** vinculados a requerimientos (modal inline o formulario completo)
+5. El QA ejecuta los casos desde la grilla; el ciclo activo se asigna automáticamente. El botón "Ejecutar" se bloquea si el proyecto no está activo, el requerimiento no está aprobado o el ciclo no tiene plan vinculado
 6. Si el resultado es **Fallido**, se completan los campos del defecto en el mismo modal
 7. Se crea la ejecución y el defecto en una sola acción; se muestra el código `INC-XXX`
 8. El backend envía correo automáticamente:
@@ -144,7 +150,7 @@ Proyecto → [Plan de Pruebas] → Ciclo de Prueba → Casos de Prueba → Ejecu
    - Si se asignó al **Developer**: correo rojo con detalle completo + CC al PM
 9. El **PM asigna** el defecto al desarrollador desde la vista de edición → el developer recibe correo azul
 10. El developer trabaja el defecto, actualiza su estado de desarrollo (`Atendido` / `No Aplica`)
-11. El QA verifica la corrección y cierra el defecto
+11. El QA verifica la corrección y cierra el defecto; si no es satisfactorio, usa **Reabrir** (comentario obligatorio) para pasar el defecto a estado `Reabierto`
 12. La **Matriz de Trazabilidad** del plan muestra la cobertura req → caso → resultado
 13. El **Historial de Auditoría** en `/defectos/:id` muestra todos los cambios y correos enviados
 

@@ -93,6 +93,7 @@ src/app/
 | `AuditoriaService` | `/auditoria` | |
 | `WordExportService` | — | Exporta defectos a DOCX (docx + file-saver) |
 | `WordExportPlanService` | — | Exporta trazabilidad a DOCX con tabla coloreada |
+| `ToastService` | — | Toast global de errores HTTP; el `authInterceptor` lo llama en errores ≥ 400 (excepto 401 en logout) |
 
 ---
 
@@ -130,13 +131,19 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 
 ### Ciclos de Prueba
 - Solo puede haber **un ciclo activo por proyecto** a la vez.
-- Al crear: el modal previo y el formulario verifican si ya existe un ciclo activo (llamada a `getActivoByProyecto()`); si existe, bloquean la creación con mensaje de error antes de llegar al backend.
+- Al crear: `ciclo-list` primero llama a `getActivoByProyecto()` y, si no existe ciclo activo, embebe el formulario **inline** (no hay página separada para crear ciclos). Si ya existe uno activo, muestra error y bloquea.
 - El backend también valida esto y lanza `400 BadRequest` si se intenta crear con ciclo activo existente.
-- Si no hay ciclo activo, el botón "Ejecutar" en la grilla de casos muestra un **popup de error** (no abre el modal).
+- Un ciclo activo debe tener un **Plan de Prueba vinculado** (`planPruebaId`) para que se pueda ejecutar casos; si no lo tiene, el botón "Ejecutar" muestra popup de error específico.
+- La vista de ejecución de ciclo (`/ciclos/:id/ejecutar`) incluye una **barra de progreso apilada** (verde aprobados / rojo fallidos / gris sin ejecutar) y paginación client-side de 20 casos por página.
 - La grilla de ciclos muestra: Nombre, Proyecto, Estado (badge), Fechas, Total Ejecuciones, Acciones.
 - Solo se puede eliminar un ciclo si `totalEjecuciones === 0`.
 
 ### Modal de Ejecución (en Casos de Prueba)
+- El botón "Ejecutar" está **bloqueado** (popup de error, sin abrir modal) si alguna de estas condiciones falla:
+  1. No hay ciclo activo para el proyecto.
+  2. El ciclo activo no tiene plan de prueba vinculado.
+  3. El proyecto no está en estado `En Ejecución`.
+  4. El requerimiento vinculado al caso no está `Aprobado`.
 - Cuando resultado = `Fallido`: aparece el bloque "Datos del Defecto" con todos los campos inline.
 - Campo "Evidencia (URL)": cuando resultado ≠ Fallido se muestra antes del bloque; cuando = Fallido se mueve al final del bloque de defecto.
 - Al guardar con Fallido: crea la ejecución, luego crea el defecto; muestra pantalla de éxito con código `INC-XXX`.
@@ -144,6 +151,8 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 
 ### Planes de Prueba y Trazabilidad
 - Un plan agrupa ciclos de prueba de un proyecto.
+- Crear y editar planes se hace en un **modal inline** dentro de `plan-list` — no existe página separada para el formulario de plan.
+- El formulario de plan no incluye criterios de entrada/salida ni riesgos (campos eliminados).
 - Al crear un ciclo vinculado a un plan, el plan avanza automáticamente a estado `En ejecución`.
 - La vista de trazabilidad (`/planes-prueba/:id/trazabilidad`) muestra la matriz req → caso → resultado con colores por estado.
 - Se puede exportar la trazabilidad a **CSV** o a **Word** (.docx) con tabla coloreada.
@@ -154,6 +163,8 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 - La grilla de defectos muestra `codigoProyecto` (INC-XXX) en la columna "Defecto".
 - El defecto recién creado se auto-vincula a la última ejecución `Fallido` sin defecto para ese caso.
 - La grilla de defectos incluye filtro por **proyecto** (dropdown) además de severidad y estado.
+- **Reapertura**: el botón "Reabrir" en `defect-detail` abre un modal con campo de comentario obligatorio. Al confirmar, cambia el estado a `REABIERTO` (no a `ASIGNADO`). Flujo: `Cerrado → Reabierto → En Progreso`.
+- **Exportación a Excel**: la grilla de defectos tiene botón de export a `.xlsx` usando la librería `xlsx`.
 
 ### Historial de Auditoría de Defectos
 - La vista `/defectos/:id` (`defect-detail.component`) muestra una sección "Historial de Auditoría" al pie.
@@ -185,6 +196,24 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 - Todos los listados usan `<select [(ngModel)]="proyectoId" (change)="buscar()">` para filtrar por proyecto.
 - **No usar** `<input list="datalist">` para el proyecto — rompe la consistencia de UX.
 
+### Selección de Proyecto Obligatoria
+- Los grids de **Casos de Prueba**, **Ciclos**, **Ejecuciones** y **Defectos** no cargan datos hasta que el usuario selecciona un proyecto.
+- Mientras no hay proyecto seleccionado se muestra un mensaje placeholder en lugar de la grilla.
+- Esto evita queries sin filtro de proyecto que traerían miles de registros.
+
+### Formularios en Modal Inline
+- **Requerimientos** — edición abre el formulario embebido en `requirement-list` (no página separada). El código RF es de solo lectura y auto-incremental.
+- **Casos de Prueba** — creación abre el formulario embebido en `test-case-list`; las listas de casos y ejecuciones también tienen **exportación a Excel** (`.xlsx`).
+- **Ciclos de Prueba** — creación embebida en `ciclo-list` tras pre-validación de ciclo activo.
+- **Planes de Prueba** — creación y edición embebidas en `plan-list`.
+
+### Ejecuciones
+- Filtros disponibles: proyecto, resultado, ambiente, tester, **fecha desde** y **fecha hasta**.
+- La grilla de ejecuciones también tiene botón de exportación a Excel (`.xlsx`).
+
+### Login
+- La página de login incluye un enlace para descargar el manual de usuario.
+
 ---
 
 ## Estados de Entidades
@@ -203,7 +232,7 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 
 ### Defecto
 `Nuevo → Asignado → En Progreso → En Revisión → Resuelto → Cerrado`
-`Cerrado → Reabierto → En Progreso` (reapertura)
+`Cerrado → Reabierto → En Progreso` (reapertura con comentario obligatorio)
 `Nuevo | Asignado → Rechazado` (falso positivo)
 
 ---
@@ -218,6 +247,7 @@ El guard `roleGuard(rolesPermitidos)` es una función que retorna `CanActivateFn
 - Auditoría de defecto: `.audit-table`, `.audit-fecha`, `.audit-valor`, `.audit-accion`, `.audit-accion--ok` (verde), `.audit-accion--err` (rojo).
 - Dashboard vacío: `.dash-empty-state`, `.dash-empty-icon`, `.dash-empty-title`, `.dash-empty-desc`.
 - Login: `.login-brand-logo-wrap` (fondo blanco, borde redondeado, sombra) sobre panel oscuro.
+- Barra de progreso en ciclo-ejecucion: `.ce-progress-wrap`, `.ce-progress-bar`, `.ce-progress-seg`, `.ce-progress-aprobado` (verde), `.ce-progress-fallido` (rojo), `.ce-progress-pendiente` (gris), `.ce-progress-legend`, `.ce-pl-item`.
 - **No crear archivos `.scss` por componente** a menos que el componente tenga estilos muy específicos y extensos.
 
 ---
