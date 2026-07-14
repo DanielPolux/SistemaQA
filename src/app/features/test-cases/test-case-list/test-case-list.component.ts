@@ -81,6 +81,23 @@ export class TestCaseListComponent implements OnInit {
     [EstadoCasoPrueba.OMITIDO]:      'badge-qa-omitido',
   };
 
+  // ─── Selección masiva ─────────────────────────────────────────────────────
+  seleccionados = new Set<number>();
+
+  get todosSeleccionados(): boolean {
+    return this.casos.length > 0 && this.casos.every(c => this.seleccionados.has(c.id));
+  }
+
+  toggleSeleccion(id: number): void {
+    if (this.seleccionados.has(id)) this.seleccionados.delete(id);
+    else this.seleccionados.add(id);
+  }
+
+  toggleTodos(): void {
+    if (this.todosSeleccionados) this.casos.forEach(c => this.seleccionados.delete(c.id));
+    else this.casos.forEach(c => this.seleccionados.add(c.id));
+  }
+
   // ─── Modal confirmación eliminar ──────────────────────────────────────────
   modalConfirmarAbierto = signal(false);
   confirmPendiente: { id: number; nombre: string; bloqueado: boolean; mensaje?: string } | null = null;
@@ -109,6 +126,37 @@ export class TestCaseListComponent implements OnInit {
 
   eliminar(id: number, nombre: string, totalDefectos: number): void {
     this.abrirConfirmarEliminar(id, nombre, totalDefectos);
+  }
+
+  // ─── Modal eliminación masiva ─────────────────────────────────────────────
+  modalBulkAbierto    = signal(false);
+  eliminandoBulk      = signal(false);
+  resultadoBulk: { eliminados: number[]; bloqueados: { id: number; nombre: string; motivo: string }[] } | null = null;
+
+  abrirEliminarMasivo(): void {
+    this.resultadoBulk = null;
+    this.modalBulkAbierto.set(true);
+  }
+
+  cerrarBulk(): void {
+    this.modalBulkAbierto.set(false);
+    this.resultadoBulk = null;
+    if (this.seleccionados.size === 0) return;
+    this.seleccionados.clear();
+    this.cargar();
+  }
+
+  confirmarEliminarMasivo(): void {
+    if (this.seleccionados.size === 0) return;
+    this.eliminandoBulk.set(true);
+    this.service.deleteMany(Array.from(this.seleccionados)).subscribe({
+      next: (res) => {
+        this.eliminandoBulk.set(false);
+        this.resultadoBulk = res;
+        res.eliminados.forEach(id => this.seleccionados.delete(id));
+      },
+      error: () => { this.eliminandoBulk.set(false); },
+    });
   }
 
   // ─── Modal Ver ────────────────────────────────────────────────────────────
@@ -320,6 +368,7 @@ export class TestCaseListComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.casos = res.datos; this.total = res.total; this.cargando = false;
+        this.seleccionados.clear();
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
       error: ()   => { this.cargando = false; this.toast.error('Error al cargar casos de prueba'); },

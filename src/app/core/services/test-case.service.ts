@@ -67,4 +67,8 @@ export class TestCaseService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
+
+  deleteMany(ids: number[]): Observable<{ eliminados: number[]; bloqueados: { id: number; nombre: string; motivo: string }[] }> {
+    return this.http.delete<any>(`${this.url}/bulk`, { body: { ids } });
+  }
 }

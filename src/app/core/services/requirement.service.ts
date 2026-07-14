@@ -39,10 +39,10 @@ export class RequirementService {
     return this.http.get<Requerimiento[]>(`${environment.apiUrl}/proyectos/${proyectoId}/requerimientos`);
   }
 
-  getNextCodigo(proyectoId: number): Observable<{ codigo: string }> {
-    return this.http.get<{ codigo: string }>(`${this.url}/next-codigo`, {
-      params: new HttpParams().set('proyectoId', String(proyectoId)),
-    });
+  getNextCodigo(proyectoId: number, tipo?: string): Observable<{ codigo: string }> {
+    let params = new HttpParams().set('proyectoId', String(proyectoId));
+    if (tipo) params = params.set('tipo', tipo);
+    return this.http.get<{ codigo: string }>(`${this.url}/next-codigo`, { params });
   }
 
   create(req: Partial<Requerimiento>): Observable<Requerimiento> {

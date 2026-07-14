@@ -58,12 +58,19 @@ export class RequirementFormComponent implements OnInit {
 
     const qpProyecto = this.route.snapshot.queryParams['proyectoId'];
 
-    // Cuando cambia el proyecto en el selector libre, previsualizar código
+    // Cuando cambia el proyecto o el tipo, previsualizar código
     this.form.get('proyectoId')?.valueChanges.subscribe(pid => {
       if (pid && !this.reqId) {
         this.cargarNextCodigo(pid);
       } else if (!pid && !this.reqId) {
         this.form.get('codigo')?.setValue('', { emitEvent: false });
+      }
+    });
+
+    this.form.get('tipo')?.valueChanges.subscribe(() => {
+      const pid = this.proyectoIdActual;
+      if (pid && !this.reqId) {
+        this.cargarNextCodigo(pid);
       }
     });
 
@@ -82,7 +89,8 @@ export class RequirementFormComponent implements OnInit {
   }
 
   private cargarNextCodigo(proyectoId: number): void {
-    this.service.getNextCodigo(proyectoId).subscribe(r => {
+    const tipo = this.form.get('tipo')?.value ?? undefined;
+    this.service.getNextCodigo(proyectoId, tipo).subscribe(r => {
       this.form.get('codigo')?.setValue(r.codigo, { emitEvent: false });
     });
   }

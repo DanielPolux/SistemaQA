@@ -7,6 +7,11 @@
           <i class="bi bi-file-earmark-excel"></i> Excel
         </button>
       }
+      @if (auth.puedeEditar() && seleccionados.size > 0) {
+        <button class="btn btn-danger btn-sm" (click)="abrirEliminarMasivo()">
+          <i class="bi bi-trash"></i> Eliminar seleccionados ({{ seleccionados.size }})
+        </button>
+      }
       @if (auth.puedeEditar()) {
         <a routerLink="/casos-prueba/importar" class="btn btn-secondary">Importar Excel</a>
         <button class="btn btn-primary" (click)="abrirNuevo()">+ Nuevo Caso</button>
@@ -89,6 +94,11 @@
     <table class="data-table">
       <thead>
         <tr>
+          @if (auth.puedeEditar()) {
+            <th class="th-check">
+              <input type="checkbox" [checked]="todosSeleccionados" (change)="toggleTodos()" title="Seleccionar todos" />
+            </th>
+          }
           <th>Código CP</th>
           <th>Proyecto</th>
           <th>Nombre del Caso de Prueba</th>
@@ -105,7 +115,12 @@
       </thead>
       <tbody>
         @for (c of casos; track c.id) {
-          <tr>
+          <tr [class.row-selected]="seleccionados.has(c.id)">
+            @if (auth.puedeEditar()) {
+              <td class="td-check">
+                <input type="checkbox" [checked]="seleccionados.has(c.id)" (change)="toggleSeleccion(c.id)" />
+              </td>
+            }
             <td><span class="tag-codigo">{{ c.codigo ?? '-' }}</span></td>
             <td>{{ c.proyectoNombre ?? '-' }}</td>
             <td class="td-nombre">{{ c.nombre }}</td>
@@ -139,7 +154,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="12" class="empty-row">No se encontraron casos de prueba</td></tr>
+          <tr><td [attr.colspan]="auth.puedeEditar() ? 13 : 12" class="empty-row">No se encontraron casos de prueba</td></tr>
         }
       </tbody>
     </table>
@@ -165,6 +180,61 @@
     </div>
   }
 </div>
+
+<!-- ─── Modal Eliminación Masiva ─────────────────────────────────────────── -->
+@if (modalBulkAbierto()) {
+  <div class="modal-overlay" (click)="cerrarBulk()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+
+      <div class="modal-header" [class.modal-header--danger]="!resultadoBulk">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗑</span>
+          <div><h3 class="modal-title">
+            {{ resultadoBulk ? 'Resultado de eliminación' : 'Eliminar casos seleccionados' }}
+          </h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarBulk()">✕</button>
+      </div>
+
+      <div class="modal-body modal-body--confirm">
+        @if (!resultadoBulk) {
+          <p class="confirm-msg">
+            ¿Eliminar <strong>{{ seleccionados.size }}</strong> caso(s) de prueba seleccionado(s)?
+          </p>
+          <p class="confirm-sub">Los casos con defectos asociados no podrán eliminarse. Esta acción no se puede deshacer.</p>
+        } @else {
+          @if (resultadoBulk.eliminados.length > 0) {
+            <p class="confirm-msg" style="color: var(--color-success, #22c55e);">
+              ✓ {{ resultadoBulk.eliminados.length }} caso(s) eliminado(s) correctamente.
+            </p>
+          }
+          @if (resultadoBulk.bloqueados.length > 0) {
+            <p class="confirm-msg" style="color: var(--color-danger, #ef4444);">
+              ✗ {{ resultadoBulk.bloqueados.length }} caso(s) no pudieron eliminarse:
+            </p>
+            <ul class="bulk-blocked-list">
+              @for (b of resultadoBulk.bloqueados; track b.id) {
+                <li><strong>{{ b.nombre }}</strong> — {{ b.motivo }}</li>
+              }
+            </ul>
+          }
+        }
+      </div>
+
+      <div class="modal-footer">
+        @if (!resultadoBulk) {
+          <button class="btn btn-outline" (click)="cerrarBulk()" [disabled]="eliminandoBulk()">Cancelar</button>
+          <button class="btn btn-danger" (click)="confirmarEliminarMasivo()" [disabled]="eliminandoBulk()">
+            {{ eliminandoBulk() ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        } @else {
+          <button class="btn btn-primary" (click)="cerrarBulk()">Cerrar</button>
+        }
+      </div>
+
+    </div>
+  </div>
+}
 
 <!-- ─── Modal Confirmación Eliminar ─────────────────────────────────────── -->
 @if (modalConfirmarAbierto() && confirmPendiente) {

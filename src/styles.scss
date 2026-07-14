@@ -949,6 +949,9 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .td-center    { text-align: center; }
 .td-obs       { min-width: 160px; font-size: 13px; color: var(--color-text-muted); }
 .req          { color: var(--color-danger); margin-left: 2px; }
+.th-check, .td-check { width: 36px; text-align: center; padding: 0 4px; }
+.row-selected td { background: rgba(239, 68, 68, 0.08) !important; }
+.bulk-blocked-list { margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.85rem; color: var(--color-text-muted); li { margin-bottom: 4px; } }
 
 /* ────────────────────────────────────────────────────────────
    DETAIL VIEW — Vista detalle de entidad
