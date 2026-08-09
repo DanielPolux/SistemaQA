@@ -183,6 +183,19 @@ export const environment = {
 };
 ```
 
+En producción, `src/environments/environment.prod.ts` se genera automáticamente con
+`generate-env.js` a partir de la variable `API_URL` (ver `Dockerfile.prod`).
+
+---
+
+## Despliegue
+
+- **Vercel**: build estático vía `vercel.json` (`node generate-env.js && npm run build:prod`).
+- **Self-hosted (Docker)**: `Dockerfile.prod` compila la app y la sirve con nginx, que
+  además hace de proxy de `/api/*` hacia el backend (mismo origen, sin CORS). Se despliega
+  junto al backend vía `docker-compose.prod.yml` — instrucciones completas en el README de
+  [`SistemaQA-Backend`](https://github.com/DanielPolux/SistemaQA-Backend#despliegue-en-producción-self-hosted-docker-compose).
+
 ---
 
 ## API Consumida
