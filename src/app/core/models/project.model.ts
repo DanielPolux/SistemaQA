@@ -50,6 +50,11 @@ export interface Proyecto {
   creadoEn: Date;
   actualizadoEn: Date;
   creadoPor?: number;
+
+  // Fase 3 — archivar proyecto (evidencias purgadas del servidor)
+  evidenciasArchivadasEn?: Date | null;
+  evidenciasArchivadasPor?: number | null;
+  evidenciasArchivadasPorNombre?: string | null;
 }
 
 export interface ProyectoResumen {

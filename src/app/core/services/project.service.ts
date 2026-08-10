@@ -64,4 +64,16 @@ export class ProjectService {
   deleteDocument(id: number, itemId: string): Observable<Proyecto> {
     return this.http.delete<Proyecto>(`${this.url}/${id}/documentos/${itemId}`);
   }
+
+  // ─── Fase 3 — archivar proyecto ─────────────────────────────────────────────
+
+  /** Descarga el paquete completo (evidencias + reportes Word + manifiesto) como .zip. */
+  descargarPaquete(id: number): Observable<Blob> {
+    return this.http.get(`${this.url}/${id}/archivo/paquete`, { responseType: 'blob' });
+  }
+
+  /** Confirma que ya se descargó el paquete y borra del servidor las evidencias del proyecto. */
+  confirmarArchivo(id: number): Observable<{ archivosEliminados: number }> {
+    return this.http.post<{ archivosEliminados: number }>(`${this.url}/${id}/archivo/confirmar`, { confirmoDescarga: true });
+  }
 }

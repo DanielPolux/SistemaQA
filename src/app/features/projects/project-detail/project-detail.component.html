@@ -119,6 +119,41 @@
       </div>
     }
 
+    <!-- Archivar proyecto (Fase 3) -->
+    @if (puedeArchivar) {
+      <div class="detail-section">
+        <h3>Archivar Proyecto</h3>
+        @if (proyecto.evidenciasArchivadasEn) {
+          <div class="alert alert-info">
+            <i class="bi bi-archive"></i>
+            Las evidencias de este proyecto fueron archivadas el
+            {{ proyecto.evidenciasArchivadasEn | date:'dd/MM/yyyy HH:mm' }}
+            @if (proyecto.evidenciasArchivadasPorNombre) { por <strong>{{ proyecto.evidenciasArchivadasPorNombre }}</strong> }.
+            Los archivos originales ya no están disponibles en el servidor — la información de ejecuciones y defectos permanece intacta.
+          </div>
+        } @else {
+          <p class="text-muted" style="margin-bottom:12px">
+            Descarga toda la evidencia y los reportes del proyecto en un solo paquete (.zip) y, una vez verificado,
+            borra los archivos originales del servidor para liberar espacio. Los datos del proyecto en el sistema
+            (casos, ejecuciones, defectos) no se pierden.
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button class="btn btn-outline" (click)="descargarPaquete()" [disabled]="descargandoPaquete()">
+              @if (descargandoPaquete()) { Generando paquete... } @else { <i class="bi bi-download"></i> Descargar Paquete Completo }
+            </button>
+            <button class="btn btn-danger" (click)="abrirConfirmarArchivo()" [disabled]="!paqueteDescargado()">
+              <i class="bi bi-archive"></i> Borrar Evidencias del Servidor
+            </button>
+          </div>
+          @if (!paqueteDescargado()) {
+            <p class="text-light" style="font-size:12.5px; margin-top:8px">
+              Primero descarga el paquete completo para habilitar el borrado.
+            </p>
+          }
+        }
+      </div>
+    }
+
     <!-- Accesos rápidos -->
     <div class="quick-links">
       <a [routerLink]="['/requerimientos']" [queryParams]="{proyectoId: proyecto.id}" class="btn btn-outline">
@@ -133,3 +168,35 @@
     </div>
   }
 </div>
+
+<!-- ─── Modal Confirmar Archivar Evidencias (Fase 3) ─────────────────────────── -->
+@if (modalArchivarAbierto()) {
+  <div class="modal-overlay" (click)="cerrarConfirmarArchivo()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">🗄️</span>
+          <div><h3 class="modal-title">Borrar evidencias del servidor</h3></div>
+        </div>
+        <button class="modal-close" (click)="cerrarConfirmarArchivo()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px;margin-bottom:12px">
+          Esto borra permanentemente del servidor todos los archivos de evidencia (imágenes, videos, pdf, logs)
+          subidos en las ejecuciones de <strong>{{ proyecto?.nombre }}</strong>. No se puede deshacer.
+          Los casos, ejecuciones y defectos del proyecto no se ven afectados en el sistema.
+        </p>
+        <p style="font-size:14px;font-weight:bold">¿Ya descargaste y verificaste el paquete completo?</p>
+        @if (errorArchivar) {
+          <div class="alert alert-danger">{{ errorArchivar }}</div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="cerrarConfirmarArchivo()" [disabled]="archivando()">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarArchivar()" [disabled]="archivando()">
+          @if (archivando()) { Borrando... } @else { Sí, borrar evidencias }
+        </button>
+      </div>
+    </div>
+  </div>
+}
