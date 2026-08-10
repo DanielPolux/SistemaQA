@@ -3,6 +3,8 @@ import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { CicloService } from '../../../core/services/ciclo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UploadService, Evidencia } from '../../../core/services/upload.service';
+import { DefectService } from '../../../core/services/defect.service';
+import { WordExportService } from '../../../core/services/word-export.service';
 import {
   AmbienteEjecucion, CasoPrueba, CicloPrueba, EstadoProyecto,
   PrioridadDefecto, Proyecto, ResultadoEjecucion, SeveridadDefecto,
@@ -21,6 +23,8 @@ export class EjecucionModalService {
   private ejecucionService = inject(EjecucionService);
   private cicloService     = inject(CicloService);
   private uploadService    = inject(UploadService);
+  private defectService    = inject(DefectService);
+  private wordExport       = inject(WordExportService);
   readonly auth            = inject(AuthService);
 
   // ─── Execution modal state ────────────────────────────────────────────────
@@ -211,6 +215,10 @@ export class EjecucionModalService {
       this.errorEjecucion = 'Para resultado Fallido completa: Título, Descripción, Pasos para reproducir, Severidad y Prioridad.';
       return;
     }
+    if (this.esFallido && !f.observaciones.trim()) {
+      this.errorEjecucion = 'Para resultado Fallido, detalla la Observación (qué se observó al fallar el caso).';
+      return;
+    }
     this.errorEjecucion = '';
     this.guardandoEjec.set(true);
 
@@ -252,6 +260,7 @@ export class EjecucionModalService {
         if (esFallido) {
           const codigoDefecto = res?.defecto?.codigoProyecto ?? res?.defecto?.codigo ?? 'INC-???';
           this.ejecucionExito.set(codigoDefecto);
+          this.descargarWordDefecto(res?.defecto?.id);
         } else {
           this.cerrarModal();
         }
@@ -260,6 +269,20 @@ export class EjecucionModalService {
         this.guardandoEjec.set(false);
         this.errorEjecucion = 'Error al registrar la ejecución: ' + (err?.error?.message ?? 'Error desconocido');
       },
+    });
+  }
+
+  /**
+   * Al crear un defecto (ejecución Fallida), descarga automáticamente el reporte Word
+   * de evidencias — el mismo que genera el botón "Word" de la lista de Defectos.
+   * Se pide el defecto completo (getById) porque la respuesta de create() no trae
+   * `evidencias`. Si falla, no interrumpe el flujo.
+   */
+  private descargarWordDefecto(defectoId?: number): void {
+    if (!defectoId) return;
+    this.defectService.getById(defectoId).subscribe({
+      next: (d) => { this.wordExport.exportarDefecto(d).catch(() => {}); },
+      error: () => {},
     });
   }
 

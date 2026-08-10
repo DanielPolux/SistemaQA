@@ -8,6 +8,8 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UploadService, Evidencia } from '../../../core/services/upload.service';
+import { DefectService } from '../../../core/services/defect.service';
+import { WordExportService } from '../../../core/services/word-export.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
@@ -29,6 +31,8 @@ export class CicloEjecucionComponent implements OnInit {
   private userService      = inject(UserService);
   private projectService   = inject(ProjectService);
   private uploadService    = inject(UploadService);
+  private defectService    = inject(DefectService);
+  private wordExport       = inject(WordExportService);
   private toast            = inject(ToastService);
   auth                     = inject(AuthService);
 
@@ -362,6 +366,10 @@ export class CicloEjecucionComponent implements OnInit {
       this.errorEjecucion = 'Para resultado Fallido completa: Título, Descripción, Pasos para reproducir, Severidad y Prioridad.';
       return;
     }
+    if (this.esFallido && !f.observaciones.trim()) {
+      this.errorEjecucion = 'Para resultado Fallido, detalla la Observación (qué se observó al fallar el caso).';
+      return;
+    }
     if (this.subiendoEvidencia()) {
       this.errorEjecucion = 'Espera a que termine de subirse la evidencia antes de guardar.';
       return;
@@ -407,6 +415,7 @@ export class CicloEjecucionComponent implements OnInit {
         if (esFallido) {
           const codigoDefecto = res?.defecto?.codigoProyecto ?? res?.defecto?.codigo ?? 'INC-???';
           this.ejecucionExito.set(codigoDefecto);
+          this.descargarWordDefecto(res?.defecto?.id);
         } else {
           this.limpiarSeleccion();
         }
@@ -415,6 +424,21 @@ export class CicloEjecucionComponent implements OnInit {
         this.guardandoEjec.set(false);
         this.errorEjecucion = 'Error al registrar la ejecución: ' + (err?.error?.message ?? 'Error desconocido');
       },
+    });
+  }
+
+  /**
+   * Al crear un defecto (ejecución Fallida), descarga automáticamente el reporte Word
+   * de evidencias — el mismo que genera el botón "Word" de la lista de Defectos.
+   * Se pide el defecto completo (getById) porque la respuesta de create() no trae
+   * `evidencias`. Si falla, no interrumpe el flujo — el tester igual puede generarlo
+   * después manualmente desde la lista.
+   */
+  private descargarWordDefecto(defectoId?: number): void {
+    if (!defectoId) return;
+    this.defectService.getById(defectoId).subscribe({
+      next: (d) => { this.wordExport.exportarDefecto(d).catch(() => {}); },
+      error: () => {},
     });
   }
 

@@ -820,10 +820,14 @@
         }
 
         <div class="form-group">
-          <label>Observaciones</label>
+          <label>{{ ejecucion.esFallido ? 'Observación' : 'Observaciones' }}
+            @if (ejecucion.esFallido) { <span class="req">*</span> }
+          </label>
           <textarea [(ngModel)]="ejecucion.formEjecucion.observaciones"
                     rows="2"
-                    placeholder="Notas adicionales sobre la ejecución..."></textarea>
+                    [placeholder]="ejecucion.esFallido
+                      ? 'Detalla qué se observó al fallar el caso (se incluye en el reporte y el correo al desarrollador)...'
+                      : 'Notas adicionales sobre la ejecución...'"></textarea>
         </div>
 
         @if (ejecucion.errorEjecucion) {
