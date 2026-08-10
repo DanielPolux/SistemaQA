@@ -6,6 +6,7 @@ import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UploadService } from '../../../core/services/upload.service';
 import { EjecucionCasoPrueba, Proyecto, Usuario, ResultadoEjecucion, AmbienteEjecucion } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -20,7 +21,12 @@ export class EjecucionListComponent implements OnInit {
   private projectService = inject(ProjectService);
   private userService    = inject(UserService);
   private toast          = inject(ToastService);
+  private uploadService  = inject(UploadService);
   auth                   = inject(AuthService);
+
+  urlEvidencia(rutaRelativa: string): string {
+    return this.uploadService.resolverUrl(rutaRelativa);
+  }
 
   ejecuciones: EjecucionCasoPrueba[] = [];
   proyectos: Proyecto[]              = [];

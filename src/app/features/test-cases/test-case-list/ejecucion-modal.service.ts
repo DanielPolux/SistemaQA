@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { CicloService } from '../../../core/services/ciclo.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { UploadService, Evidencia } from '../../../core/services/upload.service';
 import {
   AmbienteEjecucion, CasoPrueba, CicloPrueba, EstadoProyecto,
   PrioridadDefecto, Proyecto, ResultadoEjecucion, SeveridadDefecto,
@@ -19,13 +20,16 @@ export interface PasoEjecucion {
 export class EjecucionModalService {
   private ejecucionService = inject(EjecucionService);
   private cicloService     = inject(CicloService);
+  private uploadService    = inject(UploadService);
   readonly auth            = inject(AuthService);
 
   // ─── Execution modal state ────────────────────────────────────────────────
-  modalAbierto   = signal(false);
-  guardandoEjec  = signal(false);
-  ejecucionExito = signal<string | null>(null);
-  errorEjecucion = '';
+  modalAbierto      = signal(false);
+  guardandoEjec     = signal(false);
+  subiendoEvidencia = signal(false);
+  ejecucionExito    = signal<string | null>(null);
+  errorEjecucion    = '';
+  errorEvidencia    = '';
 
   casoSeleccionado: CasoPrueba | null = null;
   cicloActivo: CicloPrueba | null     = null;
@@ -151,6 +155,43 @@ export class EjecucionModalService {
     (event.target as HTMLInputElement).value = '';
   }
 
+  // ─── Evidencia (archivos subidos) ──────────────────────────────────────────
+  agregarEvidencia(files: FileList | File[]): void {
+    const lista = Array.from(files);
+    if (!lista.length) return;
+    this.errorEvidencia = '';
+    this.subiendoEvidencia.set(true);
+    let pendientes = lista.length;
+    lista.forEach(file => {
+      this.uploadService.subir(file).subscribe({
+        next: (evidencia) => {
+          this.formEjecucion.evidencias = [...this.formEjecucion.evidencias, evidencia];
+          if (--pendientes === 0) this.subiendoEvidencia.set(false);
+        },
+        error: (err) => {
+          this.errorEvidencia = `No se pudo subir "${file.name}": ${err?.error?.message ?? 'error desconocido'}`;
+          if (--pendientes === 0) this.subiendoEvidencia.set(false);
+        },
+      });
+    });
+  }
+
+  onFileSelectedEvidencia(event: Event): void {
+    const files = (event.target as HTMLInputElement).files;
+    if (files) this.agregarEvidencia(files);
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  quitarEvidencia(idx: number): void {
+    const lista = [...this.formEjecucion.evidencias];
+    lista.splice(idx, 1);
+    this.formEjecucion.evidencias = lista;
+  }
+
+  urlEvidencia(rutaRelativa: string): string {
+    return this.uploadService.resolverUrl(rutaRelativa);
+  }
+
   get esFallido(): boolean {
     return this.formEjecucion.resultado === ResultadoEjecucion.FALLIDO;
   }
@@ -160,6 +201,10 @@ export class EjecucionModalService {
     const f = this.formEjecucion;
     if (!f.ambiente || !f.resultado || !f.resultadoObtenido || !f.testerId) {
       this.errorEjecucion = 'Completa los campos obligatorios: Ambiente, Tester, Resultado y Resultado Obtenido.';
+      return;
+    }
+    if (this.subiendoEvidencia()) {
+      this.errorEjecucion = 'Espera a que termine de subirse la evidencia antes de guardar.';
       return;
     }
     if (this.esFallido && (!f.defTitulo.trim() || !f.defDescripcion.trim() || !f.defPasosReproduccion.trim() || !f.defSeveridad || !f.defPrioridad)) {
@@ -181,7 +226,7 @@ export class EjecucionModalService {
       version:           f.version,
       resultado:         f.resultado,
       resultadoObtenido: f.resultadoObtenido,
-      evidenciaUrl:      f.evidenciaUrl    || undefined,
+      evidencias:        f.evidencias.length ? f.evidencias : undefined,
       desarrolladorId:   esFallido && f.defAsignadoA ? f.defAsignadoA : undefined,
       observaciones:     f.observaciones   || undefined,
       ...(esFallido && {
@@ -227,7 +272,7 @@ export class EjecucionModalService {
       version:              '',
       resultado:            '' as ResultadoEjecucion | '',
       resultadoObtenido:    '',
-      evidenciaUrl:         '',
+      evidencias:           [] as Evidencia[],
       observaciones:        '',
       defTitulo:            '',
       defDescripcion:       '',
@@ -240,12 +285,17 @@ export class EjecucionModalService {
   }
 
   private leerArchivoImagenPaso(file: File, idx: number): void {
+    // Vista previa local inmediata dentro del paso (no se persiste por si sola).
     const reader = new FileReader();
     reader.onload = (e) => {
       const imagenes = [...this.pasosEjecucion[idx].imagenes, e.target?.result as string];
       this.pasosEjecucion[idx] = { ...this.pasosEjecucion[idx], imagenes };
     };
     reader.readAsDataURL(file);
+
+    // Subida real: esto es lo que efectivamente queda guardado como evidencia
+    // de la ejecución (antes esta imagen se perdía al cerrar el modal).
+    this.agregarEvidencia([file]);
   }
 
   private sincronizarResultadoDesdePasos(): void {

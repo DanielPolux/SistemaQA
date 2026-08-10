@@ -31,7 +31,7 @@ export interface EjecucionCasoPrueba {
   version: string;
   resultado: ResultadoEjecucion;
   resultadoObtenido: string;
-  evidenciaUrl?: string;
+  evidencias?: { url: string; nombre: string }[];
   defectoId?: number;
   defectoCodigo?: string;
   defectoTitulo?: string;

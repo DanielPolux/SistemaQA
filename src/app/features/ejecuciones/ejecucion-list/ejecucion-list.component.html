@@ -243,12 +243,16 @@
           </div>
         }
 
-        @if (ejecucionVer.evidenciaUrl) {
+        @if (ejecucionVer.evidencias && ejecucionVer.evidencias.length > 0) {
           <div class="detail-section">
             <h4 class="detail-section-title">Evidencia</h4>
-            <a [href]="ejecucionVer.evidenciaUrl" target="_blank" class="btn btn-sm btn-info">
-              <i class="bi bi-link-45deg"></i> Ver evidencia
-            </a>
+            <div class="evidencia-lista">
+              @for (ev of ejecucionVer.evidencias; track ev.url) {
+                <a [href]="urlEvidencia(ev.url)" target="_blank" class="btn btn-sm btn-info">
+                  <i class="bi bi-link-45deg"></i> {{ ev.nombre }}
+                </a>
+              }
+            </div>
           </div>
         }
 

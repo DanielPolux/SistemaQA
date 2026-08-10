@@ -7,6 +7,7 @@ import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { UploadService, Evidencia } from '../../../core/services/upload.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
@@ -27,6 +28,7 @@ export class CicloEjecucionComponent implements OnInit {
   private ejecucionService = inject(EjecucionService);
   private userService      = inject(UserService);
   private projectService   = inject(ProjectService);
+  private uploadService    = inject(UploadService);
   private toast            = inject(ToastService);
   auth                     = inject(AuthService);
 
@@ -68,8 +70,10 @@ export class CicloEjecucionComponent implements OnInit {
   };
 
   // ─── Panel ejecución ─────────────────────────────────────────────────────
-  guardandoEjec  = signal(false);
-  errorEjecucion = '';
+  guardandoEjec     = signal(false);
+  subiendoEvidencia = signal(false);
+  errorEjecucion    = '';
+  errorEvidencia    = '';
   ejecucionExito = signal<string | null>(null);
   casoSeleccionado: CasoCiclo | null = null;
   pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok'; imagenes: string[] }[] = [];
@@ -80,7 +84,7 @@ export class CicloEjecucionComponent implements OnInit {
     version:              '',
     resultado:            '' as ResultadoEjecucion | '',
     resultadoObtenido:    '',
-    evidenciaUrl:         '',
+    evidencias:           [] as Evidencia[],
     observaciones:        '',
     defTitulo:            '',
     defDescripcion:       '',
@@ -230,7 +234,7 @@ export class CicloEjecucionComponent implements OnInit {
       version:              '',
       resultado:            '' as ResultadoEjecucion | '',
       resultadoObtenido:    '',
-      evidenciaUrl:         '',
+      evidencias:           [] as Evidencia[],
       observaciones:        '',
       defTitulo:            '',
       defDescripcion:       caso.descripcion ?? '',
@@ -248,6 +252,7 @@ export class CicloEjecucionComponent implements OnInit {
   limpiarSeleccion(): void {
     this.casoSeleccionado = null;
     this.errorEjecucion = '';
+    this.errorEvidencia = '';
     this.ejecucionExito.set(null);
     this.pasosEjecucion = [];
   }
@@ -278,12 +283,54 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   private leerArchivoImagenPaso(file: File, idx: number): void {
+    // Vista previa local inmediata dentro del paso (no se persiste por si sola).
     const reader = new FileReader();
     reader.onload = (e) => {
       const imagenes = [...this.pasosEjecucion[idx].imagenes, e.target?.result as string];
       this.pasosEjecucion[idx] = { ...this.pasosEjecucion[idx], imagenes };
     };
     reader.readAsDataURL(file);
+
+    // Subida real: esto es lo que efectivamente queda guardado como evidencia
+    // de la ejecución (antes esta imagen se perdía al cerrar el panel).
+    this.agregarEvidencia([file]);
+  }
+
+  // ─── Evidencia (archivos subidos) ──────────────────────────────────────────
+  agregarEvidencia(files: FileList | File[]): void {
+    const lista = Array.from(files);
+    if (!lista.length) return;
+    this.errorEvidencia = '';
+    this.subiendoEvidencia.set(true);
+    let pendientes = lista.length;
+    lista.forEach(file => {
+      this.uploadService.subir(file).subscribe({
+        next: (evidencia) => {
+          this.formEjecucion.evidencias = [...this.formEjecucion.evidencias, evidencia];
+          if (--pendientes === 0) this.subiendoEvidencia.set(false);
+        },
+        error: (err) => {
+          this.errorEvidencia = `No se pudo subir "${file.name}": ${err?.error?.message ?? 'error desconocido'}`;
+          if (--pendientes === 0) this.subiendoEvidencia.set(false);
+        },
+      });
+    });
+  }
+
+  onFileSelectedEvidencia(event: Event): void {
+    const files = (event.target as HTMLInputElement).files;
+    if (files) this.agregarEvidencia(files);
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  quitarEvidencia(idx: number): void {
+    const lista = [...this.formEjecucion.evidencias];
+    lista.splice(idx, 1);
+    this.formEjecucion.evidencias = lista;
+  }
+
+  urlEvidencia(rutaRelativa: string): string {
+    return this.uploadService.resolverUrl(rutaRelativa);
   }
 
   marcarPaso(idx: number, estado: 'ok' | 'no_ok'): void {
@@ -315,6 +362,10 @@ export class CicloEjecucionComponent implements OnInit {
       this.errorEjecucion = 'Para resultado Fallido completa: Título, Descripción, Pasos para reproducir, Severidad y Prioridad.';
       return;
     }
+    if (this.subiendoEvidencia()) {
+      this.errorEjecucion = 'Espera a que termine de subirse la evidencia antes de guardar.';
+      return;
+    }
     this.errorEjecucion = '';
     this.guardandoEjec.set(true);
 
@@ -330,7 +381,7 @@ export class CicloEjecucionComponent implements OnInit {
       version:           f.version,
       resultado:         f.resultado,
       resultadoObtenido: f.resultadoObtenido,
-      evidenciaUrl:      f.evidenciaUrl  || undefined,
+      evidencias:        f.evidencias.length ? f.evidencias : undefined,
       observaciones:     f.observaciones || undefined,
       desarrolladorId:   esFallido && f.defAsignadoA ? f.defAsignadoA : undefined,
       ...(esFallido && {
