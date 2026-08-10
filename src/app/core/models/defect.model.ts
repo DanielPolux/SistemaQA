@@ -64,6 +64,8 @@ export interface Defecto {
   estadoDesarrollo?: EstadoDesarrollo | null;
   comentariosDesarrollo?: string | null;
   comentarios?: ComentarioDefecto[];
+  /** Evidencias (capturas/video/pdf/log) de la ejecución que originó este defecto. Solo viene en getById(). */
+  evidencias?: { url: string; nombre: string }[];
 }
 
 export interface ComentarioDefecto {

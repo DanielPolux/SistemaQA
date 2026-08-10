@@ -130,7 +130,12 @@ export class DefectListComponent implements OnInit {
   }
 
   generarWord(d: Defecto): void {
-    this.wordExport.exportarDefecto(d);
+    // El listado paginado no trae `evidencias` (ver defectos.service.ts findOne) —
+    // se pide el defecto completo antes de exportar para poder embeber las imágenes.
+    this.service.getById(d.id).subscribe({
+      next: (full) => this.wordExport.exportarDefecto(full),
+      error: () => this.toast.error('No se pudo generar el Word del defecto.'),
+    });
   }
 
   exportarExcel(): void {

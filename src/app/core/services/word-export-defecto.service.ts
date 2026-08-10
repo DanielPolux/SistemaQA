@@ -1,16 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AlignmentType, Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import { Defecto } from '../models';
-import { infoTable, multilineParagraphs, sectionTitle } from './word-export.helpers';
+import { evidenciasParagraphs, infoTable, multilineParagraphs, sectionTitle } from './word-export.helpers';
+import { UploadService } from './upload.service';
 
 @Injectable({ providedIn: 'root' })
 export class DefectoWordExportService {
+  private uploadService = inject(UploadService);
 
   async exportarDefecto(d: Defecto): Promise<void> {
     const fecha = d.creadoEn
       ? new Date(d.creadoEn).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '—';
+
+    const evidencias = await evidenciasParagraphs(d.evidencias, (r) => this.uploadService.resolverUrl(r));
 
     const doc = new Document({
       sections: [{
@@ -64,6 +68,9 @@ export class DefectoWordExportService {
 
           sectionTitle('RESULTADO ESPERADO'),
           ...multilineParagraphs(d.resultadoEsperado),
+
+          sectionTitle('EVIDENCIAS'),
+          ...evidencias,
         ],
       }],
     });
