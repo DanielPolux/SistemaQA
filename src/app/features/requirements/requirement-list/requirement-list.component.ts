@@ -60,6 +60,8 @@ export class RequirementListComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.form.get('tipo')?.valueChanges.subscribe(() => this.cargarNextCodigo());
+
     this.projectService.getAll({ porPagina: 200 }).subscribe(r => {
       this.proyectos = r.datos;
       const qp = this.route.snapshot.queryParams;
@@ -145,12 +147,21 @@ export class RequirementListComponent implements OnInit {
       prioridad:           PrioridadRequerimiento.MEDIA,
       estado:              EstadoRequerimiento.PENDIENTE,
     });
-    if (this.proyectoId) {
-      this.service.getNextCodigo(this.proyectoId).subscribe(r => {
-        this.form.get('codigo')?.setValue(r.codigo, { emitEvent: false });
-      });
-    }
+    // form.reset() ya dispara el valueChanges de 'tipo' suscrito en ngOnInit,
+    // que se encarga de pedir el próximo código para el proyecto/tipo actual.
     this.modalAbierto.set(true);
+  }
+
+  private cargarNextCodigo(): void {
+    if (!this.proyectoId || this.editandoId()) return;
+    const tipo = this.form.get('tipo')?.value ?? undefined;
+    this.service.getNextCodigo(this.proyectoId, tipo).subscribe(r => {
+      this.form.get('codigo')?.setValue(r.codigo, { emitEvent: false });
+    });
+  }
+
+  get esNoFuncional(): boolean {
+    return this.form.get('tipo')?.value === TipoRequerimiento.NO_FUNCIONAL;
   }
 
   abrirModalEditar(req: Requerimiento): void {

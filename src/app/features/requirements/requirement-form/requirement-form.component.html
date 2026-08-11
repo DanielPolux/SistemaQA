@@ -48,9 +48,9 @@
         }
       </div>
       <div class="form-group form-group--sm">
-        <label>Código RF</label>
+        <label>Código {{ esNoFuncional ? 'RNF' : 'RF' }}</label>
         <input type="text" formControlName="codigo" class="input-readonly" readonly
-          [placeholder]="esEdicion ? '' : 'Auto (RF-01, RF-02…)'" />
+          [placeholder]="esEdicion ? '' : (esNoFuncional ? 'Auto (RNF-01, RNF-02…)' : 'Auto (RF-01, RF-02…)')" />
       </div>
     </div>
 

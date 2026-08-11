@@ -49,6 +49,10 @@ export class RequirementFormComponent implements OnInit {
 
   get esEdicion(): boolean { return !!this.reqId; }
 
+  get esNoFuncional(): boolean {
+    return this.form.get('tipo')?.value === TipoRequerimiento.NO_FUNCIONAL;
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
