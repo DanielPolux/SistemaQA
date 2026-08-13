@@ -167,7 +167,7 @@ export class TestCaseFormComponent implements OnInit {
       .filter(l => l.trim())
       .map((l, idx) => ({
         orden: idx + 1,
-        descripcion: l.replace(/^\d+\.\s*/, '').trim(),
+        descripcion: l.replace(/^\s*\d+\s*[.)\-:]\s*/, '').trim(),
         resultadoEsperado: ''
       }));
   }
