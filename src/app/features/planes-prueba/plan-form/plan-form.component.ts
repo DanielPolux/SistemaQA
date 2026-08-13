@@ -2,11 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { RequirementService } from '../../../core/services/requirement.service';
-import { Proyecto, Usuario, Requerimiento, TIPOS_PRUEBA, AMBIENTES_PLAN } from '../../../core/models';
+import { TestCaseService } from '../../../core/services/test-case.service';
+import {
+  Proyecto, Usuario, Requerimiento, CasoPrueba, PlanReqCobertura,
+  TIPOS_PRUEBA, AMBIENTES_PLAN
+} from '../../../core/models';
 
 @Component({
   selector: 'app-plan-form',
@@ -20,6 +25,7 @@ export class PlanFormComponent implements OnInit {
   private projectService     = inject(ProjectService);
   private userService        = inject(UserService);
   private requirementService = inject(RequirementService);
+  private testCaseService    = inject(TestCaseService);
   private router             = inject(Router);
   private route              = inject(ActivatedRoute);
 
@@ -31,6 +37,14 @@ export class PlanFormComponent implements OnInit {
   cargandoReqs = false;
   guardando    = false;
   error        = '';
+
+  // ─── Casos de prueba específicos por requerimiento (opcional) ────────────
+  // Un requerimiento sin entrada en casosSeleccionadosPorReq se cubre con
+  // TODOS sus casos (comportamiento por defecto). Si tiene entrada, solo
+  // esos casos cuentan.
+  casosPorRequerimiento      = new Map<number, CasoPrueba[]>();
+  casosSeleccionadosPorReq   = new Map<number, Set<number>>();
+  requerimientosExpandidos   = new Set<number>();
 
   readonly tiposPrueba  = TIPOS_PRUEBA;
   readonly ambientesPlan = AMBIENTES_PLAN;
@@ -74,7 +88,7 @@ export class PlanFormComponent implements OnInit {
           fechaInicio:      p.fechaInicio      ? String(p.fechaInicio).substring(0, 10)  : '',
           fechaObjetivo:    p.fechaObjetivo    ? String(p.fechaObjetivo).substring(0, 10): '',
         });
-        this.cargarRequerimientos(p.proyectoId, new Set(p.requerimientoIds ?? []));
+        this.cargarRequerimientos(p.proyectoId, new Set(p.requerimientoIds ?? []), p.requerimientos ?? []);
       });
     }
 
@@ -82,17 +96,46 @@ export class PlanFormComponent implements OnInit {
       this.form.get('proyectoId')!.valueChanges.subscribe(pid => {
         this.requerimientos = [];
         this.requerimientosSeleccionados.clear();
+        this.casosPorRequerimiento.clear();
+        this.casosSeleccionadosPorReq.clear();
+        this.requerimientosExpandidos.clear();
         if (pid) this.cargarRequerimientos(Number(pid));
       });
     }
   }
 
-  private cargarRequerimientos(proyectoId: number, preseleccionados = new Set<number>()): void {
+  private cargarRequerimientos(
+    proyectoId: number,
+    preseleccionados = new Set<number>(),
+    coberturaExistente: PlanReqCobertura[] = [],
+  ): void {
     this.cargandoReqs = true;
-    this.requirementService.getAll({ proyectoId, porPagina: 500 }).subscribe({
-      next: (res) => {
-        this.requerimientos = res.datos;
+    forkJoin({
+      reqs:  this.requirementService.getAll({ proyectoId, porPagina: 500 }),
+      casos: this.testCaseService.getByProyecto(proyectoId),
+    }).subscribe({
+      next: ({ reqs, casos }) => {
+        this.requerimientos = reqs.datos;
         this.requerimientosSeleccionados = new Set(preseleccionados);
+
+        this.casosPorRequerimiento = new Map();
+        for (const c of casos) {
+          if (!c.requerimientoId) continue;
+          const arr = this.casosPorRequerimiento.get(c.requerimientoId) ?? [];
+          arr.push(c);
+          this.casosPorRequerimiento.set(c.requerimientoId, arr);
+        }
+
+        // Prellenar selección custom (edición) comparando contra el total real de casos
+        this.casosSeleccionadosPorReq = new Map();
+        for (const cov of coberturaExistente) {
+          const todos = this.casosPorRequerimiento.get(cov.id) ?? [];
+          const seleccionIds = cov.casoIds ?? [];
+          if (todos.length > 0 && seleccionIds.length < todos.length) {
+            this.casosSeleccionadosPorReq.set(cov.id, new Set(seleccionIds));
+          }
+        }
+
         this.cargandoReqs = false;
       },
       error: () => { this.cargandoReqs = false; },
@@ -102,9 +145,47 @@ export class PlanFormComponent implements OnInit {
   toggleReq(id: number): void {
     if (this.requerimientosSeleccionados.has(id)) {
       this.requerimientosSeleccionados.delete(id);
+      this.casosSeleccionadosPorReq.delete(id);
+      this.requerimientosExpandidos.delete(id);
     } else {
       this.requerimientosSeleccionados.add(id);
     }
+  }
+
+  toggleExpandReq(id: number): void {
+    if (this.requerimientosExpandidos.has(id)) this.requerimientosExpandidos.delete(id);
+    else this.requerimientosExpandidos.add(id);
+  }
+
+  toggleCaso(requerimientoId: number, casoId: number): void {
+    const todos = this.casosPorRequerimiento.get(requerimientoId) ?? [];
+    let seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    if (!seleccion) {
+      // Estaba en modo "todos" implícito — arranca la personalización desde el set completo
+      seleccion = new Set(todos.map(c => c.id));
+      this.casosSeleccionadosPorReq.set(requerimientoId, seleccion);
+    }
+    if (seleccion.has(casoId)) {
+      if (seleccion.size === 1) return; // debe quedar al menos 1 caso; para 0, desmarca el requerimiento
+      seleccion.delete(casoId);
+    } else {
+      seleccion.add(casoId);
+    }
+    // Si volvió a quedar igual a "todos", se elimina el override (vuelve al default dinámico)
+    if (seleccion.size === todos.length) {
+      this.casosSeleccionadosPorReq.delete(requerimientoId);
+    }
+  }
+
+  casoSeleccionado(requerimientoId: number, casoId: number): boolean {
+    const seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    return seleccion ? seleccion.has(casoId) : true; // default: todos seleccionados
+  }
+
+  casosSeleccionadosCount(requerimientoId: number): number {
+    const seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    if (seleccion) return seleccion.size;
+    return this.casosPorRequerimiento.get(requerimientoId)?.length ?? 0;
   }
 
   seleccionarTodos(): void {
@@ -113,6 +194,8 @@ export class PlanFormComponent implements OnInit {
 
   deseleccionarTodos(): void {
     this.requerimientosSeleccionados.clear();
+    this.casosSeleccionadosPorReq.clear();
+    this.requerimientosExpandidos.clear();
   }
 
   prioridadClase(p: string): string {
@@ -144,6 +227,9 @@ export class PlanFormComponent implements OnInit {
       fechaInicio:      val.fechaInicio      || undefined,
       fechaObjetivo:    val.fechaObjetivo    || undefined,
       requerimientoIds: Array.from(this.requerimientosSeleccionados),
+      casosSeleccionados: Array.from(this.casosSeleccionadosPorReq.entries())
+        .filter(([reqId]) => this.requerimientosSeleccionados.has(reqId))
+        .map(([requerimientoId, ids]) => ({ requerimientoId, casoIds: Array.from(ids) })),
     };
 
     const op = this.esEdicion

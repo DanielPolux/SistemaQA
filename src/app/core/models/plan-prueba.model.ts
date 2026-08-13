@@ -70,7 +70,13 @@ export interface PlanReqCobertura {
   casosEjecutados: number;
   casosAprobados: number;
   casosFallidos: number;
+  casoIds: number[];
   estadoValidacion: 'Validado' | 'Con fallas' | 'En progreso' | 'Sin ejecutar' | 'Sin casos';
+}
+
+export interface CasoSeleccionPlan {
+  requerimientoId: number;
+  casoIds: number[];
 }
 
 export interface TrazabilidadDefecto {
