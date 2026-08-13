@@ -2,13 +2,15 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { RequirementService } from '../../../core/services/requirement.service';
+import { TestCaseService } from '../../../core/services/test-case.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
-  PlanPrueba, EstadoPlan, Proyecto, Usuario, Requerimiento,
+  PlanPrueba, EstadoPlan, Proyecto, Usuario, Requerimiento, CasoPrueba, PlanReqCobertura,
   TIPOS_PRUEBA, AMBIENTES_PLAN,
 } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
@@ -24,6 +26,7 @@ export class PlanListComponent implements OnInit {
   private projectService     = inject(ProjectService);
   private userService        = inject(UserService);
   private requirementService = inject(RequirementService);
+  private testCaseService    = inject(TestCaseService);
   private fb                 = inject(FormBuilder);
   private toast              = inject(ToastService);
   auth                       = inject(AuthService);
@@ -34,6 +37,14 @@ export class PlanListComponent implements OnInit {
   requerimientos: Requerimiento[] = [];
   requerimientosSeleccionados = new Set<number>();
   cargandoReqs                = false;
+
+  // ─── Casos de prueba específicos por requerimiento (opcional) ────────────
+  // Un requerimiento sin entrada en casosSeleccionadosPorReq se cubre con
+  // TODOS sus casos (comportamiento por defecto). Si tiene entrada, solo
+  // esos casos cuentan.
+  casosPorRequerimiento    = new Map<number, CasoPrueba[]>();
+  casosSeleccionadosPorReq = new Map<number, Set<number>>();
+  requerimientosExpandidos = new Set<number>();
 
   total     = 0;
   pagina    = 1;
@@ -87,6 +98,9 @@ export class PlanListComponent implements OnInit {
     this.form.get('proyectoId')!.valueChanges.subscribe(pid => {
       this.requerimientos = [];
       this.requerimientosSeleccionados.clear();
+      this.casosPorRequerimiento.clear();
+      this.casosSeleccionadosPorReq.clear();
+      this.requerimientosExpandidos.clear();
       if (pid) this.cargarRequerimientos(Number(pid));
     });
   }
@@ -118,6 +132,9 @@ export class PlanListComponent implements OnInit {
     this.editandoId.set(null);
     this.requerimientos = [];
     this.requerimientosSeleccionados.clear();
+    this.casosPorRequerimiento.clear();
+    this.casosSeleccionadosPorReq.clear();
+    this.requerimientosExpandidos.clear();
     this.form.reset({
       proyectoId: null, nombre: '', descripcion: '', sprint: '',
       tipoPrueba: '', ambiente: '', objetivo: '', alcance: '',
@@ -132,6 +149,9 @@ export class PlanListComponent implements OnInit {
     this.editandoId.set(plan.id);
     this.requerimientos = [];
     this.requerimientosSeleccionados.clear();
+    this.casosPorRequerimiento.clear();
+    this.casosSeleccionadosPorReq.clear();
+    this.requerimientosExpandidos.clear();
     this.form.reset({
       proyectoId:    plan.proyectoId ?? null,
       nombre:        plan.nombre,
@@ -145,15 +165,15 @@ export class PlanListComponent implements OnInit {
       responsableId: plan.responsableId  ?? null,
       fechaInicio:   plan.fechaInicio  ? String(plan.fechaInicio).substring(0, 10)  : '',
       fechaObjetivo: plan.fechaObjetivo ? String(plan.fechaObjetivo).substring(0, 10) : '',
-    });
+    }, { emitEvent: false }); // evita que valueChanges dispare un cargarRequerimientos duplicado sin preselección
     this.form.get('proyectoId')!.disable();
     if (plan.proyectoId) {
       this.cargandoReqs = true;
-      this.requirementService.getAll({ proyectoId: plan.proyectoId, porPagina: 500 }).subscribe({
-        next: (res) => {
-          this.requerimientos = res.datos;
-          this.requerimientosSeleccionados = new Set((plan as any).requerimientoIds ?? []);
-          this.cargandoReqs = false;
+      // La fila de la lista no trae requerimientoIds/casoIds -- se pide el
+      // detalle completo del plan para precargar la selección real.
+      this.service.getById(plan.id).subscribe({
+        next: (detalle) => {
+          this.cargarRequerimientos(plan.proyectoId, new Set(detalle.requerimientoIds ?? []), detalle.requerimientos ?? []);
         },
         error: () => { this.cargandoReqs = false; },
       });
@@ -168,10 +188,39 @@ export class PlanListComponent implements OnInit {
     this.form.get('proyectoId')!.enable();
   }
 
-  private cargarRequerimientos(proyectoId: number): void {
+  private cargarRequerimientos(
+    proyectoId: number,
+    preseleccionados = new Set<number>(),
+    coberturaExistente: PlanReqCobertura[] = [],
+  ): void {
     this.cargandoReqs = true;
-    this.requirementService.getAll({ proyectoId, porPagina: 500 }).subscribe({
-      next: (res) => { this.requerimientos = res.datos; this.cargandoReqs = false; },
+    forkJoin({
+      reqs:  this.requirementService.getAll({ proyectoId, porPagina: 500 }),
+      casos: this.testCaseService.getByProyecto(proyectoId),
+    }).subscribe({
+      next: ({ reqs, casos }) => {
+        this.requerimientos = reqs.datos;
+        this.requerimientosSeleccionados = new Set(preseleccionados);
+
+        this.casosPorRequerimiento = new Map();
+        for (const c of casos) {
+          if (!c.requerimientoId) continue;
+          const arr = this.casosPorRequerimiento.get(c.requerimientoId) ?? [];
+          arr.push(c);
+          this.casosPorRequerimiento.set(c.requerimientoId, arr);
+        }
+
+        this.casosSeleccionadosPorReq = new Map();
+        for (const cov of coberturaExistente) {
+          const todos = this.casosPorRequerimiento.get(cov.id) ?? [];
+          const seleccionIds = cov.casoIds ?? [];
+          if (todos.length > 0 && seleccionIds.length < todos.length) {
+            this.casosSeleccionadosPorReq.set(cov.id, new Set(seleccionIds));
+          }
+        }
+
+        this.cargandoReqs = false;
+      },
       error: () => { this.cargandoReqs = false; },
     });
   }
@@ -179,13 +228,54 @@ export class PlanListComponent implements OnInit {
   toggleReq(id: number): void {
     if (this.requerimientosSeleccionados.has(id)) {
       this.requerimientosSeleccionados.delete(id);
+      this.casosSeleccionadosPorReq.delete(id);
+      this.requerimientosExpandidos.delete(id);
     } else {
       this.requerimientosSeleccionados.add(id);
     }
   }
 
-  seleccionarTodos(): void    { this.requerimientos.forEach(r => this.requerimientosSeleccionados.add(r.id)); }
-  deseleccionarTodos(): void  { this.requerimientosSeleccionados.clear(); }
+  toggleExpandReq(id: number): void {
+    if (this.requerimientosExpandidos.has(id)) this.requerimientosExpandidos.delete(id);
+    else this.requerimientosExpandidos.add(id);
+  }
+
+  toggleCaso(requerimientoId: number, casoId: number): void {
+    const todos = this.casosPorRequerimiento.get(requerimientoId) ?? [];
+    let seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    if (!seleccion) {
+      seleccion = new Set(todos.map(c => c.id));
+      this.casosSeleccionadosPorReq.set(requerimientoId, seleccion);
+    }
+    if (seleccion.has(casoId)) {
+      if (seleccion.size === 1) return; // debe quedar al menos 1 caso; para 0, desmarca el requerimiento
+      seleccion.delete(casoId);
+    } else {
+      seleccion.add(casoId);
+    }
+    if (seleccion.size === todos.length) {
+      this.casosSeleccionadosPorReq.delete(requerimientoId);
+    }
+  }
+
+  casoSeleccionado(requerimientoId: number, casoId: number): boolean {
+    const seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    return seleccion ? seleccion.has(casoId) : true;
+  }
+
+  casosSeleccionadosCount(requerimientoId: number): number {
+    const seleccion = this.casosSeleccionadosPorReq.get(requerimientoId);
+    if (seleccion) return seleccion.size;
+    return this.casosPorRequerimiento.get(requerimientoId)?.length ?? 0;
+  }
+
+  seleccionarTodos(): void { this.requerimientos.forEach(r => this.requerimientosSeleccionados.add(r.id)); }
+
+  deseleccionarTodos(): void {
+    this.requerimientosSeleccionados.clear();
+    this.casosSeleccionadosPorReq.clear();
+    this.requerimientosExpandidos.clear();
+  }
 
   prioridadClase(p: string): string {
     const m: Record<string, string> = {
@@ -216,6 +306,9 @@ export class PlanListComponent implements OnInit {
       fechaInicio:      val.fechaInicio      || undefined,
       fechaObjetivo:    val.fechaObjetivo    || undefined,
       requerimientoIds: Array.from(this.requerimientosSeleccionados),
+      casosSeleccionados: Array.from(this.casosSeleccionadosPorReq.entries())
+        .filter(([reqId]) => this.requerimientosSeleccionados.has(reqId))
+        .map(([requerimientoId, ids]) => ({ requerimientoId, casoIds: Array.from(ids) })),
     };
     const op = this.editandoId()
       ? this.service.update(this.editandoId()!, payload)

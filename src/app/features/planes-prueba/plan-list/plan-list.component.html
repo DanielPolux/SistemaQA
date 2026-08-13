@@ -227,18 +227,41 @@
           </div>
           <div class="plan-req-checklist">
             @for (r of requerimientos; track r.id) {
-              <label class="plan-req-item" [class.plan-req-item--checked]="requerimientosSeleccionados.has(r.id)">
-                <input type="checkbox"
-                       [checked]="requerimientosSeleccionados.has(r.id)"
-                       (change)="toggleReq(r.id)" />
-                <span class="plan-req-item-body">
-                  <span class="tag-codigo">{{ r.codigo }}</span>
-                  <span class="plan-req-titulo">{{ r.titulo }}</span>
-                  <span class="badge {{ prioridadClase(r.prioridad) }}" style="font-size:10px;padding:1px 6px">
-                    {{ r.prioridad }}
+              <div class="plan-req-item" [class.plan-req-item--checked]="requerimientosSeleccionados.has(r.id)">
+                <label class="plan-req-item-main">
+                  <input type="checkbox"
+                         [checked]="requerimientosSeleccionados.has(r.id)"
+                         (change)="toggleReq(r.id)" />
+                  <span class="plan-req-item-body">
+                    <span class="tag-codigo">{{ r.codigo }}</span>
+                    <span class="plan-req-titulo">{{ r.titulo }}</span>
+                    <span class="badge {{ prioridadClase(r.prioridad) }}" style="font-size:10px;padding:1px 6px">
+                      {{ r.prioridad }}
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+
+                @if (requerimientosSeleccionados.has(r.id) && (casosPorRequerimiento.get(r.id)?.length ?? 0) > 0) {
+                  <button type="button" class="plan-req-casos-toggle" (click)="toggleExpandReq(r.id)">
+                    {{ requerimientosExpandidos.has(r.id) ? '▾' : '▸' }}
+                    {{ casosSeleccionadosCount(r.id) }} / {{ casosPorRequerimiento.get(r.id)?.length }} casos de prueba
+                  </button>
+
+                  @if (requerimientosExpandidos.has(r.id)) {
+                    <div class="plan-req-casos">
+                      @for (c of casosPorRequerimiento.get(r.id); track c.id) {
+                        <label class="plan-caso-item">
+                          <input type="checkbox"
+                                 [checked]="casoSeleccionado(r.id, c.id)"
+                                 (change)="toggleCaso(r.id, c.id)" />
+                          <span class="tag-codigo">{{ c.codigo || ('#' + c.id) }}</span>
+                          <span class="plan-caso-titulo">{{ c.nombre }}</span>
+                        </label>
+                      }
+                    </div>
+                  }
+                }
+              </div>
             }
           </div>
         }
