@@ -1,11 +1,12 @@
 export enum TipoPrueba {
-  FUNCIONAL   = 'Funcional',
-  REGRESION   = 'Regresión',
-  HUMO        = 'Humo',
-  INTEGRACION = 'Integración',
-  RENDIMIENTO = 'Rendimiento',
-  SEGURIDAD   = 'Seguridad',
-  USABILIDAD  = 'Usabilidad'
+  FUNCIONAL    = 'Funcional',
+  NO_FUNCIONAL = 'No Funcional',
+  REGRESION    = 'Regresión',
+  HUMO         = 'Humo',
+  INTEGRACION  = 'Integración',
+  RENDIMIENTO  = 'Rendimiento',
+  SEGURIDAD    = 'Seguridad',
+  USABILIDAD   = 'Usabilidad'
 }
 
 export enum PrioridadCasoPrueba {
