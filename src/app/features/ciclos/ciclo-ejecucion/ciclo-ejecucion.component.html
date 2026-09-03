@@ -400,6 +400,15 @@
               <button class="btn btn-outline" (click)="limpiarSeleccion()" [disabled]="guardandoEjec()">
                 ← Cancelar
               </button>
+              <button class="btn btn-secondary" type="button"
+                      (click)="generarEvidenciaWord()"
+                      [disabled]="generandoWord() || subiendoEvidencia()">
+                @if (generandoWord()) {
+                  Generando Word...
+                } @else {
+                  <i class="bi bi-file-earmark-word"></i> Generar evidencia Word
+                }
+              </button>
               @if (ciclo?.estado === 'Activo' && auth.puedeEjecutar()) {
                 <button class="btn btn-accent" (click)="guardarEjecucion()" [disabled]="guardandoEjec()">
                   @if (guardandoEjec()) { Registrando... } @else { ✓ Registrar Ejecución }

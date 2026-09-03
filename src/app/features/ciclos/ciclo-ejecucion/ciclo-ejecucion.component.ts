@@ -75,6 +75,7 @@ export class CicloEjecucionComponent implements OnInit {
 
   // ─── Panel ejecución ─────────────────────────────────────────────────────
   guardandoEjec     = signal(false);
+  generandoWord     = signal(false);
   subiendoEvidencia = signal(false);
   errorEjecucion    = '';
   errorEvidencia    = '';
@@ -351,6 +352,34 @@ export class CicloEjecucionComponent implements OnInit {
         .join('\n');
     } else if (todosOk) {
       this.formEjecucion.resultado = ResultadoEjecucion.APROBADO;
+    }
+  }
+
+  async generarEvidenciaWord(): Promise<void> {
+    if (!this.casoSeleccionado) return;
+    this.generandoWord.set(true);
+    try {
+      const usuario = this.auth.usuarioActual();
+      await this.wordExport.exportarEjecucion({
+        proyecto:          this.ciclo?.proyectoNombre ?? '—',
+        ciclo:             this.ciclo?.nombre ?? '—',
+        codigoCaso:        this.casoSeleccionado.codigo,
+        nombreCaso:        this.casoSeleccionado.nombre,
+        descripcionCaso:   this.casoSeleccionado.descripcion,
+        tester:            usuario ? `${usuario.nombre} ${usuario.apellido}` : '—',
+        ambiente:          this.formEjecucion.ambiente,
+        version:           this.formEjecucion.version,
+        resultado:         this.formEjecucion.resultado,
+        resultadoEsperado: this.casoSeleccionado.resultadoEsperado,
+        resultadoObtenido: this.formEjecucion.resultadoObtenido,
+        observaciones:     this.formEjecucion.observaciones,
+        pasos:             this.pasosEjecucion,
+      });
+      this.toast.exito('Evidencia Word generada correctamente.');
+    } catch {
+      this.toast.error('No se pudo generar la evidencia Word.');
+    } finally {
+      this.generandoWord.set(false);
     }
   }
 
