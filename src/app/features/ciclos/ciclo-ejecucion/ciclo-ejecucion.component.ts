@@ -79,7 +79,7 @@ export class CicloEjecucionComponent implements OnInit {
   subiendoEvidencia = signal(false);
   errorEjecucion    = '';
   errorEvidencia    = '';
-  ejecucionExito = signal<string | null>(null);
+  registroExitoso = signal<{ resultado: ResultadoEjecucion; codigoDefecto?: string } | null>(null);
   casoSeleccionado: CasoCiclo | null = null;
   pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok' | 'bloqueado'; imagenes: string[] }[] = [];
   decisionFalloAbierta = signal(false);
@@ -139,7 +139,7 @@ export class CicloEjecucionComponent implements OnInit {
   cambiarPaginaCiclo(p: number): void {
     this.paginaCiclo = p;
     this.casoSeleccionado = null;
-    this.ejecucionExito.set(null);
+    this.registroExitoso.set(null);
     this.errorEjecucion = '';
   }
 
@@ -211,7 +211,7 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   seleccionarCaso(caso: CasoCiclo): void {
-    if (this.casoSeleccionado?.id === caso.id && !this.ejecucionExito()) return;
+    if (this.casoSeleccionado?.id === caso.id && !this.registroExitoso()) return;
 
     if (this.proyectoEstado && this.proyectoEstado !== EstadoProyecto.EN_EJECUCION) {
       this.abrirPopupBloqueado(
@@ -238,7 +238,7 @@ export class CicloEjecucionComponent implements OnInit {
       return;
     }
 
-    this.ejecucionExito.set(null);
+    this.registroExitoso.set(null);
     this.casoSeleccionado = caso;
     this.errorEjecucion = '';
     this.pasosEjecucion = (caso.pasos ?? []).map((p: any) => ({
@@ -277,7 +277,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.casoSeleccionado = null;
     this.errorEjecucion = '';
     this.errorEvidencia = '';
-    this.ejecucionExito.set(null);
+    this.registroExitoso.set(null);
     this.pasosEjecucion = [];
     this.cerrarDecisionFallo();
   }
@@ -557,33 +557,16 @@ export class CicloEjecucionComponent implements OnInit {
       next: (res: any) => {
         this.guardandoEjec.set(false);
         this.cargarCasos();
-        if (esFallido) {
-          const codigoDefecto = res?.defecto?.codigoProyecto ?? res?.defecto?.codigo ?? 'INC-???';
-          this.ejecucionExito.set(codigoDefecto);
-          this.descargarWordDefecto(res?.defecto?.id);
-        } else {
-          this.limpiarSeleccion();
-        }
+        this.formEjecucion.version = res?.version ?? this.formEjecucion.version;
+        const codigoDefecto = esFallido
+          ? res?.defecto?.codigoProyecto ?? res?.defecto?.codigo ?? 'INC-???'
+          : undefined;
+        this.registroExitoso.set({ resultado: f.resultado as ResultadoEjecucion, codigoDefecto });
       },
       error: (err: any) => {
         this.guardandoEjec.set(false);
         this.errorEjecucion = 'Error al registrar la ejecución: ' + (err?.error?.message ?? 'Error desconocido');
       },
-    });
-  }
-
-  /**
-   * Al crear un defecto (ejecución Fallida), descarga automáticamente el reporte Word
-   * de evidencias — el mismo que genera el botón "Word" de la lista de Defectos.
-   * Se pide el defecto completo (getById) porque la respuesta de create() no trae
-   * `evidencias`. Si falla, no interrumpe el flujo — el tester igual puede generarlo
-   * después manualmente desde la lista.
-   */
-  private descargarWordDefecto(defectoId?: number): void {
-    if (!defectoId) return;
-    this.defectService.getById(defectoId).subscribe({
-      next: (d) => { this.wordExport.exportarDefecto(d).catch(() => {}); },
-      error: () => {},
     });
   }
 

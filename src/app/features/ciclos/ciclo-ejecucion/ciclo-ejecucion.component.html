@@ -131,17 +131,6 @@
             <p>Selecciona un caso de prueba de la lista para registrar su ejecución</p>
           </div>
 
-        } @else if (ejecucionExito()) {
-          <!-- Success state (Fallido with defect) -->
-          <div class="ciclo-exec-exito">
-            <div style="font-size:2.5rem;margin-bottom:0.5rem">✅</div>
-            <h3>Ejecución y defecto registrados</h3>
-            <p>El caso fue marcado como <strong>Fallido</strong> y el defecto fue creado con el código:</p>
-            <div class="ciclo-exec-defecto-codigo">{{ ejecucionExito() }}</div>
-            <p style="font-size:0.82rem">Puedes ver el defecto en la sección <strong>Defectos</strong>.</p>
-            <button class="btn btn-primary" (click)="limpiarSeleccion()">← Seleccionar otro caso</button>
-          </div>
-
         } @else {
           <!-- Execution form -->
           <div class="ciclo-exec-form">
@@ -428,19 +417,6 @@
               <button class="btn btn-outline" (click)="limpiarSeleccion()" [disabled]="guardandoEjec()">
                 ← Cancelar
               </button>
-              <button class="btn" type="button"
-                      [class.btn-secondary]="!hayPasoNoOk"
-                      [class.btn-danger]="hayPasoNoOk"
-                      (click)="generarEvidenciaWord()"
-                      [disabled]="generandoWord() || subiendoEvidencia()">
-                @if (generandoWord()) {
-                  Generando Word...
-                } @else if (hayPasoNoOk) {
-                  <i class="bi bi-file-earmark-word"></i> Generar Reporte defecto
-                } @else {
-                  <i class="bi bi-file-earmark-word"></i> Generar evidencia Word
-                }
-              </button>
               @if (ciclo?.estado === 'Activo' && auth.puedeEjecutar()) {
                 <button class="btn btn-accent" (click)="guardarEjecucion()" [disabled]="guardandoEjec()">
                   @if (guardandoEjec()) { Registrando... } @else { ✓ Registrar Ejecución }
@@ -475,6 +451,43 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" (click)="cerrarPopupBloqueado()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Confirmación de ejecución registrada ─────────────────────────── -->
+@if (registroExitoso(); as registro) {
+  <div class="modal-overlay">
+    <div class="modal-panel modal-panel--sm">
+      <div class="modal-header modal-header--success">
+        <div class="modal-title-group">
+          <span class="modal-icon">✓</span>
+          <div>
+            <h3 class="modal-title">Ejecución registrada</h3>
+            <p class="modal-subtitle">Resultado: {{ registro.resultado }} · Versión {{ formEjecucion.version }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">La ejecución se guardó correctamente.</p>
+        @if (registro.codigoDefecto) {
+          <p class="confirm-sub">Defecto creado: <strong>{{ registro.codigoDefecto }}</strong></p>
+        }
+      </div>
+      <div class="modal-footer">
+        @if (registro.resultado === 'Aprobado') {
+          <button class="btn btn-secondary" (click)="generarEvidenciaWord()" [disabled]="generandoWord()">
+            <i class="bi bi-file-earmark-word"></i>
+            {{ generandoWord() ? 'Generando Word...' : 'Generar Evidencia Word' }}
+          </button>
+        } @else if (registro.resultado === 'Fallido') {
+          <button class="btn btn-danger" (click)="generarEvidenciaWord()" [disabled]="generandoWord()">
+            <i class="bi bi-file-earmark-word"></i>
+            {{ generandoWord() ? 'Generando Word...' : 'Generar Reporte Defecto' }}
+          </button>
+        }
+        <button class="btn btn-primary" (click)="limpiarSeleccion()">Cerrar y seleccionar otro caso</button>
       </div>
     </div>
   </div>
