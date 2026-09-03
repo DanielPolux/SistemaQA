@@ -135,7 +135,7 @@ export class EjecucionWordExportService {
           this.tablaInfo([
             ['Proyecto', [data.codigoProyecto, data.proyecto].filter(Boolean).join(' - ') || '—'],
             ['Requerimiento', data.requerimiento || '—'],
-            ['Ciclo de prueba', data.ciclo || '—'],
+            ...(!data.esReporteDefecto ? [['Ciclo de prueba', data.ciclo || '—'] as [string, string]] : []),
             ['Caso de prueba', `${data.codigoCaso} — ${data.nombreCaso}`],
             ['Tester', data.tester || '—'],
             ['Fecha de generación', fecha],

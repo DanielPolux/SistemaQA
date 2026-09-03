@@ -36,8 +36,6 @@ export class DefectoWordExportService {
             ['Proyecto',        [d.proyectoCodigo, d.proyectoNombre].filter(Boolean).join(' - ') || '—'],
             ['Requerimiento',   [d.requerimientoCodigo, d.requerimientoTitulo].filter(Boolean).join(' - ') || '—'],
             ['Caso de Prueba',  d.casoPruebaCodigo ?? '—'],
-            ['Plan de Pruebas', (d as any).planNombre ?? '—'],
-            ['Ciclo',           (d as any).cicloNombre ?? '—'],
             ['Fecha Reporte',   fecha],
             ['Reportado por',   d.reportadoPorNombre ?? '—'],
             ['Asignado a',      d.asignadoANombre ?? 'Sin asignar'],
