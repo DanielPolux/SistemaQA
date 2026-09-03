@@ -49,6 +49,9 @@ export class CicloEjecucionComponent implements OnInit {
   // ─── Popup bloqueo ejecución ──────────────────────────────────────────────
   popupBloqueadoAbierto = signal(false);
   popupBloqueadoMsg     = '';
+  modalFinalizarCiclo = signal(false);
+  finalizandoCiclo = signal(false);
+  errorFinalizarCiclo = '';
 
   get pmUsuario(): Usuario | null {
     if (!this.pmProyectoId) return null;
@@ -158,6 +161,11 @@ export class CicloEjecucionComponent implements OnInit {
     return this.casos.filter(c => c.resultadoCiclo === 'Fallido' || c.resultadoCiclo === 'Bloqueado').length;
   }
 
+  get totalFallidosExactos(): number { return this.casos.filter(c => c.resultadoCiclo === 'Fallido').length; }
+  get totalBloqueados(): number { return this.casos.filter(c => c.resultadoCiclo === 'Bloqueado').length; }
+  get totalOmitidos(): number { return this.casos.filter(c => c.resultadoCiclo === 'Omitido').length; }
+  get totalPendientes(): number { return this.casos.filter(c => !c.resultadoCiclo).length; }
+
   get porcentajeCompletado(): number {
     if (!this.casos.length) return 0;
     return Math.round((this.totalEjecutados / this.casos.length) * 100);
@@ -171,6 +179,34 @@ export class CicloEjecucionComponent implements OnInit {
   get porcentajeFallido(): number {
     if (!this.casos.length) return 0;
     return Math.round((this.totalFallidos / this.casos.length) * 100);
+  }
+
+  abrirFinalizarCiclo(): void {
+    if (!this.casos.length || this.totalPendientes > 0) return;
+    this.errorFinalizarCiclo = '';
+    this.modalFinalizarCiclo.set(true);
+  }
+
+  cerrarFinalizarCiclo(): void {
+    if (!this.finalizandoCiclo()) this.modalFinalizarCiclo.set(false);
+  }
+
+  confirmarFinalizarCiclo(): void {
+    this.finalizandoCiclo.set(true);
+    this.errorFinalizarCiclo = '';
+    this.cicloService.cerrar(this.cicloId).subscribe({
+      next: ciclo => {
+        this.ciclo = ciclo;
+        this.finalizandoCiclo.set(false);
+        this.modalFinalizarCiclo.set(false);
+        this.limpiarSeleccion();
+        this.toast.exito('Ciclo de pruebas finalizado correctamente.');
+      },
+      error: err => {
+        this.finalizandoCiclo.set(false);
+        this.errorFinalizarCiclo = err?.error?.message ?? 'No se pudo finalizar el ciclo.';
+      },
+    });
   }
 
   ngOnInit(): void {
