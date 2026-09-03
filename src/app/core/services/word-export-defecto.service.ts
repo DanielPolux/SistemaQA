@@ -41,7 +41,7 @@ export class DefectoWordExportService {
             ['Fecha Reporte',   fecha],
             ['Reportado por',   d.reportadoPorNombre ?? '—'],
             ['Asignado a',      d.asignadoANombre ?? 'Sin asignar'],
-          ], 18),
+          ], 25),
 
           sectionTitle('CLASIFICACIÓN'),
           infoTable([
@@ -50,7 +50,7 @@ export class DefectoWordExportService {
             ['Estado',    d.estado],
             ['Ambiente',  d.ambiente],
             ['Versión',   d.version],
-          ], 18),
+          ], 25),
 
           sectionTitle('TÍTULO'),
           new Paragraph({

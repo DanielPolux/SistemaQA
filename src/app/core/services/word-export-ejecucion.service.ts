@@ -81,7 +81,7 @@ export class EjecucionWordExportService {
       }));
       contenidoPasos.push(this.tablaInfo([
         ['Acción', paso.descripcion || '—'],
-      ], 18));
+      ], 25));
 
       if (!paso.imagenes.length) {
         contenidoPasos.push(this.parrafo('Sin capturas para este paso.', '9CA3AF'));
@@ -142,14 +142,14 @@ export class EjecucionWordExportService {
             ['Ambiente', data.ambiente || '—'],
             ['Versión', data.version || '—'],
             ['Resultado', data.resultado || 'Pendiente'],
-          ], 18),
+          ], 25),
           this.tituloSeccion('DETALLE DEL CASO'),
           this.tablaInfo([
             ['Descripción', data.descripcionCaso || '—'],
             ['Resultado esperado', data.resultadoEsperado || '—'],
             ['Resultado obtenido', data.resultadoObtenido || '—'],
             ['Observaciones', data.observaciones || '—'],
-          ], 18),
+          ], 25),
           ...(data.esReporteDefecto ? [
             this.tituloSeccion('DETALLE DEL DEFECTO'),
             this.tablaInfo([
@@ -167,7 +167,7 @@ export class EjecucionWordExportService {
               ['Caso bloqueante', data.bloqueadoPorCaso],
               ['Defecto asociado', data.defectoBloqueante || '—'],
               ['Detalle', data.resultadoObtenido || '—'],
-            ], 18),
+            ], 25),
           ] : []),
           this.tituloSeccion('PASOS Y CAPTURAS'),
           ...contenidoPasos,
@@ -197,7 +197,7 @@ export class EjecucionWordExportService {
     });
   }
 
-  private tablaInfo(filas: [string, string][], anchoEtiqueta = 18): Table {
+  private tablaInfo(filas: [string, string][], anchoEtiqueta = 25): Table {
     const anchoTabla = 9000;
     const anchoEtiquetaDxa = Math.round(anchoTabla * anchoEtiqueta / 100);
     const anchoDetalleDxa = anchoTabla - anchoEtiquetaDxa;
