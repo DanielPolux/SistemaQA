@@ -400,11 +400,15 @@
               <button class="btn btn-outline" (click)="limpiarSeleccion()" [disabled]="guardandoEjec()">
                 ← Cancelar
               </button>
-              <button class="btn btn-secondary" type="button"
+              <button class="btn" type="button"
+                      [class.btn-secondary]="!hayPasoNoOk"
+                      [class.btn-danger]="hayPasoNoOk"
                       (click)="generarEvidenciaWord()"
                       [disabled]="generandoWord() || subiendoEvidencia()">
                 @if (generandoWord()) {
                   Generando Word...
+                } @else if (hayPasoNoOk) {
+                  <i class="bi bi-file-earmark-word"></i> Generar Reporte defecto
                 } @else {
                   <i class="bi bi-file-earmark-word"></i> Generar evidencia Word
                 }

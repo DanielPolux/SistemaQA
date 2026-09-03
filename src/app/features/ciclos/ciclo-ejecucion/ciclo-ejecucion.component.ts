@@ -104,6 +104,10 @@ export class CicloEjecucionComponent implements OnInit {
     return this.formEjecucion.resultado === ResultadoEjecucion.FALLIDO;
   }
 
+  get hayPasoNoOk(): boolean {
+    return this.pasosEjecucion.some(p => p.estado === 'no_ok');
+  }
+
   // ─── Pagination for case list ────────────────────────────────────────────
   paginaCiclo    = 1;
   porPaginaCiclo = 20;
@@ -360,7 +364,9 @@ export class CicloEjecucionComponent implements OnInit {
     this.generandoWord.set(true);
     try {
       const usuario = this.auth.usuarioActual();
+      const asignado = this.usuarios.find(u => u.id === this.formEjecucion.defAsignadoA);
       await this.wordExport.exportarEjecucion({
+        esReporteDefecto:   this.hayPasoNoOk,
         proyecto:          this.ciclo?.proyectoNombre ?? '—',
         ciclo:             this.ciclo?.nombre ?? '—',
         codigoCaso:        this.casoSeleccionado.codigo,
@@ -373,6 +379,12 @@ export class CicloEjecucionComponent implements OnInit {
         resultadoEsperado: this.casoSeleccionado.resultadoEsperado,
         resultadoObtenido: this.formEjecucion.resultadoObtenido,
         observaciones:     this.formEjecucion.observaciones,
+        defectoTitulo:     this.formEjecucion.defTitulo,
+        defectoDescripcion:this.formEjecucion.defDescripcion,
+        defectoPasos:      this.formEjecucion.defPasosReproduccion,
+        defectoSeveridad:  this.formEjecucion.defSeveridad,
+        defectoPrioridad:  this.formEjecucion.defPrioridad,
+        defectoAsignadoA:  asignado ? this.nombreUsuario(asignado) : undefined,
         pasos:             this.pasosEjecucion,
       });
       this.toast.exito('Evidencia Word generada correctamente.');

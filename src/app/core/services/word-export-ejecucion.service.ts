@@ -17,6 +17,7 @@ export interface PasoEvidenciaWord {
 }
 
 export interface EjecucionEvidenciaWord {
+  esReporteDefecto: boolean;
   proyecto: string;
   ciclo: string;
   codigoCaso: string;
@@ -29,6 +30,12 @@ export interface EjecucionEvidenciaWord {
   resultadoEsperado?: string;
   resultadoObtenido?: string;
   observaciones?: string;
+  defectoTitulo?: string;
+  defectoDescripcion?: string;
+  defectoPasos?: string;
+  defectoSeveridad?: string;
+  defectoPrioridad?: string;
+  defectoAsignadoA?: string;
   pasos: PasoEvidenciaWord[];
 }
 
@@ -100,7 +107,12 @@ export class EjecucionWordExportService {
           new Paragraph({
             alignment: AlignmentType.CENTER,
             spacing: { after: 300 },
-            children: [new TextRun({ text: 'EVIDENCIA DE EJECUCIÓN', size: 34, bold: true, color: '1E3A5F' })],
+            children: [new TextRun({
+              text: data.esReporteDefecto ? 'REPORTE DE DEFECTO' : 'EVIDENCIA DE EJECUCIÓN',
+              size: 34,
+              bold: true,
+              color: data.esReporteDefecto ? 'B91C1C' : '1E3A5F',
+            })],
           }),
           this.tituloSeccion('CABECERA'),
           this.tablaInfo([
@@ -120,6 +132,17 @@ export class EjecucionWordExportService {
             ['Resultado obtenido', data.resultadoObtenido || '—'],
             ['Observaciones', data.observaciones || '—'],
           ]),
+          ...(data.esReporteDefecto ? [
+            this.tituloSeccion('DETALLE DEL DEFECTO'),
+            this.tablaInfo([
+              ['Título', data.defectoTitulo || '—'],
+              ['Descripción', data.defectoDescripcion || '—'],
+              ['Pasos para reproducir', data.defectoPasos || '—'],
+              ['Severidad', data.defectoSeveridad || '—'],
+              ['Prioridad', data.defectoPrioridad || '—'],
+              ['Asignado a', data.defectoAsignadoA || 'Sin asignar'],
+            ]),
+          ] : []),
           this.tituloSeccion('PASOS Y CAPTURAS'),
           ...contenidoPasos,
         ],
@@ -128,7 +151,7 @@ export class EjecucionWordExportService {
 
     const blob = await Packer.toBlob(doc);
     const codigo = (data.codigoCaso || 'caso-prueba').replace(/[^a-zA-Z0-9_-]+/g, '-');
-    saveAs(blob, `${codigo}-evidencia.docx`);
+    saveAs(blob, `${codigo}-${data.esReporteDefecto ? 'reporte-defecto' : 'evidencia'}.docx`);
   }
 
   private tituloSeccion(texto: string): Paragraph {
