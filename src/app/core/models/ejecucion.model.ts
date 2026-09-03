@@ -17,6 +17,7 @@ export interface EjecucionCasoPrueba {
   casoPruebaId: number;
   casoPruebaCodigo?: string;
   casoPruebaNombre?: string;
+  casoPruebaDescripcion?: string;
   proyectoId: number;
   proyectoNombre?: string;
   proyectoCodigo?: string;
