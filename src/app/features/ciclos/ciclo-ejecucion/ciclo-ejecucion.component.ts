@@ -354,8 +354,12 @@ export class CicloEjecucionComponent implements OnInit {
         .filter(p => p.estado === 'no_ok')
         .map(p => `${p.orden}. ${p.descripcion}`)
         .join('\n');
-    } else if (todosOk) {
-      this.formEjecucion.resultado = ResultadoEjecucion.APROBADO;
+    } else {
+      // Al corregir el último NO OK, el formulario de defecto debe ocultarse
+      // incluso si todavía quedan pasos pendientes por ejecutar.
+      this.formEjecucion.resultado = todosOk
+        ? ResultadoEjecucion.APROBADO
+        : '';
     }
   }
 
