@@ -42,6 +42,19 @@ export interface CasoCiclo {
   totalEjecucionesCiclo?: number;
 }
 
+export interface InformeCierreCiclo {
+  id: number;
+  version: number;
+  resultadoGlobal: string;
+  recomendacionQa: string;
+  conclusionQa: string;
+  justificacionBloqueados?: string;
+  resumen: any;
+  generadoPorNombre?: string;
+  correoEnviadoEn?: string;
+  creadoEn: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CicloService {
   private readonly url = `${environment.apiUrl}/ciclos-prueba`;
@@ -84,8 +97,16 @@ export class CicloService {
     return this.http.put<CicloPrueba>(`${this.url}/${id}`, ciclo);
   }
 
-  cerrar(id: number): Observable<CicloPrueba> {
-    return this.http.patch<CicloPrueba>(`${this.url}/${id}/cerrar`, {});
+  cerrar(id: number, datos: { conclusionQa: string; recomendacionQa: string; justificacionBloqueados?: string }): Observable<CicloPrueba> {
+    return this.http.patch<CicloPrueba>(`${this.url}/${id}/cerrar`, datos);
+  }
+
+  getInformes(id: number): Observable<InformeCierreCiclo[]> {
+    return this.http.get<InformeCierreCiclo[]>(`${this.url}/${id}/informes`);
+  }
+
+  descargarInforme(id: number, informeId: number): Observable<Blob> {
+    return this.http.get(`${this.url}/${id}/informes/${informeId}/word`, { responseType: 'blob' });
   }
 
   reabrir(id: number): Observable<CicloPrueba> {

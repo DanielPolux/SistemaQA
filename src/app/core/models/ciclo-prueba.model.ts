@@ -21,4 +21,10 @@ export interface CicloPrueba {
   totalEjecuciones?: number;
   planPruebaId?: number | null;
   planNombre?: string | null;
+  resultadoGlobal?: string;
+  recomendacionQa?: string;
+  conclusionQa?: string;
+  informeVersion?: number;
+  informeId?: number;
+  resumen?: any;
 }

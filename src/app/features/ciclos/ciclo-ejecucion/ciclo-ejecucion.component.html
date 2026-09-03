@@ -73,8 +73,31 @@
   }
 
   @if (ciclo?.estado === 'Cerrado') {
-    <div class="alert alert-warning" style="margin-bottom: 1rem;">
-      Este ciclo está cerrado. Reabre el ciclo para registrar ejecuciones.
+    <div class="card" style="margin-bottom:1rem;border-left:5px solid #2D4F72;padding:1rem;">
+      <h3 style="margin:0 0 .75rem;">Ciclo cerrado — {{ informesCierre.length ? informesCierre[0].resultadoGlobal : (ciclo?.resultadoGlobal ?? 'Finalizado') }}</h3>
+      @if (informesCierre[0]; as informe) {
+        <div class="detail-grid">
+          <div class="detail-row"><span class="detail-label">Recomendación QA</span><span class="detail-value"><strong>{{ informe.recomendacionQa }}</strong></span></div>
+          <div class="detail-row"><span class="detail-label">Aprobación</span><span class="detail-value">{{ informe.resumen.porcentajeAprobacion }}%</span></div>
+          <div class="detail-row"><span class="detail-label">Defectos abiertos</span><span class="detail-value">{{ informe.resumen.defectosAbiertos }}</span></div>
+          <div class="detail-row"><span class="detail-label">Críticos/altos abiertos</span><span class="detail-value">{{ informe.resumen.criticosAltosAbiertos }}</span></div>
+        </div>
+        <div class="detail-section"><h4 class="detail-section-title">Conclusión QA</h4><p class="detail-text">{{ informe.conclusionQa }}</p></div>
+      }
+      <p class="text-muted" style="margin:.75rem 0 0;">El ciclo no admite nuevas ejecuciones mientras permanezca cerrado.</p>
+      @if (informesCierre.length) {
+        <div class="detail-section">
+          <h4 class="detail-section-title">Historial de informes de cierre</h4>
+          @for (informe of informesCierre; track informe.id) {
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid #e5e7eb;">
+              <span><strong>E{{ informe.version.toString().padStart(2, '0') }}</strong> — {{ informe.creadoEn | date:'dd/MM/yyyy HH:mm' }} — {{ informe.generadoPorNombre }}</span>
+              <button class="btn btn-secondary btn-sm" (click)="descargarInformeCierre(informe)" [disabled]="descargandoInforme() === informe.id">
+                <i class="bi bi-file-earmark-word"></i> {{ descargandoInforme() === informe.id ? 'Generando...' : 'Descargar informe' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
@@ -479,6 +502,27 @@
             <p class="modal-subtitle">Resultado: {{ registro.resultado }} · Versión {{ formEjecucion.version }}</p>
           </div>
         </div>
+        @if (totalFallidosExactos > 0 || totalBloqueados > 0) {
+          <div class="alert alert-warning" style="margin-top:1rem;">El ciclo tiene {{ totalFallidosExactos }} caso(s) fallido(s) y {{ totalBloqueados }} bloqueado(s). Revisa la recomendación antes del cierre.</div>
+        }
+        <div class="form-group" style="margin-top:1rem;">
+          <label>Recomendación QA *</label>
+          <select class="form-control" [(ngModel)]="recomendacionQa">
+            <option value="Liberar">Liberar</option>
+            <option value="Liberar con observaciones">Liberar con observaciones</option>
+            <option value="No liberar">No liberar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Conclusión del responsable QA *</label>
+          <textarea class="form-control" rows="4" [(ngModel)]="conclusionQa" placeholder="Resume el resultado, los riesgos pendientes y la decisión de QA..."></textarea>
+        </div>
+        @if (totalBloqueados > 0) {
+          <div class="form-group">
+            <label>Justificación de casos bloqueados *</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="justificacionBloqueados" placeholder="Indica por qué se cierra el ciclo con casos bloqueados..."></textarea>
+          </div>
+        }
       </div>
       <div class="modal-body modal-body--confirm">
         <p class="confirm-msg">La ejecución se guardó correctamente.</p>
@@ -566,7 +610,7 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="cerrarFinalizarCiclo()" [disabled]="finalizandoCiclo()">Cancelar</button>
         <button class="btn btn-primary" (click)="confirmarFinalizarCiclo()" [disabled]="finalizandoCiclo()">
-          {{ finalizandoCiclo() ? 'Finalizando...' : 'Confirmar finalización' }}
+          {{ finalizandoCiclo() ? 'Generando y notificando...' : 'Finalizar y generar informe' }}
         </button>
       </div>
     </div>

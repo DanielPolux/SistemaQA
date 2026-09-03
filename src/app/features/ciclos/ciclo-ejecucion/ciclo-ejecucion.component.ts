@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
-import { CicloService, CasoCiclo } from '../../../core/services/ciclo.service';
+import { CicloService, CasoCiclo, InformeCierreCiclo } from '../../../core/services/ciclo.service';
 import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -52,6 +52,11 @@ export class CicloEjecucionComponent implements OnInit {
   modalFinalizarCiclo = signal(false);
   finalizandoCiclo = signal(false);
   errorFinalizarCiclo = '';
+  conclusionQa = '';
+  recomendacionQa: 'Liberar' | 'Liberar con observaciones' | 'No liberar' = 'Liberar';
+  justificacionBloqueados = '';
+  informesCierre: InformeCierreCiclo[] = [];
+  descargandoInforme = signal<number | null>(null);
 
   get pmUsuario(): Usuario | null {
     if (!this.pmProyectoId) return null;
@@ -184,6 +189,7 @@ export class CicloEjecucionComponent implements OnInit {
   abrirFinalizarCiclo(): void {
     if (!this.casos.length || this.totalPendientes > 0) return;
     this.errorFinalizarCiclo = '';
+    this.recomendacionQa = this.totalFallidosExactos || this.totalBloqueados ? 'No liberar' : this.totalOmitidos ? 'Liberar con observaciones' : 'Liberar';
     this.modalFinalizarCiclo.set(true);
   }
 
@@ -192,20 +198,53 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   confirmarFinalizarCiclo(): void {
+    if (!this.conclusionQa.trim()) {
+      this.errorFinalizarCiclo = 'Ingresa la conclusión del responsable QA.';
+      return;
+    }
+    if (this.totalBloqueados > 0 && !this.justificacionBloqueados.trim()) {
+      this.errorFinalizarCiclo = 'Justifica los casos bloqueados antes de finalizar.';
+      return;
+    }
     this.finalizandoCiclo.set(true);
     this.errorFinalizarCiclo = '';
-    this.cicloService.cerrar(this.cicloId).subscribe({
+    this.cicloService.cerrar(this.cicloId, {
+      conclusionQa: this.conclusionQa.trim(),
+      recomendacionQa: this.recomendacionQa,
+      justificacionBloqueados: this.justificacionBloqueados.trim() || undefined,
+    }).subscribe({
       next: ciclo => {
         this.ciclo = ciclo;
         this.finalizandoCiclo.set(false);
         this.modalFinalizarCiclo.set(false);
         this.limpiarSeleccion();
+        this.cargarInformesCierre();
         this.toast.exito('Ciclo de pruebas finalizado correctamente.');
       },
       error: err => {
         this.finalizandoCiclo.set(false);
         this.errorFinalizarCiclo = err?.error?.message ?? 'No se pudo finalizar el ciclo.';
       },
+    });
+  }
+
+  cargarInformesCierre(): void {
+    this.cicloService.getInformes(this.cicloId).subscribe(informes => this.informesCierre = informes);
+  }
+
+  descargarInformeCierre(informe: InformeCierreCiclo): void {
+    this.descargandoInforme.set(informe.id);
+    this.cicloService.descargarInforme(this.cicloId, informe.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.ciclo?.proyectoCodigo}-${this.ciclo?.nombre}-INFORME-CIERRE-E${String(informe.version).padStart(2, '0')}.docx`.replace(/[^a-zA-Z0-9_.-]+/g, '-');
+        a.click();
+        URL.revokeObjectURL(url);
+        this.descargandoInforme.set(null);
+      },
+      error: () => { this.descargandoInforme.set(null); this.toast.error('No se pudo descargar el informe.'); },
     });
   }
 
@@ -227,6 +266,7 @@ export class CicloEjecucionComponent implements OnInit {
       },
       error: () => { this.error = 'No se pudo cargar el ciclo.'; },
     });
+    this.cargarInformesCierre();
 
     this.cargarCasos();
   }

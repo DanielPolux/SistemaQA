@@ -288,7 +288,7 @@ export class CicloListComponent implements OnInit {
   get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
   cerrar(c: CicloPrueba): void {
-    this.service.cerrar(c.id).subscribe(() => this.cargar());
+    this.router.navigate(['/ciclos', c.id, 'ejecutar']);
   }
 
   reabrir(c: CicloPrueba): void {
