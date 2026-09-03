@@ -421,6 +421,7 @@ export class CicloEjecucionComponent implements OnInit {
       const asignado = this.usuarios.find(u => u.id === this.formEjecucion.defAsignadoA);
       await this.wordExport.exportarEjecucion({
         esReporteDefecto:   this.hayPasoNoOk,
+        codigoProyecto:    this.ciclo?.proyectoCodigo,
         proyecto:          this.ciclo?.proyectoNombre ?? '—',
         ciclo:             this.ciclo?.nombre ?? '—',
         codigoCaso:        this.casoSeleccionado.codigo,

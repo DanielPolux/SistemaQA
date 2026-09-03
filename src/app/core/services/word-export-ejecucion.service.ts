@@ -18,6 +18,7 @@ export interface PasoEvidenciaWord {
 
 export interface EjecucionEvidenciaWord {
   esReporteDefecto: boolean;
+  codigoProyecto?: string;
   proyecto: string;
   ciclo: string;
   codigoCaso: string;
@@ -121,7 +122,7 @@ export class EjecucionWordExportService {
           }),
           this.tituloSeccion('CABECERA'),
           this.tablaInfo([
-            ['Proyecto', data.proyecto || '—'],
+            ['Proyecto', [data.codigoProyecto, data.proyecto].filter(Boolean).join(' - ') || '—'],
             ['Ciclo de prueba', data.ciclo || '—'],
             ['Caso de prueba', `${data.codigoCaso} — ${data.nombreCaso}`],
             ['Tester', data.tester || '—'],
@@ -129,14 +130,14 @@ export class EjecucionWordExportService {
             ['Ambiente', data.ambiente || '—'],
             ['Versión', data.version || '—'],
             ['Resultado', data.resultado || 'Pendiente'],
-          ]),
+          ], 18),
           this.tituloSeccion('DETALLE DEL CASO'),
           this.tablaInfo([
             ['Descripción', data.descripcionCaso || '—'],
             ['Resultado esperado', data.resultadoEsperado || '—'],
             ['Resultado obtenido', data.resultadoObtenido || '—'],
             ['Observaciones', data.observaciones || '—'],
-          ]),
+          ], 18),
           ...(data.esReporteDefecto ? [
             this.tituloSeccion('DETALLE DEL DEFECTO'),
             this.tablaInfo([
@@ -155,8 +156,11 @@ export class EjecucionWordExportService {
     });
 
     const blob = await Packer.toBlob(doc);
-    const codigo = (data.codigoCaso || 'caso-prueba').replace(/[^a-zA-Z0-9_-]+/g, '-');
-    saveAs(blob, `${codigo}-${data.esReporteDefecto ? 'reporte-defecto' : 'evidencia'}.docx`);
+    const codigoCompleto = [data.codigoProyecto, data.codigoCaso]
+      .filter(Boolean)
+      .join('-')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-');
+    saveAs(blob, `${codigoCompleto || 'caso-prueba'}.docx`);
   }
 
   private tituloSeccion(texto: string): Paragraph {
