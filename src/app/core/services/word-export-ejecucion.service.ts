@@ -72,7 +72,7 @@ export class EjecucionWordExportService {
       }));
       contenidoPasos.push(this.tablaInfo([
         ['Acción', paso.descripcion || '—'],
-      ]));
+      ], 18));
 
       if (!paso.imagenes.length) {
         contenidoPasos.push(this.parrafo('Sin capturas para este paso.', '9CA3AF'));
@@ -168,19 +168,19 @@ export class EjecucionWordExportService {
     });
   }
 
-  private tablaInfo(filas: [string, string][]): Table {
+  private tablaInfo(filas: [string, string][], anchoEtiqueta = 28): Table {
     return new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: filas.map(([etiqueta, valor]) => new TableRow({ children: [
         new TableCell({
-          width: { size: 28, type: WidthType.PERCENTAGE },
+          width: { size: anchoEtiqueta, type: WidthType.PERCENTAGE },
           verticalAlign: VerticalAlign.CENTER,
           shading: { fill: 'EEF2F7' },
           margins: { top: 80, bottom: 80, left: 120, right: 120 },
           children: [new Paragraph({ children: [new TextRun({ text: etiqueta, bold: true, size: 19, color: '374151' })] })],
         }),
         new TableCell({
-          width: { size: 72, type: WidthType.PERCENTAGE },
+          width: { size: 100 - anchoEtiqueta, type: WidthType.PERCENTAGE },
           verticalAlign: VerticalAlign.CENTER,
           margins: { top: 80, bottom: 80, left: 120, right: 120 },
           children: [new Paragraph({ children: [new TextRun({ text: valor, size: 19 })] })],
