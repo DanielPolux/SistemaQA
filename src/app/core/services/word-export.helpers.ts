@@ -1,7 +1,7 @@
 import {
   AlignmentType, BorderStyle, HeadingLevel, ImageRun,
   Paragraph, Table, TableCell, TableRow, TextRun,
-  WidthType, VerticalAlign,
+  TableLayoutType, WidthType, VerticalAlign,
 } from 'docx';
 
 type TipoImagenDocx = 'png' | 'jpg' | 'gif' | 'bmp';
@@ -25,14 +25,19 @@ export function sectionTitle(text: string): Paragraph {
 }
 
 export function infoTable(rows: [string, string][], labelWidth = 28): Table {
+  const tableWidth = 9000;
+  const labelWidthDxa = Math.round(tableWidth * labelWidth / 100);
+  const detailWidthDxa = tableWidth - labelWidthDxa;
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: tableWidth, type: WidthType.DXA },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [labelWidthDxa, detailWidthDxa],
     margins: { bottom: 240 },
     rows: rows.map(([label, value]) =>
       new TableRow({
         children: [
           new TableCell({
-            width: { size: labelWidth, type: WidthType.PERCENTAGE },
+            width: { size: labelWidthDxa, type: WidthType.DXA },
             verticalAlign: VerticalAlign.CENTER,
             shading: { fill: 'EEF2F7' },
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
@@ -43,7 +48,7 @@ export function infoTable(rows: [string, string][], labelWidth = 28): Table {
             ],
           }),
           new TableCell({
-            width: { size: 100 - labelWidth, type: WidthType.PERCENTAGE },
+            width: { size: detailWidthDxa, type: WidthType.DXA },
             verticalAlign: VerticalAlign.CENTER,
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
             children: [

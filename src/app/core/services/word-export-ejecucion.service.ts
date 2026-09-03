@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import {
   AlignmentType, BorderStyle, Document, HeadingLevel, ImageRun,
   Packer, Paragraph, Table, TableCell, TableRow, TextRun,
-  VerticalAlign, WidthType,
+  TableLayoutType, VerticalAlign, WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { evidenciasParagraphs } from './word-export.helpers';
@@ -198,18 +198,23 @@ export class EjecucionWordExportService {
   }
 
   private tablaInfo(filas: [string, string][], anchoEtiqueta = 18): Table {
+    const anchoTabla = 9000;
+    const anchoEtiquetaDxa = Math.round(anchoTabla * anchoEtiqueta / 100);
+    const anchoDetalleDxa = anchoTabla - anchoEtiquetaDxa;
     return new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
+      width: { size: anchoTabla, type: WidthType.DXA },
+      layout: TableLayoutType.FIXED,
+      columnWidths: [anchoEtiquetaDxa, anchoDetalleDxa],
       rows: filas.map(([etiqueta, valor]) => new TableRow({ children: [
         new TableCell({
-          width: { size: anchoEtiqueta, type: WidthType.PERCENTAGE },
+          width: { size: anchoEtiquetaDxa, type: WidthType.DXA },
           verticalAlign: VerticalAlign.CENTER,
           shading: { fill: 'EEF2F7' },
           margins: { top: 80, bottom: 80, left: 120, right: 120 },
           children: [new Paragraph({ children: [new TextRun({ text: etiqueta, bold: true, size: 19, color: '374151' })] })],
         }),
         new TableCell({
-          width: { size: 100 - anchoEtiqueta, type: WidthType.PERCENTAGE },
+          width: { size: anchoDetalleDxa, type: WidthType.DXA },
           verticalAlign: VerticalAlign.CENTER,
           margins: { top: 80, bottom: 80, left: 120, right: 120 },
           children: [new Paragraph({ children: [new TextRun({ text: valor, size: 19 })] })],
