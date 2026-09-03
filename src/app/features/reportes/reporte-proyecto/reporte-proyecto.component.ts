@@ -26,6 +26,13 @@ const PALETA_ESTADOS = [
   COLORES.rojo,  COLORES.gris, COLORES.morado, COLORES.amarillo,
 ];
 
+const COLOR_RESULTADO: Record<string, string> = {
+  Aprobado:  COLORES.verde,
+  Fallido:   COLORES.rojo,
+  Bloqueado: COLORES.naranja,
+  Omitido:   COLORES.gris,
+};
+
 @Component({
   selector: 'app-reporte-proyecto',
   standalone: true,
@@ -104,9 +111,11 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
 
     this.charts.push(
       this.crearTorta(this.chartCasosEstadoRef, d.casosPorEstado),
-      this.crearTorta(this.chartResultadosRef,  d.resultadosEjecucion, [
-        COLORES.verde, COLORES.rojo, COLORES.naranja, COLORES.gris,
-      ]),
+      this.crearTorta(
+        this.chartResultadosRef,
+        d.resultadosEjecucion,
+        d.resultadosEjecucion.map(item => COLOR_RESULTADO[item.label] ?? COLORES.gris),
+      ),
       this.crearBarrasHorizontal(this.chartDefSeveridadRef, d.defectosPorSeveridad, [
         COLORES.rojo, COLORES.naranja, COLORES.amarillo, COLORES.azul,
       ]),
