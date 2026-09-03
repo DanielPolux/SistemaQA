@@ -1086,6 +1086,17 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   background: var(--color-surface-alt);
 }
 
+.modal-footer--registro {
+  flex-direction: column;
+
+  .btn {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+    white-space: normal;
+  }
+}
+
 .confirm-msg { font-size: 15px; margin: 0 0 8px; line-height: 1.6; }
 .confirm-sub { font-size: 13px; color: var(--color-text-muted); margin: 0; }
 

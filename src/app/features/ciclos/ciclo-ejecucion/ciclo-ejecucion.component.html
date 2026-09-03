@@ -475,7 +475,7 @@
           <p class="confirm-sub">Defecto creado: <strong>{{ registro.codigoDefecto }}</strong></p>
         }
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer modal-footer--registro">
         @if (registro.resultado === 'Aprobado') {
           <button class="btn btn-secondary" (click)="generarEvidenciaWord()" [disabled]="generandoWord()">
             <i class="bi bi-file-earmark-word"></i>
