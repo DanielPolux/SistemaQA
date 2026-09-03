@@ -9,6 +9,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { UploadService } from '../../../core/services/upload.service';
 import { EjecucionCasoPrueba, Proyecto, Usuario, ResultadoEjecucion, AmbienteEjecucion } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
+import { DefectService } from '../../../core/services/defect.service';
+import { TestCaseService } from '../../../core/services/test-case.service';
+import { WordExportService } from '../../../core/services/word-export.service';
 
 @Component({
   selector: 'app-ejecucion-list',
@@ -22,6 +25,9 @@ export class EjecucionListComponent implements OnInit {
   private userService    = inject(UserService);
   private toast          = inject(ToastService);
   private uploadService  = inject(UploadService);
+  private defectService  = inject(DefectService);
+  private testCaseService = inject(TestCaseService);
+  private wordExport     = inject(WordExportService);
   auth                   = inject(AuthService);
 
   urlEvidencia(rutaRelativa: string): string {
@@ -123,6 +129,7 @@ export class EjecucionListComponent implements OnInit {
   // ─── Modal Ver ───────────────────────────────────────────────────────────
   modalVerAbierto  = signal(false);
   ejecucionVer: EjecucionCasoPrueba | null = null;
+  generandoWord = signal(false);
 
   abrirVer(e: EjecucionCasoPrueba): void {
     this.ejecucionVer = e;
@@ -132,5 +139,49 @@ export class EjecucionListComponent implements OnInit {
   cerrarVer(): void {
     this.modalVerAbierto.set(false);
     this.ejecucionVer = null;
+  }
+
+  descargarWord(e: EjecucionCasoPrueba): void {
+    if (this.generandoWord()) return;
+    this.generandoWord.set(true);
+    if (e.resultado === ResultadoEjecucion.FALLIDO && e.defectoId) {
+      this.defectService.getById(e.defectoId).subscribe({
+        next: defecto => this.wordExport.exportarDefecto(defecto)
+          .then(() => this.toast.exito('Reporte de defecto generado.'))
+          .catch(() => this.toast.error('No se pudo generar el reporte.'))
+          .finally(() => this.generandoWord.set(false)),
+        error: () => { this.generandoWord.set(false); this.toast.error('No se pudo cargar el defecto asociado.'); },
+      });
+      return;
+    }
+    this.testCaseService.getById(e.casoPruebaId).subscribe({
+      next: caso => this.wordExport.exportarEjecucion({
+        esReporteDefecto: false,
+        codigoProyecto: e.proyectoCodigo,
+        proyecto: e.proyectoNombre ?? '—',
+        ciclo: e.cicloNombre ?? '—',
+        codigoCaso: e.casoPruebaCodigo ?? caso.codigo ?? 'caso-prueba',
+        nombreCaso: e.casoPruebaNombre ?? caso.nombre,
+        descripcionCaso: caso.descripcion,
+        tester: e.testerNombre ?? '—',
+        ambiente: e.ambiente,
+        version: e.version,
+        resultado: e.resultado,
+        resultadoEsperado: caso.resultadoEsperado,
+        resultadoObtenido: e.resultadoObtenido,
+        observaciones: e.observaciones,
+        pasos: (caso.pasos ?? []).map(p => ({
+          orden: p.orden,
+          descripcion: p.descripcion,
+          resultadoEsperado: p.resultadoEsperado,
+          estado: 'ok' as const,
+          imagenes: [],
+        })),
+        evidencias: e.evidencias,
+      }).then(() => this.toast.exito('Evidencia Word generada.'))
+        .catch(() => this.toast.error('No se pudo generar la evidencia.'))
+        .finally(() => this.generandoWord.set(false)),
+      error: () => { this.generandoWord.set(false); this.toast.error('No se pudo cargar el caso de prueba.'); },
+    });
   }
 }

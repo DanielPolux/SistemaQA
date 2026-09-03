@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   AlignmentType, BorderStyle, Document, HeadingLevel, ImageRun,
   Packer, Paragraph, Table, TableCell, TableRow, TextRun,
   VerticalAlign, WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import { evidenciasParagraphs } from './word-export.helpers';
+import { UploadService } from './upload.service';
 
 type TipoImagenDocx = 'png' | 'jpg' | 'gif' | 'bmp';
 
@@ -40,10 +42,13 @@ export interface EjecucionEvidenciaWord {
   bloqueadoPorCaso?: string;
   defectoBloqueante?: string;
   pasos: PasoEvidenciaWord[];
+  evidencias?: { url: string; nombre: string }[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class EjecucionWordExportService {
+  private uploadService = inject(UploadService);
+
   async exportar(data: EjecucionEvidenciaWord): Promise<void> {
     const fecha = new Date().toLocaleString('es-PE', {
       day: '2-digit', month: '2-digit', year: 'numeric',
@@ -103,6 +108,9 @@ export class EjecucionWordExportService {
         }
       }
     }
+    const evidenciasGenerales = data.evidencias?.length
+      ? await evidenciasParagraphs(data.evidencias, ruta => this.uploadService.resolverUrl(ruta))
+      : [];
 
     const doc = new Document({
       sections: [{
@@ -161,6 +169,10 @@ export class EjecucionWordExportService {
           ] : []),
           this.tituloSeccion('PASOS Y CAPTURAS'),
           ...contenidoPasos,
+          ...(evidenciasGenerales.length ? [
+            this.tituloSeccion('EVIDENCIAS ADJUNTAS'),
+            ...evidenciasGenerales,
+          ] : []),
         ],
       }],
     });

@@ -293,6 +293,17 @@
       </div>
 
       <div class="modal-footer">
+        @if (ejecucionVer.resultado === 'Aprobado') {
+          <button class="btn btn-secondary" (click)="descargarWord(ejecucionVer)" [disabled]="generandoWord()">
+            <i class="bi bi-file-earmark-word"></i>
+            {{ generandoWord() ? 'Generando...' : 'Generar Evidencia Word' }}
+          </button>
+        } @else if (ejecucionVer.resultado === 'Fallido' && ejecucionVer.defectoId) {
+          <button class="btn btn-danger" (click)="descargarWord(ejecucionVer)" [disabled]="generandoWord()">
+            <i class="bi bi-file-earmark-word"></i>
+            {{ generandoWord() ? 'Generando...' : 'Generar Reporte Defecto' }}
+          </button>
+        }
         <button class="btn btn-secondary" (click)="cerrarVer()">Cerrar</button>
       </div>
 
