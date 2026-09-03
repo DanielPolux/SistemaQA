@@ -275,6 +275,21 @@
             </div>
           </div>
         }
+        @if (ejecucionVer.bloqueadoPorCasoCodigo) {
+          <div class="detail-section">
+            <h4 class="detail-section-title">Origen del bloqueo</h4>
+            <div class="detail-grid">
+              <div class="detail-row">
+                <span class="detail-label">Caso bloqueante</span>
+                <span class="detail-value">{{ ejecucionVer.bloqueadoPorCasoCodigo }} - {{ ejecucionVer.bloqueadoPorCasoNombre }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Defecto asociado</span>
+                <span class="detail-value">{{ ejecucionVer.defectoCodigo ?? '—' }}</span>
+              </div>
+            </div>
+          </div>
+        }
       </div>
 
       <div class="modal-footer">

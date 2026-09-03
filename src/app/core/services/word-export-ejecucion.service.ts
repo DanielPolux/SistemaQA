@@ -37,6 +37,8 @@ export interface EjecucionEvidenciaWord {
   defectoSeveridad?: string;
   defectoPrioridad?: string;
   defectoAsignadoA?: string;
+  bloqueadoPorCaso?: string;
+  defectoBloqueante?: string;
   pasos: PasoEvidenciaWord[];
 }
 
@@ -148,6 +150,14 @@ export class EjecucionWordExportService {
               ['Prioridad', data.defectoPrioridad || '—'],
               ['Asignado a', data.defectoAsignadoA || 'Sin asignar'],
             ]),
+          ] : []),
+          ...(data.bloqueadoPorCaso ? [
+            this.tituloSeccion('MOTIVO DEL BLOQUEO'),
+            this.tablaInfo([
+              ['Caso bloqueante', data.bloqueadoPorCaso],
+              ['Defecto asociado', data.defectoBloqueante || '—'],
+              ['Detalle', data.resultadoObtenido || '—'],
+            ], 18),
           ] : []),
           this.tituloSeccion('PASOS Y CAPTURAS'),
           ...contenidoPasos,

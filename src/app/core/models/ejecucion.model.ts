@@ -35,6 +35,9 @@ export interface EjecucionCasoPrueba {
   defectoId?: number;
   defectoCodigo?: string;
   defectoTitulo?: string;
+  bloqueadoPorCasoId?: number;
+  bloqueadoPorCasoCodigo?: string;
+  bloqueadoPorCasoNombre?: string;
   desarrolladorId?: number;
   desarrolladorNombre?: string;
   observaciones?: string;

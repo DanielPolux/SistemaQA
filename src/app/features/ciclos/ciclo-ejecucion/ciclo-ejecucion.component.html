@@ -172,6 +172,42 @@
                         rows="2" readonly class="input-readonly"></textarea>
             </div>
 
+            <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+              <button type="button" class="btn"
+                      [class.btn-warning]="!esBloqueado"
+                      [class.btn-secondary]="esBloqueado"
+                      (click)="alternarBloqueado()">
+                @if (esBloqueado) { Quitar bloqueo } @else { <i class="bi bi-slash-circle"></i> Marcar caso como Bloqueado }
+              </button>
+            </div>
+
+            @if (esBloqueado) {
+              <div class="bloqueo-section">
+                <div class="defecto-section-title" style="color:#92400e;">Datos del bloqueo</div>
+                <div class="form-group">
+                  <label>Caso fallido que origina el bloqueo <span class="req">*</span></label>
+                  <select [(ngModel)]="formEjecucion.bloqueadoPorCasoId" (change)="cargarDefectosBloqueantes()">
+                    <option [ngValue]="null">Seleccionar caso...</option>
+                    @for (c of casosFallidosDelCiclo; track c.id) {
+                      <option [ngValue]="c.id">{{ c.codigo }} - {{ c.nombre }}</option>
+                    }
+                  </select>
+                  @if (casosFallidosDelCiclo.length === 0) {
+                    <small class="text-muted">No hay casos fallidos registrados en este ciclo.</small>
+                  }
+                </div>
+                <div class="form-group">
+                  <label>Defecto asociado <span class="req">*</span></label>
+                  <select [(ngModel)]="formEjecucion.defectoBloqueanteId" [disabled]="!formEjecucion.bloqueadoPorCasoId">
+                    <option [ngValue]="null">Seleccionar defecto...</option>
+                    @for (d of defectosBloqueantes; track d.id) {
+                      <option [ngValue]="d.id">{{ d.codigoProyecto ?? d.codigo }} - {{ d.titulo }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            }
+
             <div class="form-row">
               <div class="form-group">
                 <label>Ambiente</label>

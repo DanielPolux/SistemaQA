@@ -13,7 +13,7 @@ import { WordExportService } from '../../../core/services/word-export.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
-  SeveridadDefecto, PrioridadDefecto,
+  SeveridadDefecto, PrioridadDefecto, Defecto,
 } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -86,6 +86,7 @@ export class CicloEjecucionComponent implements OnInit {
   pasoFallidoIdx: number | null = null;
   motivoBloqueo = '';
   errorDecisionFallo = '';
+  defectosBloqueantes: Defecto[] = [];
 
   formEjecucion = {
     testerId:             0,
@@ -102,6 +103,8 @@ export class CicloEjecucionComponent implements OnInit {
     defSeveridad:         '' as SeveridadDefecto | '',
     defPrioridad:         '' as PrioridadDefecto | '',
     defAsignadoA:         null as number | null,
+    bloqueadoPorCasoId:   null as number | null,
+    defectoBloqueanteId:  null as number | null,
   };
 
   get esFallido(): boolean {
@@ -110,6 +113,12 @@ export class CicloEjecucionComponent implements OnInit {
 
   get hayPasoNoOk(): boolean {
     return this.pasosEjecucion.some(p => p.estado === 'no_ok');
+  }
+
+  get esBloqueado(): boolean { return this.formEjecucion.resultado === ResultadoEjecucion.BLOQUEADO; }
+
+  get casosFallidosDelCiclo(): CasoCiclo[] {
+    return this.casos.filter(c => c.id !== this.casoSeleccionado?.id && c.resultadoCiclo === ResultadoEjecucion.FALLIDO);
   }
 
   // ─── Pagination for case list ────────────────────────────────────────────
@@ -256,6 +265,8 @@ export class CicloEjecucionComponent implements OnInit {
       defSeveridad:         '' as SeveridadDefecto | '',
       defPrioridad:         '' as PrioridadDefecto | '',
       defAsignadoA:         this.pmProyectoId ?? null,
+      bloqueadoPorCasoId:   null,
+      defectoBloqueanteId:  null,
     };
     this.ejecucionService.getByCasoPrueba(caso.id, this.cicloId).subscribe(ejecuciones => {
       this.formEjecucion.version = `E${String(ejecuciones.length + 1).padStart(2, '0')}`;
@@ -361,6 +372,25 @@ export class CicloEjecucionComponent implements OnInit {
     }
   }
 
+  alternarBloqueado(): void {
+    if (this.esBloqueado) {
+      this.formEjecucion.resultado = '';
+      this.formEjecucion.bloqueadoPorCasoId = null;
+      this.formEjecucion.defectoBloqueanteId = null;
+      this.defectosBloqueantes = [];
+      return;
+    }
+    this.pasosEjecucion = this.pasosEjecucion.map(p => ({ ...p, estado: 'pendiente' }));
+    this.formEjecucion.resultado = ResultadoEjecucion.BLOQUEADO;
+  }
+
+  cargarDefectosBloqueantes(): void {
+    this.formEjecucion.defectoBloqueanteId = null;
+    this.defectosBloqueantes = [];
+    const casoId = this.formEjecucion.bloqueadoPorCasoId;
+    if (casoId) this.defectService.getByCasoPrueba(casoId).subscribe(ds => this.defectosBloqueantes = ds);
+  }
+
   continuarTrasFallo(): void {
     this.cerrarDecisionFallo();
   }
@@ -440,6 +470,8 @@ export class CicloEjecucionComponent implements OnInit {
         defectoSeveridad:  this.formEjecucion.defSeveridad,
         defectoPrioridad:  this.formEjecucion.defPrioridad,
         defectoAsignadoA:  asignado ? this.nombreUsuario(asignado) : undefined,
+        bloqueadoPorCaso:  this.casoBloqueanteTexto(),
+        defectoBloqueante: this.defectoBloqueanteTexto(),
         pasos:             this.pasosEjecucion,
       });
       this.toast.exito('Evidencia Word generada correctamente.');
@@ -466,6 +498,10 @@ export class CicloEjecucionComponent implements OnInit {
       this.errorEjecucion = 'Para resultado Fallido, detalla la Observación (qué se observó al fallar el caso).';
       return;
     }
+    if (this.esBloqueado && (!f.bloqueadoPorCasoId || !f.defectoBloqueanteId)) {
+      this.errorEjecucion = 'Para un caso Bloqueado selecciona el caso fallido y el defecto que impiden su ejecución.';
+      return;
+    }
     if (this.subiendoEvidencia()) {
       this.errorEjecucion = 'Espera a que termine de subirse la evidencia antes de guardar.';
       return;
@@ -488,6 +524,8 @@ export class CicloEjecucionComponent implements OnInit {
       evidencias:        f.evidencias.length ? f.evidencias : undefined,
       observaciones:     f.observaciones || undefined,
       desarrolladorId:   esFallido && f.defAsignadoA ? f.defAsignadoA : undefined,
+      bloqueadoPorCasoId: this.esBloqueado ? f.bloqueadoPorCasoId : undefined,
+      defectoId:          this.esBloqueado ? f.defectoBloqueanteId : undefined,
       ...(esFallido && {
         defectoData: {
           titulo:            f.defTitulo.trim(),
@@ -540,6 +578,16 @@ export class CicloEjecucionComponent implements OnInit {
 
   nombreUsuario(u: Usuario): string {
     return `${u.nombre} ${u.apellido}`;
+  }
+
+  private casoBloqueanteTexto(): string | undefined {
+    const caso = this.casos.find(c => c.id === this.formEjecucion.bloqueadoPorCasoId);
+    return caso ? `${caso.codigo} - ${caso.nombre}` : undefined;
+  }
+
+  private defectoBloqueanteTexto(): string | undefined {
+    const defecto = this.defectosBloqueantes.find(d => d.id === this.formEjecucion.defectoBloqueanteId);
+    return defecto ? `${defecto.codigoProyecto ?? defecto.codigo} - ${defecto.titulo}` : undefined;
   }
 
   private pasosATexto(pasos: any[]): string {
