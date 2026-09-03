@@ -6,14 +6,24 @@
     </div>
   </div>
 
-  <!-- Selector de proyecto -->
+  <!-- Selectores en cascada: proyecto → ciclo -->
   <div class="reporte-selector">
-    <label class="form-label">Selecciona un proyecto</label>
+    <label class="form-label">1. Selecciona un proyecto</label>
     <div class="reporte-selector-row">
       <select class="form-control reporte-select" [(ngModel)]="proyectoId" (change)="seleccionarProyecto()">
         <option [ngValue]="null" disabled>-- Elige un proyecto --</option>
         @for (p of proyectos; track p.id) {
           <option [ngValue]="p.id">{{ p.codigo }} · {{ p.nombre }}</option>
+        }
+      </select>
+    </div>
+    <label class="form-label" style="margin-top:1rem;">2. Selecciona un ciclo de prueba</label>
+    <div class="reporte-selector-row">
+      <select class="form-control reporte-select" [(ngModel)]="cicloId" (change)="seleccionarCiclo()" [disabled]="!proyectoId">
+        <option [ngValue]="null" disabled>-- Elige un ciclo --</option>
+        <option [ngValue]="0">Todos los ciclos (reporte general del proyecto)</option>
+        @for (c of ciclos; track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }} · {{ c.estado }}</option>
         }
       </select>
     </div>
@@ -26,7 +36,7 @@
     <div class="empty-state"><p>{{ error() }}</p></div>
   } @else if (!datos()) {
     <div class="empty-state">
-      <p>Selecciona un proyecto para ver sus estadísticas y gráficas.</p>
+      <p>Selecciona primero un proyecto y después un ciclo de prueba para ver sus estadísticas.</p>
     </div>
   }
 
@@ -38,6 +48,9 @@
       <h3>{{ d.proyecto.nombre }}</h3>
       <span class="detail-cliente">{{ d.proyecto.cliente }}</span>
       <span class="badge">{{ d.proyecto.estado }}</span>
+      @if (d.ciclo) {
+        <span class="badge badge-version">Ciclo: {{ d.ciclo.nombre }} · {{ d.ciclo.estado }}</span>
+      }
     </div>
 
     <!-- KPI cards -->

@@ -27,6 +27,7 @@ export interface AvanceCiclo {
 
 export interface ReporteProyecto {
   proyecto: { id: number; nombre: string; codigo: string; cliente: string; estado: string };
+  ciclo?: { id: number; nombre: string; estado: string; ambiente?: string };
   resumen: ReporteResumen;
   casosPorEstado: ChartItem[];
   resultadosEjecucion: ChartItem[];
@@ -44,5 +45,9 @@ export class ReporteService {
 
   getReporteProyecto(id: number): Observable<ReporteProyecto> {
     return this.http.get<ReporteProyecto>(`${this.url}/proyecto/${id}`);
+  }
+
+  getReporteCiclo(proyectoId: number, cicloId: number): Observable<ReporteProyecto> {
+    return this.http.get<ReporteProyecto>(`${this.url}/proyecto/${proyectoId}/ciclo/${cicloId}`);
   }
 }

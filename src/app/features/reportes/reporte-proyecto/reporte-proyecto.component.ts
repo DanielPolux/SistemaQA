@@ -5,6 +5,8 @@ import { Chart, registerables } from 'chart.js';
 import { ProjectService } from '../../../core/services/project.service';
 import { ReporteService, ReporteProyecto, ChartItem, AvanceCiclo } from '../../../core/services/reporte.service';
 import { Proyecto } from '../../../core/models';
+import { CicloPrueba } from '../../../core/models';
+import { CicloService } from '../../../core/services/ciclo.service';
 
 Chart.register(...registerables);
 
@@ -40,9 +42,12 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
 
   private proyectoService = inject(ProjectService);
   private reporteService  = inject(ReporteService);
+  private cicloService    = inject(CicloService);
 
   proyectos: Proyecto[]        = [];
   proyectoId: number | null    = null;
+  cicloId: number | null       = null;
+  ciclos: CicloPrueba[]        = [];
   datos  = signal<ReporteProyecto | null>(null);
   cargando = signal(false);
   error    = signal('');
@@ -58,13 +63,29 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.destruirGraficas(); }
 
   seleccionarProyecto(): void {
+    this.cicloId = null;
+    this.ciclos = [];
+    this.error.set('');
+    this.datos.set(null);
+    this.destruirGraficas();
     if (!this.proyectoId) return;
+    this.cicloService.getAll({ proyectoId: this.proyectoId, porPagina: 500 }).subscribe({
+      next: r => { this.ciclos = r.datos; },
+      error: () => this.error.set('No se pudieron cargar los ciclos del proyecto.'),
+    });
+  }
+
+  seleccionarCiclo(): void {
+    if (!this.proyectoId || this.cicloId === null) return;
     this.cargando.set(true);
     this.error.set('');
     this.datos.set(null);
     this.destruirGraficas();
 
-    this.reporteService.getReporteProyecto(this.proyectoId).subscribe({
+    const consulta = this.cicloId === 0
+      ? this.reporteService.getReporteProyecto(this.proyectoId)
+      : this.reporteService.getReporteCiclo(this.proyectoId, this.cicloId);
+    consulta.subscribe({
       next: (data) => {
         this.datos.set(data);
         this.cargando.set(false);
@@ -72,7 +93,7 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.cargando.set(false);
-        this.error.set('No se pudo cargar el reporte del proyecto.');
+        this.error.set('No se pudo cargar el reporte seleccionado.');
       },
     });
   }
