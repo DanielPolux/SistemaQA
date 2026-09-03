@@ -228,7 +228,7 @@
 
             <!-- Steps -->
             @if (pasosEjecucion.length > 0) {
-              <div class="pasos-ejecucion">
+              <div class="pasos-ejecucion" [class.pasos-ejecucion--disabled]="esBloqueado">
                 <div class="pasos-ejecucion-header">
                   <span class="pasos-ejecucion-title">
                     <i class="bi bi-list-check"></i> Pasos de Prueba
@@ -249,11 +249,13 @@
                         }
                         <div class="paso-acciones">
                           <button type="button" class="paso-btn paso-btn--ok"
+                                  [disabled]="esBloqueado"
                                   [class.paso-btn--active]="paso.estado === 'ok'"
                                   (click)="marcarPaso(idx, 'ok')">
                             <i class="bi bi-check-lg"></i> OK
                           </button>
                           <button type="button" class="paso-btn paso-btn--no-ok"
+                                  [disabled]="esBloqueado"
                                   [class.paso-btn--active]="paso.estado === 'no_ok'"
                                   (click)="marcarPaso(idx, 'no_ok')">
                             <i class="bi bi-x-lg"></i> NO OK
@@ -275,14 +277,14 @@
                           </div>
                         }
                         <div class="paso-imagen-row">
-                          <div class="paso-imagen-zona" tabindex="0" (paste)="pegarImagenPaso(idx, $event)">
+                          <div class="paso-imagen-zona" [attr.tabindex]="esBloqueado ? -1 : 0" (paste)="pegarImagenPaso(idx, $event)">
                             <i class="bi bi-clipboard-image"></i>
                             <span>Clic aquí y pega (Ctrl+V)</span>
                           </div>
                           <label [for]="'paso-img-ce-' + idx" class="paso-imagen-file-btn" title="Seleccionar imagen(es)">
                             <i class="bi bi-folder2-open"></i>
                           </label>
-                          <input [id]="'paso-img-ce-' + idx" type="file" accept="image/*" multiple style="display:none"
+                          <input [id]="'paso-img-ce-' + idx" type="file" accept="image/*" multiple style="display:none" [disabled]="esBloqueado"
                                  (change)="onFileSelectedPaso($event, idx)" />
                         </div>
                       </div>

@@ -1572,6 +1572,14 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   margin-bottom: 1.25rem;
 }
 
+.pasos-ejecucion--disabled {
+  .pasos-list { opacity: 0.55; }
+  .paso-btn, .paso-imagen-zona, .paso-imagen-file-btn, .paso-imagen-remove {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+}
+
 .pasos-ejecucion-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 8px 14px;

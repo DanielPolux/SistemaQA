@@ -289,6 +289,7 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   pegarImagenPaso(idx: number, event: ClipboardEvent): void {
+    if (this.esBloqueado) return;
     event.preventDefault();
     const items = event.clipboardData?.items;
     if (!items) return;
@@ -302,6 +303,7 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   onFileSelectedPaso(event: Event, idx: number): void {
+    if (this.esBloqueado) return;
     const files = (event.target as HTMLInputElement).files;
     if (files) Array.from(files).forEach(f => { if (f.type.startsWith('image/')) this.leerArchivoImagenPaso(f, idx); });
     (event.target as HTMLInputElement).value = '';
