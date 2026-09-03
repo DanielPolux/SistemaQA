@@ -87,6 +87,7 @@ export class CicloEjecucionComponent implements OnInit {
   motivoBloqueo = '';
   errorDecisionFallo = '';
   defectosBloqueantes: Defecto[] = [];
+  private resultadoObtenidoAutogenerado: string | null = null;
 
   formEjecucion = {
     testerId:             0,
@@ -141,6 +142,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.casoSeleccionado = null;
     this.registroExitoso.set(null);
     this.errorEjecucion = '';
+    this.resultadoObtenidoAutogenerado = null;
   }
 
   // ─── Stats ───────────────────────────────────────────────────────────────
@@ -241,6 +243,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.registroExitoso.set(null);
     this.casoSeleccionado = caso;
     this.errorEjecucion = '';
+    this.resultadoObtenidoAutogenerado = null;
     this.pasosEjecucion = (caso.pasos ?? []).map((p: any) => ({
       orden: p.orden,
       descripcion: p.descripcion,
@@ -279,6 +282,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.errorEvidencia = '';
     this.registroExitoso.set(null);
     this.pasosEjecucion = [];
+    this.resultadoObtenidoAutogenerado = null;
     this.cerrarDecisionFallo();
   }
 
@@ -382,6 +386,7 @@ export class CicloEjecucionComponent implements OnInit {
       this.defectosBloqueantes = [];
       return;
     }
+    this.limpiarResultadoObtenidoAutomatico();
     this.pasosEjecucion = this.pasosEjecucion.map(p => ({ ...p, estado: 'pendiente' }));
     this.formEjecucion.resultado = ResultadoEjecucion.BLOQUEADO;
   }
@@ -435,6 +440,7 @@ export class CicloEjecucionComponent implements OnInit {
     const hayNoOk  = pasos.some(p => p.estado === 'no_ok');
     const todosOk  = pasos.every(p => p.estado === 'ok');
     if (hayNoOk) {
+      this.limpiarResultadoObtenidoAutomatico();
       this.formEjecucion.resultado = ResultadoEjecucion.FALLIDO;
       this.formEjecucion.defPasosReproduccion = pasos
         .filter(p => p.estado === 'no_ok')
@@ -447,7 +453,25 @@ export class CicloEjecucionComponent implements OnInit {
       this.formEjecucion.resultado = todosOk
         ? ResultadoEjecucion.APROBADO
         : '';
+      if (todosOk) {
+        const esperado = this.casoSeleccionado?.resultadoEsperado?.trim() ?? '';
+        if (esperado && (!this.formEjecucion.resultadoObtenido.trim()
+          || this.formEjecucion.resultadoObtenido === this.resultadoObtenidoAutogenerado)) {
+          this.formEjecucion.resultadoObtenido = esperado;
+          this.resultadoObtenidoAutogenerado = esperado;
+        }
+      } else {
+        this.limpiarResultadoObtenidoAutomatico();
+      }
     }
+  }
+
+  private limpiarResultadoObtenidoAutomatico(): void {
+    if (this.resultadoObtenidoAutogenerado !== null
+      && this.formEjecucion.resultadoObtenido === this.resultadoObtenidoAutogenerado) {
+      this.formEjecucion.resultadoObtenido = '';
+    }
+    this.resultadoObtenidoAutogenerado = null;
   }
 
   async generarEvidenciaWord(): Promise<void> {
