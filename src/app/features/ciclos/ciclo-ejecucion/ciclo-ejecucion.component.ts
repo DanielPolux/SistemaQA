@@ -84,7 +84,7 @@ export class CicloEjecucionComponent implements OnInit {
   errorEvidencia    = '';
   registroExitoso = signal<{ resultado: ResultadoEjecucion; codigoDefecto?: string } | null>(null);
   casoSeleccionado: CasoCiclo | null = null;
-  pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok' | 'bloqueado'; imagenes: string[] }[] = [];
+  pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok' | 'bloqueado'; imagenes: string[]; evidencias: Evidencia[] }[] = [];
   decisionFalloAbierta = signal(false);
   pasoFallidoIdx: number | null = null;
   motivoBloqueo = '';
@@ -286,6 +286,7 @@ export class CicloEjecucionComponent implements OnInit {
       resultadoEsperado: p.resultadoEsperado ?? '',
       estado: 'pendiente' as const,
       imagenes: [] as string[],
+      evidencias: [] as Evidencia[],
     }));
     const userId     = this.auth.usuarioActual()?.id ?? 0;
     const pasosTexto = this.pasosATexto(caso.pasos ?? []);
@@ -323,9 +324,17 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   limpiarImagenPaso(pasoIdx: number, imgIdx: number): void {
-    const imgs = [...this.pasosEjecucion[pasoIdx].imagenes];
+    const paso = this.pasosEjecucion[pasoIdx];
+    const imgs = [...paso.imagenes];
+    const evidencias = [...paso.evidencias];
+    const evidenciaEliminada = evidencias[imgIdx];
     imgs.splice(imgIdx, 1);
-    this.pasosEjecucion[pasoIdx] = { ...this.pasosEjecucion[pasoIdx], imagenes: imgs };
+    evidencias.splice(imgIdx, 1);
+    this.pasosEjecucion[pasoIdx] = { ...paso, imagenes: imgs, evidencias };
+    if (evidenciaEliminada) {
+      this.formEjecucion.evidencias = this.formEjecucion.evidencias
+        .filter(e => e.url !== evidenciaEliminada.url);
+    }
   }
 
   pegarImagenPaso(idx: number, event: ClipboardEvent): void {
@@ -360,11 +369,11 @@ export class CicloEjecucionComponent implements OnInit {
 
     // Subida real: esto es lo que efectivamente queda guardado como evidencia
     // de la ejecución (antes esta imagen se perdía al cerrar el panel).
-    this.agregarEvidencia([file]);
+    this.agregarEvidencia([file], idx);
   }
 
   // ─── Evidencia (archivos subidos) ──────────────────────────────────────────
-  agregarEvidencia(files: FileList | File[]): void {
+  agregarEvidencia(files: FileList | File[], pasoIdx?: number): void {
     const lista = Array.from(files);
     if (!lista.length) return;
     this.errorEvidencia = '';
@@ -374,6 +383,13 @@ export class CicloEjecucionComponent implements OnInit {
       this.uploadService.subir(file).subscribe({
         next: (evidencia) => {
           this.formEjecucion.evidencias = [...this.formEjecucion.evidencias, evidencia];
+          if (pasoIdx !== undefined) {
+            const paso = this.pasosEjecucion[pasoIdx];
+            this.pasosEjecucion[pasoIdx] = {
+              ...paso,
+              evidencias: [...paso.evidencias, evidencia],
+            };
+          }
           if (--pendientes === 0) this.subiendoEvidencia.set(false);
         },
         error: (err) => {
@@ -478,10 +494,7 @@ export class CicloEjecucionComponent implements OnInit {
     if (hayNoOk) {
       this.limpiarResultadoObtenidoAutomatico();
       this.formEjecucion.resultado = ResultadoEjecucion.FALLIDO;
-      this.formEjecucion.defPasosReproduccion = pasos
-        .filter(p => p.estado === 'no_ok')
-        .map(p => `${p.orden}. ${p.descripcion}`)
-        .join('\n');
+      this.formEjecucion.defPasosReproduccion = this.pasosATexto(pasos);
     } else {
       this.pasosEjecucion = pasos.map(p => p.estado === 'bloqueado' ? { ...p, estado: 'pendiente' } : p);
       // Al corregir el último NO OK, el formulario de defecto debe ocultarse
@@ -594,7 +607,9 @@ export class CicloEjecucionComponent implements OnInit {
       version:           f.version,
       resultado:         f.resultado,
       resultadoObtenido: this.resultadoObtenidoEfectivo(),
-      evidencias:        f.evidencias.length ? f.evidencias : undefined,
+      evidencias:        esFallido
+        ? this.pasosEjecucion.filter(p => p.estado === 'no_ok').flatMap(p => p.evidencias)
+        : (f.evidencias.length ? f.evidencias : undefined),
       observaciones:     f.observaciones || undefined,
       desarrolladorId:   esFallido && f.defAsignadoA ? f.defAsignadoA : undefined,
       bloqueadoPorCasoId: this.esBloqueado ? f.bloqueadoPorCasoId : undefined,

@@ -83,9 +83,10 @@ export class EjecucionWordExportService {
         ['Acción', paso.descripcion || '—'],
       ], 25));
 
-      if (!paso.imagenes.length) {
+      const incluirCapturas = !data.esReporteDefecto || paso.estado === 'no_ok';
+      if (incluirCapturas && !paso.imagenes.length) {
         contenidoPasos.push(this.parrafo('Sin capturas para este paso.', '9CA3AF'));
-      } else {
+      } else if (incluirCapturas) {
         for (let i = 0; i < paso.imagenes.length; i++) {
           const imagen = await this.imagenDesdeDataUrl(paso.imagenes[i]);
           if (!imagen) {
