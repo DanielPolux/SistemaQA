@@ -159,6 +159,7 @@ export class EjecucionListComponent implements OnInit {
         esReporteDefecto: false,
         codigoProyecto: e.proyectoCodigo,
         proyecto: e.proyectoNombre ?? '—',
+        requerimiento: [caso.requerimientoCodigo, caso.requerimientoTitulo].filter(Boolean).join(' - ') || '—',
         ciclo: e.cicloNombre ?? '—',
         codigoCaso: e.casoPruebaCodigo ?? caso.codigo ?? 'caso-prueba',
         nombreCaso: e.casoPruebaNombre ?? caso.nombre,

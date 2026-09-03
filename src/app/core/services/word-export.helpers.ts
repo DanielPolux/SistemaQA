@@ -24,7 +24,7 @@ export function sectionTitle(text: string): Paragraph {
   });
 }
 
-export function infoTable(rows: [string, string][]): Table {
+export function infoTable(rows: [string, string][], labelWidth = 28): Table {
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     margins: { bottom: 240 },
@@ -32,7 +32,7 @@ export function infoTable(rows: [string, string][]): Table {
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 28, type: WidthType.PERCENTAGE },
+            width: { size: labelWidth, type: WidthType.PERCENTAGE },
             verticalAlign: VerticalAlign.CENTER,
             shading: { fill: 'EEF2F7' },
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
@@ -43,7 +43,7 @@ export function infoTable(rows: [string, string][]): Table {
             ],
           }),
           new TableCell({
-            width: { size: 72, type: WidthType.PERCENTAGE },
+            width: { size: 100 - labelWidth, type: WidthType.PERCENTAGE },
             verticalAlign: VerticalAlign.CENTER,
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
             children: [

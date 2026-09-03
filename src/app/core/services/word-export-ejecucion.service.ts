@@ -22,6 +22,7 @@ export interface EjecucionEvidenciaWord {
   esReporteDefecto: boolean;
   codigoProyecto?: string;
   proyecto: string;
+  requerimiento?: string;
   ciclo: string;
   codigoCaso: string;
   nombreCaso: string;
@@ -133,6 +134,7 @@ export class EjecucionWordExportService {
           this.tituloSeccion('CABECERA'),
           this.tablaInfo([
             ['Proyecto', [data.codigoProyecto, data.proyecto].filter(Boolean).join(' - ') || '—'],
+            ['Requerimiento', data.requerimiento || '—'],
             ['Ciclo de prueba', data.ciclo || '—'],
             ['Caso de prueba', `${data.codigoCaso} — ${data.nombreCaso}`],
             ['Tester', data.tester || '—'],
@@ -195,7 +197,7 @@ export class EjecucionWordExportService {
     });
   }
 
-  private tablaInfo(filas: [string, string][], anchoEtiqueta = 28): Table {
+  private tablaInfo(filas: [string, string][], anchoEtiqueta = 18): Table {
     return new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: filas.map(([etiqueta, valor]) => new TableRow({ children: [

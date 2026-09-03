@@ -39,9 +39,12 @@ export interface Defecto {
   id: number;
   proyectoId: number;
   proyectoNombre?: string;
+  proyectoCodigo?: string;
   casoPruebaId: number;
   casoPruebaCodigo?: string;
   requerimientoId?: number;
+  requerimientoCodigo?: string;
+  requerimientoTitulo?: string;
   codigo: string;
   codigoProyecto?: string;
   titulo: string;

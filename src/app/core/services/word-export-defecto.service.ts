@@ -33,14 +33,15 @@ export class DefectoWordExportService {
           sectionTitle('IDENTIFICACIÓN'),
           infoTable([
             ['Código',          d.codigoProyecto ?? d.codigo ?? '—'],
-            ['Proyecto',        d.proyectoNombre ?? '—'],
+            ['Proyecto',        [d.proyectoCodigo, d.proyectoNombre].filter(Boolean).join(' - ') || '—'],
+            ['Requerimiento',   [d.requerimientoCodigo, d.requerimientoTitulo].filter(Boolean).join(' - ') || '—'],
             ['Caso de Prueba',  d.casoPruebaCodigo ?? '—'],
             ['Plan de Pruebas', (d as any).planNombre ?? '—'],
             ['Ciclo',           (d as any).cicloNombre ?? '—'],
             ['Fecha Reporte',   fecha],
             ['Reportado por',   d.reportadoPorNombre ?? '—'],
             ['Asignado a',      d.asignadoANombre ?? 'Sin asignar'],
-          ]),
+          ], 18),
 
           sectionTitle('CLASIFICACIÓN'),
           infoTable([
@@ -49,12 +50,16 @@ export class DefectoWordExportService {
             ['Estado',    d.estado],
             ['Ambiente',  d.ambiente],
             ['Versión',   d.version],
-          ]),
+          ], 18),
 
           sectionTitle('TÍTULO'),
           new Paragraph({
             spacing: { after: 280 },
-            children: [new TextRun({ text: d.titulo, size: 24, bold: true })],
+            children: [new TextRun({
+              text: [d.proyectoCodigo, d.titulo].filter(Boolean).join(' - '),
+              size: 24,
+              bold: true,
+            })],
           }),
 
           sectionTitle('DESCRIPCIÓN'),
@@ -76,6 +81,10 @@ export class DefectoWordExportService {
     });
 
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${d.codigoProyecto ?? d.codigo ?? 'defecto'}-reporte.docx`);
+    const nombreArchivo = [d.proyectoCodigo, d.codigoProyecto ?? d.codigo ?? 'defecto']
+      .filter(Boolean)
+      .join('-')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-');
+    saveAs(blob, `${nombreArchivo}-reporte.docx`);
   }
 }

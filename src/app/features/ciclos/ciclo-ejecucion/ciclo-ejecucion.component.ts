@@ -520,6 +520,8 @@ export class CicloEjecucionComponent implements OnInit {
         esReporteDefecto:   this.hayPasoNoOk,
         codigoProyecto:    this.ciclo?.proyectoCodigo,
         proyecto:          this.ciclo?.proyectoNombre ?? '—',
+        requerimiento:     [this.casoSeleccionado.requerimientoCodigo, this.casoSeleccionado.requerimientoTitulo]
+          .filter(Boolean).join(' - ') || '—',
         ciclo:             this.ciclo?.nombre ?? '—',
         codigoCaso:        this.casoSeleccionado.codigo,
         nombreCaso:        this.casoSeleccionado.nombre,
@@ -609,6 +611,7 @@ export class CicloEjecucionComponent implements OnInit {
           severidad:         f.defSeveridad,
           prioridad:         f.defPrioridad,
           asignadoA:         f.defAsignadoA ?? undefined,
+          requerimientoId:   caso.requerimientoId ?? undefined,
         },
       }),
     };

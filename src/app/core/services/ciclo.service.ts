@@ -33,6 +33,8 @@ export interface CasoCiclo {
   proyectoId?: number;
   requerimientoId?: number | null;
   requerimientoEstado?: string | null;
+  requerimientoCodigo?: string | null;
+  requerimientoTitulo?: string | null;
   resultadoCiclo?: 'Aprobado' | 'Fallido' | 'Bloqueado' | 'Omitido';
   ejecucionId?: number;
   fechaEjecucion?: string;

@@ -66,6 +66,8 @@ export interface CasoPrueba {
 
   requerimientoRf?: string;
   requerimientoId?: number;
+  requerimientoCodigo?: string;
+  requerimientoTitulo?: string;
 
   defectosAsociadosIds?: number[];
   totalDefectos?: number;
