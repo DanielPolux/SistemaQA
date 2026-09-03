@@ -388,7 +388,12 @@ export class CicloEjecucionComponent implements OnInit {
     this.formEjecucion.defectoBloqueanteId = null;
     this.defectosBloqueantes = [];
     const casoId = this.formEjecucion.bloqueadoPorCasoId;
-    if (casoId) this.defectService.getByCasoPrueba(casoId).subscribe(ds => this.defectosBloqueantes = ds);
+    if (casoId) {
+      this.defectService.getByCasoPrueba(casoId).subscribe(ds => {
+        this.defectosBloqueantes = ds;
+        if (ds.length === 1) this.formEjecucion.defectoBloqueanteId = ds[0].id;
+      });
+    }
   }
 
   continuarTrasFallo(): void {
