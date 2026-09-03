@@ -81,7 +81,11 @@ export class CicloEjecucionComponent implements OnInit {
   errorEvidencia    = '';
   ejecucionExito = signal<string | null>(null);
   casoSeleccionado: CasoCiclo | null = null;
-  pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok'; imagenes: string[] }[] = [];
+  pasosEjecucion: { orden: number; descripcion: string; resultadoEsperado: string; estado: 'pendiente' | 'ok' | 'no_ok' | 'bloqueado'; imagenes: string[] }[] = [];
+  decisionFalloAbierta = signal(false);
+  pasoFallidoIdx: number | null = null;
+  motivoBloqueo = '';
+  errorDecisionFallo = '';
 
   formEjecucion = {
     testerId:             0,
@@ -264,6 +268,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.errorEvidencia = '';
     this.ejecucionExito.set(null);
     this.pasosEjecucion = [];
+    this.cerrarDecisionFallo();
   }
 
   limpiarImagenPaso(pasoIdx: number, imgIdx: number): void {
@@ -343,8 +348,52 @@ export class CicloEjecucionComponent implements OnInit {
   }
 
   marcarPaso(idx: number, estado: 'ok' | 'no_ok'): void {
+    const activaNoOk = estado === 'no_ok' && this.pasosEjecucion[idx].estado !== 'no_ok';
     this.pasosEjecucion[idx].estado =
       this.pasosEjecucion[idx].estado === estado ? 'pendiente' : estado;
+    this.recalcularResultadoPasos();
+
+    if (activaNoOk) {
+      this.pasoFallidoIdx = idx;
+      this.motivoBloqueo = '';
+      this.errorDecisionFallo = '';
+      this.decisionFalloAbierta.set(true);
+    }
+  }
+
+  continuarTrasFallo(): void {
+    this.cerrarDecisionFallo();
+  }
+
+  finalizarTrasFallo(): void {
+    const motivo = this.motivoBloqueo.trim();
+    if (!motivo) {
+      this.errorDecisionFallo = 'Indica por qué no se continuarán ejecutando los pasos restantes.';
+      return;
+    }
+
+    const idx = this.pasoFallidoIdx;
+    if (idx === null) return;
+    this.pasosEjecucion = this.pasosEjecucion.map((paso, pasoIdx) => ({
+      ...paso,
+      estado: pasoIdx > idx && paso.estado === 'pendiente' ? 'bloqueado' : paso.estado,
+    }));
+    const nota = `Ejecución finalizada en el paso ${this.pasosEjecucion[idx].orden}. Motivo: ${motivo}`;
+    this.formEjecucion.observaciones = this.formEjecucion.observaciones.trim()
+      ? `${this.formEjecucion.observaciones.trim()}\n${nota}`
+      : nota;
+    this.recalcularResultadoPasos();
+    this.cerrarDecisionFallo();
+  }
+
+  cerrarDecisionFallo(): void {
+    this.decisionFalloAbierta.set(false);
+    this.pasoFallidoIdx = null;
+    this.motivoBloqueo = '';
+    this.errorDecisionFallo = '';
+  }
+
+  private recalcularResultadoPasos(): void {
     const pasos    = this.pasosEjecucion;
     const hayNoOk  = pasos.some(p => p.estado === 'no_ok');
     const todosOk  = pasos.every(p => p.estado === 'ok');
@@ -355,6 +404,7 @@ export class CicloEjecucionComponent implements OnInit {
         .map(p => `${p.orden}. ${p.descripcion}`)
         .join('\n');
     } else {
+      this.pasosEjecucion = pasos.map(p => p.estado === 'bloqueado' ? { ...p, estado: 'pendiente' } : p);
       // Al corregir el último NO OK, el formulario de defecto debe ocultarse
       // incluso si todavía quedan pasos pendientes por ejecutar.
       this.formEjecucion.resultado = todosOk

@@ -188,10 +188,14 @@
                   @for (paso of pasosEjecucion; track paso.orden; let idx = $index) {
                     <div class="paso-item"
                          [class.paso-item--ok]="paso.estado === 'ok'"
-                         [class.paso-item--no-ok]="paso.estado === 'no_ok'">
+                         [class.paso-item--no-ok]="paso.estado === 'no_ok'"
+                         [class.paso-item--bloqueado]="paso.estado === 'bloqueado'">
                       <div class="paso-item-fila">
                         <span class="paso-num">{{ paso.orden }}</span>
                         <span class="paso-desc">{{ paso.descripcion }}</span>
+                        @if (paso.estado === 'bloqueado') {
+                          <span class="paso-estado-bloqueado">Bloqueado / no ejecutado</span>
+                        }
                         <div class="paso-acciones">
                           <button type="button" class="paso-btn paso-btn--ok"
                                   [class.paso-btn--active]="paso.estado === 'ok'"
@@ -447,6 +451,40 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" (click)="cerrarPopupBloqueado()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─── Decisión después de un paso NO OK ────────────────────────────── -->
+@if (decisionFalloAbierta()) {
+  <div class="modal-overlay" (click)="continuarTrasFallo()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header--danger">
+        <div class="modal-title-group">
+          <span class="modal-icon">✕</span>
+          <div>
+            <h3 class="modal-title">Paso marcado como NO OK</h3>
+            <p class="modal-subtitle">El caso conservará el resultado Fallido.</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="continuarTrasFallo()">✕</button>
+      </div>
+      <div class="modal-body modal-body--confirm">
+        <p class="confirm-msg">¿Deseas continuar probando los pasos restantes o finalizar la ejecución?</p>
+        <p class="confirm-sub">Si finalizas, los pasos posteriores pendientes quedarán como Bloqueado / no ejecutado.</p>
+        <div class="form-group" style="margin-top: 1rem;">
+          <label>Motivo de finalización</label>
+          <textarea [(ngModel)]="motivoBloqueo" rows="3"
+                    placeholder="Obligatorio solo si decides finalizar..."></textarea>
+        </div>
+        @if (errorDecisionFallo) {
+          <div class="evidencia-error">{{ errorDecisionFallo }}</div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="continuarTrasFallo()">Continuar ejecución</button>
+        <button class="btn btn-danger" (click)="finalizarTrasFallo()">Finalizar y bloquear restantes</button>
       </div>
     </div>
   </div>

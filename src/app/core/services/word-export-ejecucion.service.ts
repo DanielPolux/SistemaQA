@@ -12,7 +12,7 @@ export interface PasoEvidenciaWord {
   orden: number;
   descripcion: string;
   resultadoEsperado: string;
-  estado: 'pendiente' | 'ok' | 'no_ok';
+  estado: 'pendiente' | 'ok' | 'no_ok' | 'bloqueado';
   imagenes: string[];
 }
 
@@ -53,8 +53,14 @@ export class EjecucionWordExportService {
     }
 
     for (const paso of data.pasos) {
-      const estado = paso.estado === 'ok' ? 'OK' : paso.estado === 'no_ok' ? 'NO OK' : 'PENDIENTE';
-      const color = paso.estado === 'ok' ? '15803D' : paso.estado === 'no_ok' ? 'B91C1C' : '6B7280';
+      const estado = paso.estado === 'ok' ? 'OK'
+        : paso.estado === 'no_ok' ? 'NO OK'
+        : paso.estado === 'bloqueado' ? 'BLOQUEADO / NO EJECUTADO'
+        : 'PENDIENTE';
+      const color = paso.estado === 'ok' ? '15803D'
+        : paso.estado === 'no_ok' ? 'B91C1C'
+        : paso.estado === 'bloqueado' ? '92400E'
+        : '6B7280';
       contenidoPasos.push(new Paragraph({
         heading: HeadingLevel.HEADING_3,
         spacing: { before: 280, after: 100 },
