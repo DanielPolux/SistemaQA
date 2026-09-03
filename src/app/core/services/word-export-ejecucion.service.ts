@@ -72,7 +72,6 @@ export class EjecucionWordExportService {
       }));
       contenidoPasos.push(this.tablaInfo([
         ['Acción', paso.descripcion || '—'],
-        ['Resultado esperado', paso.resultadoEsperado || '—'],
       ]));
 
       if (!paso.imagenes.length) {
