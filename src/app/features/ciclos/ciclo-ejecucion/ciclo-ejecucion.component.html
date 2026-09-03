@@ -302,11 +302,13 @@
               </div>
             }
 
-            <div class="form-group">
-              <label>Resultado Obtenido <span class="req">*</span></label>
-              <textarea [(ngModel)]="formEjecucion.resultadoObtenido" rows="3"
-                        placeholder="Describe el resultado real obtenido..."></textarea>
-            </div>
+            @if (!esBloqueado) {
+              <div class="form-group">
+                <label>Resultado Obtenido <span class="req">*</span></label>
+                <textarea [(ngModel)]="formEjecucion.resultadoObtenido" rows="3"
+                          placeholder="Describe el resultado real obtenido..."></textarea>
+              </div>
+            }
 
             <div class="form-group">
               <label>Evidencias de la ejecución</label>

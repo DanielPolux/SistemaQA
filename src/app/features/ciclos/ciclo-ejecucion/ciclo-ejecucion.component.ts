@@ -462,7 +462,7 @@ export class CicloEjecucionComponent implements OnInit {
         version:           this.formEjecucion.version,
         resultado:         this.formEjecucion.resultado,
         resultadoEsperado: this.casoSeleccionado.resultadoEsperado,
-        resultadoObtenido: this.formEjecucion.resultadoObtenido,
+        resultadoObtenido: this.resultadoObtenidoEfectivo(),
         observaciones:     this.formEjecucion.observaciones,
         defectoTitulo:     this.formEjecucion.defTitulo,
         defectoDescripcion:this.formEjecucion.defDescripcion,
@@ -484,10 +484,14 @@ export class CicloEjecucionComponent implements OnInit {
 
   guardarEjecucion(): void {
     const f = this.formEjecucion;
-    if (!f.ambiente || !f.resultado || !f.resultadoObtenido || !f.testerId) {
+    if (!f.ambiente || !f.resultado || !f.testerId) {
       this.errorEjecucion = !f.ambiente
         ? 'El ciclo no tiene ambiente configurado. Edita el ciclo y asigna un ambiente antes de registrar ejecuciones.'
-        : 'Completa los campos obligatorios: Tester, Resultado y Resultado Obtenido.';
+        : 'No se pudo determinar el Tester o el Resultado de la ejecución.';
+      return;
+    }
+    if (!this.esBloqueado && !f.resultadoObtenido.trim()) {
+      this.errorEjecucion = 'Completa el campo Resultado Obtenido.';
       return;
     }
     if (this.esFallido && (!f.defTitulo.trim() || !f.defDescripcion.trim() || !f.defPasosReproduccion.trim() || !f.defSeveridad || !f.defPrioridad)) {
@@ -520,7 +524,7 @@ export class CicloEjecucionComponent implements OnInit {
       ambiente:          f.ambiente,
       version:           f.version,
       resultado:         f.resultado,
-      resultadoObtenido: f.resultadoObtenido,
+      resultadoObtenido: this.resultadoObtenidoEfectivo(),
       evidencias:        f.evidencias.length ? f.evidencias : undefined,
       observaciones:     f.observaciones || undefined,
       desarrolladorId:   esFallido && f.defAsignadoA ? f.defAsignadoA : undefined,
@@ -588,6 +592,13 @@ export class CicloEjecucionComponent implements OnInit {
   private defectoBloqueanteTexto(): string | undefined {
     const defecto = this.defectosBloqueantes.find(d => d.id === this.formEjecucion.defectoBloqueanteId);
     return defecto ? `${defecto.codigoProyecto ?? defecto.codigo} - ${defecto.titulo}` : undefined;
+  }
+
+  private resultadoObtenidoEfectivo(): string {
+    if (!this.esBloqueado) return this.formEjecucion.resultadoObtenido;
+    const caso = this.casoBloqueanteTexto() ?? 'caso no identificado';
+    const defecto = this.defectoBloqueanteTexto() ?? 'defecto no identificado';
+    return `Ejecución bloqueada por el caso ${caso}. Defecto asociado: ${defecto}.`;
   }
 
   private pasosATexto(pasos: any[]): string {
