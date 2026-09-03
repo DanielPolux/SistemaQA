@@ -1960,6 +1960,11 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   color: var(--color-text-muted);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-row-alt);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(15, 27, 42, 0.08);
 }
 
 .ciclo-exec-count {
