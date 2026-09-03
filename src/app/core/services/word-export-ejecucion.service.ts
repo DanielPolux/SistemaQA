@@ -160,7 +160,8 @@ export class EjecucionWordExportService {
       .filter(Boolean)
       .join('-')
       .replace(/[^a-zA-Z0-9_-]+/g, '-');
-    saveAs(blob, `${codigoCompleto || 'caso-prueba'}.docx`);
+    const version = (data.version || '').replace(/[^a-zA-Z0-9_-]+/g, '-');
+    saveAs(blob, `${[codigoCompleto || 'caso-prueba', version].filter(Boolean).join('-')}.docx`);
   }
 
   private tituloSeccion(texto: string): Paragraph {

@@ -37,7 +37,8 @@ export class EjecucionService {
     return this.http.get<PaginatedResponse<EjecucionCasoPrueba>>(this.url, { params });
   }
 
-  getByCasoPrueba(casoPruebaId: number): Observable<EjecucionCasoPrueba[]> {
-    return this.http.get<EjecucionCasoPrueba[]>(`${this.url}/caso-prueba/${casoPruebaId}`);
+  getByCasoPrueba(casoPruebaId: number, cicloId?: number): Observable<EjecucionCasoPrueba[]> {
+    const params = cicloId ? new HttpParams().set('cicloId', String(cicloId)) : undefined;
+    return this.http.get<EjecucionCasoPrueba[]>(`${this.url}/caso-prueba/${casoPruebaId}`, { params });
   }
 }

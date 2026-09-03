@@ -257,8 +257,8 @@ export class CicloEjecucionComponent implements OnInit {
       defPrioridad:         '' as PrioridadDefecto | '',
       defAsignadoA:         this.pmProyectoId ?? null,
     };
-    this.ejecucionService.getByCasoPrueba(caso.id).subscribe(ejecuciones => {
-      this.formEjecucion.version = String(ejecuciones.length + 1);
+    this.ejecucionService.getByCasoPrueba(caso.id, this.cicloId).subscribe(ejecuciones => {
+      this.formEjecucion.version = `E${String(ejecuciones.length + 1).padStart(2, '0')}`;
     });
   }
 

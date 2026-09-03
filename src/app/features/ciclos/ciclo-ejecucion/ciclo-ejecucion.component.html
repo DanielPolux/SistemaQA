@@ -89,6 +89,9 @@
               <span class="tag-codigo tag-codigo-xs">{{ c.codigo }}</span>
               @if (c.resultadoCiclo) {
                 <span class="badge {{ resultadoClase[c.resultadoCiclo] }} badge-xs">{{ c.resultadoCiclo }}</span>
+                @if (c.ultimaVersion) {
+                  <span class="badge badge-version badge-xs">{{ c.ultimaVersion }}</span>
+                }
               } @else {
                 <span class="badge badge-resultado-no-ejecutado badge-xs">Sin ejecutar</span>
               }

@@ -36,6 +36,8 @@ export interface CasoCiclo {
   resultadoCiclo?: 'Aprobado' | 'Fallido' | 'Bloqueado' | 'Omitido';
   ejecucionId?: number;
   fechaEjecucion?: string;
+  ultimaVersion?: string;
+  totalEjecucionesCiclo?: number;
 }
 
 @Injectable({ providedIn: 'root' })
