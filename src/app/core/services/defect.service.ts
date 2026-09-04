@@ -54,6 +54,10 @@ export class DefectService {
     return this.http.patch<Defecto>(`${this.url}/${id}/estado`, { estado, comentario });
   }
 
+  asignarLote(defectoIds: number[], desarrolladorId: number): Observable<{ asignados: number }> {
+    return this.http.patch<{ asignados: number }>(`${this.url}/asignacion-lote`, { defectoIds, desarrolladorId });
+  }
+
   agregarComentario(defectoId: number, comentario: string): Observable<ComentarioDefecto> {
     return this.http.post<ComentarioDefecto>(`${this.url}/${defectoId}/comentarios`, { comentario });
   }

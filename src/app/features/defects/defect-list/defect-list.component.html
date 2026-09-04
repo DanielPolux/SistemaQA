@@ -38,6 +38,12 @@
         </select>
       </div>
     </div>
+    @if (puedeAsignarLote && seleccionados.size > 0) {
+      <div class="alert alert-info" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+        <span><strong>{{ seleccionados.size }}</strong> defecto{{ seleccionados.size === 1 ? '' : 's' }} seleccionado{{ seleccionados.size === 1 ? '' : 's' }}</span>
+        <button class="btn btn-primary btn-sm" (click)="abrirAsignacionLote()"><i class="bi bi-person-check"></i> Asignar seleccionados</button>
+      </div>
+    }
   }
 
   @if (!proyectoId) {
@@ -50,6 +56,9 @@
     <table class="data-table">
       <thead>
         <tr>
+          @if (puedeAsignarLote) {
+            <th style="width:38px"><input type="checkbox" [checked]="todosSeleccionados" (change)="alternarTodos($any($event.target).checked)" title="Seleccionar visibles"></th>
+          }
           <th>Defecto</th>
           <th>Título</th>
           <th>Caso de Prueba</th>
@@ -65,6 +74,9 @@
       <tbody>
         @for (d of defectos; track d.id) {
           <tr>
+            @if (puedeAsignarLote) {
+              <td><input type="checkbox" [disabled]="!esSeleccionable(d)" [checked]="seleccionados.has(d.id)" (change)="alternarSeleccion(d.id, $any($event.target).checked)"></td>
+            }
             <td>{{ d.codigoProyecto ?? '-' }}</td>
             <td>{{ d.titulo }}</td>
             <td>{{ d.casoPruebaCodigo ?? '-' }}</td>
@@ -132,7 +144,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="10" class="empty-row">No se encontraron defectos</td></tr>
+          <tr><td [attr.colspan]="puedeAsignarLote ? 11 : 10" class="empty-row">No se encontraron defectos</td></tr>
         }
       </tbody>
     </table>
@@ -222,6 +234,35 @@
       <div class="modal-footer">
         <button class="btn btn-outline" (click)="cerrarConfirmar()">Cancelar</button>
         <button class="btn btn-danger" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modalAsignacionAbierto()) {
+  <div class="modal-overlay" (click)="cerrarAsignacionLote()">
+    <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group"><span class="modal-icon">👤</span><div><h3 class="modal-title">Asignar defectos</h3></div></div>
+        <button class="modal-close" (click)="cerrarAsignacionLote()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Se asignarán <strong>{{ seleccionados.size }} defectos</strong> del proyecto al desarrollador seleccionado.</p>
+        @if (contieneEnRevision) {
+          <div class="alert alert-warning">La selección contiene defectos En Revisión. Su respuesta anterior se limpiará y volverán a estado Asignado.</div>
+        }
+        <div class="form-group">
+          <label>Desarrollador <span class="req">*</span></label>
+          <select [(ngModel)]="desarrolladorLoteId">
+            <option [ngValue]="undefined">Seleccionar desarrollador...</option>
+            @for (u of desarrolladores; track u.id) { <option [ngValue]="u.id">{{ u.nombre }} {{ u.apellido }}</option> }
+          </select>
+        </div>
+        <p class="text-muted" style="font-size:12px">Se enviará un solo correo consolidado y se registrará auditoría en cada defecto.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" [disabled]="asignandoLote" (click)="cerrarAsignacionLote()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="!desarrolladorLoteId || asignandoLote" (click)="confirmarAsignacionLote()">{{ asignandoLote ? 'Asignando...' : 'Confirmar asignación' }}</button>
       </div>
     </div>
   </div>

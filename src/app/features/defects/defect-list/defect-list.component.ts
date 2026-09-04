@@ -9,6 +9,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { WordExportService } from '../../../core/services/word-export.service';
 import { Defecto, EstadoDefecto, PrioridadDefecto, SeveridadDefecto, Proyecto } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
+import { UserService } from '../../../core/services/user.service';
+import { Rol, Usuario } from '../../../core/models';
 
 @Component({
   selector: 'app-defect-list',
@@ -22,6 +24,7 @@ export class DefectListComponent implements OnInit {
   private route          = inject(ActivatedRoute);
   private wordExport     = inject(WordExportService);
   private toast          = inject(ToastService);
+  private userService    = inject(UserService);
   auth                   = inject(AuthService);
 
   defectos: Defecto[]   = [];
@@ -36,6 +39,11 @@ export class DefectListComponent implements OnInit {
   severidadFiltro = '';
   busqueda = '';
   cargando = false;
+  desarrolladores: Usuario[] = [];
+  seleccionados = new Set<number>();
+  desarrolladorLoteId?: number;
+  modalAsignacionAbierto = signal(false);
+  asignandoLote = false;
 
   readonly estados    = Object.values(EstadoDefecto);
   readonly severidades = Object.values(SeveridadDefecto);
@@ -73,6 +81,33 @@ export class DefectListComponent implements OnInit {
       this.proyectos = r.datos;
       if (this.proyectoId) this.cargar();
     });
+    if (this.puedeAsignarLote) {
+      this.userService.getAll({ rol: Rol.DEVELOPER, activo: true, porPagina: 500 }).subscribe(r => {
+        this.desarrolladores = r.datos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      });
+    }
+  }
+
+  get puedeAsignarLote(): boolean {
+    return this.auth.esAdmin() || this.auth.esQaLead() || this.auth.esProjectManager();
+  }
+
+  esSeleccionable(d: Defecto): boolean {
+    return d.estado !== EstadoDefecto.CERRADO && d.estado !== EstadoDefecto.RECHAZADO;
+  }
+
+  alternarSeleccion(id: number, marcado: boolean): void {
+    marcado ? this.seleccionados.add(id) : this.seleccionados.delete(id);
+  }
+
+  alternarTodos(marcado: boolean): void {
+    this.seleccionados.clear();
+    if (marcado) this.defectos.filter(d => this.esSeleccionable(d)).forEach(d => this.seleccionados.add(d.id));
+  }
+
+  get todosSeleccionados(): boolean {
+    const disponibles = this.defectos.filter(d => this.esSeleccionable(d));
+    return disponibles.length > 0 && disponibles.every(d => this.seleccionados.has(d.id));
   }
 
   private get asignadoFiltro(): number | undefined {
@@ -93,7 +128,7 @@ export class DefectListComponent implements OnInit {
       porPagina: this.porPagina
     }).subscribe({
       next: (res) => {
-        this.defectos = res.datos; this.total = res.total; this.cargando = false;
+        this.defectos = res.datos; this.total = res.total; this.cargando = false; this.seleccionados.clear();
         if (res.datos.length === 0 && this.pagina > 1) { this.pagina = Math.max(1, this.totalPaginas); this.cargar(); }
       },
       error: () => { this.cargando = false; this.toast.error('Error al cargar defectos'); }
@@ -109,6 +144,33 @@ export class DefectListComponent implements OnInit {
       next: () => { this.toast.exito('Atención iniciada'); this.cargar(); },
       error: (err) => this.toast.error(err?.error?.message || 'No se pudo iniciar la atención'),
     });
+  }
+
+  abrirAsignacionLote(): void {
+    if (!this.seleccionados.size) return;
+    this.desarrolladorLoteId = undefined;
+    this.modalAsignacionAbierto.set(true);
+  }
+
+  cerrarAsignacionLote(): void {
+    if (!this.asignandoLote) this.modalAsignacionAbierto.set(false);
+  }
+
+  confirmarAsignacionLote(): void {
+    if (!this.desarrolladorLoteId || !this.seleccionados.size) return;
+    this.asignandoLote = true;
+    this.service.asignarLote([...this.seleccionados], this.desarrolladorLoteId).subscribe({
+      next: r => {
+        this.asignandoLote = false; this.modalAsignacionAbierto.set(false);
+        this.toast.exito(`${r.asignados} defecto${r.asignados === 1 ? '' : 's'} asignado${r.asignados === 1 ? '' : 's'} correctamente`);
+        this.cargar();
+      },
+      error: err => { this.asignandoLote = false; this.toast.error(err?.error?.message || 'No se pudo completar la asignación'); },
+    });
+  }
+
+  get contieneEnRevision(): boolean {
+    return this.defectos.some(d => this.seleccionados.has(d.id) && d.estado === EstadoDefecto.EN_REVISION);
   }
 
   // ─── Modal confirmación eliminar ─────────────────────────────────────────
