@@ -2807,6 +2807,39 @@ body { background: var(--color-bg); color: var(--color-text); }
 @media(max-width:600px){.portfolio-filters,.portfolio-kpis{grid-template-columns:1fr}.report-group-row{grid-template-columns:75px 1fr 24px}}
 @media print {.sidebar,.app-header,.page-header .btn,.reporte-selector{display:none!important}.app-content{margin:0!important;padding:0!important}.page-container{max-width:none!important}.report-executive-layout{grid-template-columns:1.35fr .85fr!important}}
 
+/* Contraste WCAG del tema oscuro: azul DLW claro para lectura y oscuro para acciones. */
+[data-theme="dark"] {
+  --color-primary: #8FC5EB;
+  --color-primary-mid: #6FAED8;
+  --color-primary-light: #203B50;
+  --color-text-muted: #A9BBC9;
+  --color-text-light: #879BAB;
+  --color-info: #69B7E5;
+
+  .btn-primary { background:#315F85; border-color:#47799E; color:#FFF; }
+  .btn-primary:hover { background:#3B6E95; border-color:#5790BA; }
+  .btn-secondary,.btn-outline { color:#A9D4F1; background:var(--color-surface); border-color:#526779; }
+  .sidebar-menu li a.active { color:#244F72; background:#FFF; }
+  .sidebar-menu li a.active .menu-icon { color:#244F72; }
+  .sidebar-profile-avatar { color:#244F72; }
+
+  .badge-rol,.badge-estimado,.badge-en-ejecucion,.badge-est-asignado,
+  .badge-plan-planificado,.badge-version,.caso-check-codigo,.audit-accion,
+  .project-codigo,.activity-code,.grupo-item.activo,.alert--info,
+  .traz-defecto-chip--nuevo {
+    color:#A9D4F1;
+    background:#203B50;
+    border-color:#426681;
+  }
+  .badge-dev-pendiente { color:#C7D5DF; background:#273642; border-color:#526472; }
+  .tag-codigo { color:#B7DDF6; background:#203B50; border-color:#426681; }
+  .detail-section h3,.detail-section-title,.dash-card-link,.repo-link,
+  .doc-name,.file-name,.summary-num { color:#A9D4F1; }
+  .input-readonly { color:#DCE7EF !important; background:#1C2B37 !important; }
+  .data-table thead th,.audit-table thead th { color:#C0CFD9; }
+  ::placeholder { color:#8296A5; opacity:1; }
+}
+
 /* Reportes: selector en una franja compacta y paneles homogéneos. */
 .reporte-selector { display:grid; grid-template-columns:minmax(240px,1fr) minmax(240px,1fr); gap:8px 14px; align-items:end; }
 .reporte-selector .form-label { margin:0 !important; }
