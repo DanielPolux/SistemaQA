@@ -57,7 +57,7 @@ export const routes: Routes = [
   },
   {
     path: 'catalogos',
-    canActivate: [authGuard, roleGuard([Rol.ADMIN])],
+    canActivate: [authGuard, roleGuard([Rol.ADMIN, Rol.QA_LEAD])],
     loadChildren: () => import('./features/catalogos/catalogos.routes').then(m => m.CATALOGOS_ROUTES)
   },
   {

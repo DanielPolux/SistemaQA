@@ -77,15 +77,17 @@
     </ul>
   }
 
-  @if (auth.esAdmin()) {
+  @if (auth.esAdmin() || auth.esQaLead()) {
     <p class="sidebar-section-label">Configuración</p>
     <ul class="sidebar-menu">
-      <li>
-        <a routerLink="/usuarios" routerLinkActive="active">
-          <i class="bi bi-people-fill menu-icon"></i>
-          <span class="menu-label">Usuarios</span>
-        </a>
-      </li>
+      @if (auth.esAdmin()) {
+        <li>
+          <a routerLink="/usuarios" routerLinkActive="active">
+            <i class="bi bi-people-fill menu-icon"></i>
+            <span class="menu-label">Usuarios</span>
+          </a>
+        </li>
+      }
       <li>
         <a routerLink="/catalogos" routerLinkActive="active">
           <i class="bi bi-collection-fill menu-icon"></i>

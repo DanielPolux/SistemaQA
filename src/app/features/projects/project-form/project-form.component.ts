@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { EstadoProyecto, Rol, Usuario } from '../../../core/models';
+import { Catalogo, CatalogoService } from '../../../core/services/catalogo.service';
 
 @Component({
   selector: 'app-project-form',
@@ -16,12 +17,14 @@ export class ProjectFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(ProjectService);
   private userService = inject(UserService);
+  private catalogoService = inject(CatalogoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   proyectoId?: number;
   jefesProyecto: Usuario[] = [];
   jefesQA: Usuario[]       = [];
+  clientes: Catalogo[]     = [];
   cargando = false;
   guardando = false;
   error = '';
@@ -88,6 +91,10 @@ export class ProjectFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.catalogoService.getAll('CLIENTE').subscribe({
+      next: clientes => { this.clientes = clientes; },
+      error: () => { this.error = 'No se pudo cargar el catálogo de clientes.'; },
+    });
     const base = { activo: true, porPagina: 200 };
     this.userService.getAll({ ...base, rol: Rol.PROJECT_MANAGER }).subscribe(r => { this.jefesProyecto  = r.datos; });
     this.userService.getAll({ ...base, rol: Rol.QA_LEAD         }).subscribe(r => { this.jefesQA        = r.datos; });

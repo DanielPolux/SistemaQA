@@ -24,6 +24,11 @@ export class AuthService {
     return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
   });
 
+  readonly puedeGestionarCatalogos = computed(() => {
+    const rol = this.usuarioActual()?.rol;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
+  });
+
   // El borrado de un proyecto es una operación administrativa excepcional.
   readonly puedeEliminarProyectos = computed(() => this.usuarioActual()?.rol === Rol.ADMIN);
 

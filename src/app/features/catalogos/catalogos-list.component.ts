@@ -17,6 +17,7 @@ const ETIQUETAS_GRUPO: Record<string, string> = {
   ESTADO_DESARROLLO:    'Estado de Desarrollo',
   AMBIENTE_EJECUCION:   'Ambiente de Ejecución',
   ROL_USUARIO:          'Rol de Usuario',
+  CLIENTE:              'Clientes',
 };
 
 @Component({

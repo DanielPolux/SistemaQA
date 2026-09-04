@@ -52,7 +52,18 @@
       <div class="form-row">
         <div class="form-group">
           <label for="cliente">Cliente *</label>
-          <input id="cliente" type="text" formControlName="cliente" placeholder="Nombre del cliente" />
+          <select id="cliente" formControlName="cliente" class="project-select">
+            <option value="">Selecciona un cliente</option>
+            @for (cliente of clientes; track cliente.id) {
+              <option [ngValue]="cliente.nombre"
+                      [disabled]="!cliente.activo && cliente.nombre !== form.get('cliente')?.value">
+                {{ cliente.codigo }} — {{ cliente.nombre }}{{ cliente.activo ? '' : ' (Inactivo)' }}
+              </option>
+            }
+          </select>
+          @if (clientes.length === 0) {
+            <span class="field-hint">Registra primero un cliente activo en Configuración → Catálogos.</span>
+          }
         </div>
         <div class="form-group">
           <label for="sistema">Sistema</label>

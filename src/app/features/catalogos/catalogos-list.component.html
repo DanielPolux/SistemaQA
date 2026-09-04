@@ -2,7 +2,7 @@
   <div class="page-header">
     <h2>Catálogos del Sistema</h2>
     <div class="header-actions">
-      @if (auth.esAdmin()) {
+      @if (auth.puedeGestionarCatalogos()) {
         <button class="btn btn-primary" (click)="abrirNuevo()">+ Nuevo Ítem</button>
       }
     </div>
@@ -50,7 +50,7 @@
               <th>Descripción</th>
               <th style="width:90px">Estado</th>
               <th style="width:70px">Sistema</th>
-              @if (auth.esAdmin()) {
+              @if (auth.puedeGestionarCatalogos()) {
                 <th style="width:110px">Acciones</th>
               }
             </tr>
@@ -74,7 +74,7 @@
                     <span title="Ítem del sistema — no eliminable">🔒</span>
                   }
                 </td>
-                @if (auth.esAdmin()) {
+                @if (auth.puedeGestionarCatalogos()) {
                   <td>
                     <div class="action-buttons">
                       <button class="btn btn-sm btn-secondary" (click)="abrirEditar(item)" title="Editar">Editar</button>
