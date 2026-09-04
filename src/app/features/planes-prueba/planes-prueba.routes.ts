@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../../core/guards/role.guard';
+import { Rol } from '../../core/models';
 
 export const PLANES_PRUEBA_ROUTES: Routes = [
   {
@@ -8,6 +10,7 @@ export const PLANES_PRUEBA_ROUTES: Routes = [
   },
   {
     path: 'nuevo',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD])],
     loadComponent: () =>
       import('./plan-form/plan-form.component').then(m => m.PlanFormComponent),
   },
@@ -23,6 +26,7 @@ export const PLANES_PRUEBA_ROUTES: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD])],
     loadComponent: () =>
       import('./plan-form/plan-form.component').then(m => m.PlanFormComponent),
   },

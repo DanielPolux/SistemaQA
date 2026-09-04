@@ -27,6 +27,21 @@ export class AuthService {
   // El borrado de un proyecto es una operación administrativa excepcional.
   readonly puedeEliminarProyectos = computed(() => this.usuarioActual()?.rol === Rol.ADMIN);
 
+  readonly puedeGestionarRequerimientos = computed(() => {
+    const rol = this.usuarioActual()?.rol;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
+  });
+
+  readonly puedeGestionarPlanes = computed(() => {
+    const rol = this.usuarioActual()?.rol;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
+  });
+
+  readonly puedeGestionarCiclos = computed(() => {
+    const rol = this.usuarioActual()?.rol;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
+  });
+
   // Permiso QA general usado por casos, requerimientos y ciclos.
   readonly puedeEditar = computed(() => {
     const rol = this.usuarioActual()?.rol;
@@ -47,7 +62,7 @@ export class AuthService {
   // Puede editar defectos: QA para gestión, PM solo para asignar desarrollador
   readonly puedeEditarDefecto = computed(() => {
     const rol = this.usuarioActual()?.rol;
-    return rol === Rol.ADMIN || rol === Rol.QA_LEAD || rol === Rol.QA_TESTER || rol === Rol.PROJECT_MANAGER;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD || rol === Rol.QA_TESTER;
   });
 
   // Solo Admin y QA Lead pueden eliminar defectos

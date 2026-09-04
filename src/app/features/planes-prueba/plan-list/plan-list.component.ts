@@ -348,6 +348,6 @@ export class PlanListComponent implements OnInit {
   }
 
   puedeGestionar(): boolean {
-    return this.auth.esAdmin() || this.auth.esQaLead() || this.auth.esProjectManager();
+    return this.auth.puedeGestionarPlanes();
   }
 }
