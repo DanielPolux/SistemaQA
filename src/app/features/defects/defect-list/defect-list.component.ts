@@ -80,11 +80,6 @@ export class DefectListComponent implements OnInit {
     return this.auth.esDesarrollador() && u ? u.id : undefined;
   }
 
-  private get reportadoPorFiltro(): number | undefined {
-    const u = this.auth.usuarioActual();
-    return this.auth.esTester() && u ? u.id : undefined;
-  }
-
   cargar(): void {
     if (!this.proyectoId) return;
     this.cargando = true;
@@ -94,7 +89,6 @@ export class DefectListComponent implements OnInit {
       severidad: this.severidadFiltro || undefined,
       busqueda: this.busqueda || undefined,
       asignadoA: this.asignadoFiltro,
-      reportadoPor: this.reportadoPorFiltro,
       pagina: this.pagina,
       porPagina: this.porPagina
     }).subscribe({
