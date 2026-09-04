@@ -2725,8 +2725,8 @@ body { background: var(--color-bg); color: var(--color-text); }
 .ce-stat { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:none; }
 .ce-stat-num { font-size:22px; }
 .ce-progress-wrap { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:none; }
-.ciclo-exec-layout { gap:14px; align-items:start; }
-.ciclo-exec-left, .ciclo-exec-right { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:none; overflow-y:auto; overflow-x:hidden; }
+.ciclo-exec-layout { gap:14px; }
+.ciclo-exec-left, .ciclo-exec-right { min-height:0; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:none; overflow-y:auto; overflow-x:hidden; }
 .ciclo-exec-left-header, .ciclo-exec-form-header { background:var(--color-surface); border-bottom:1px solid var(--color-border); }
 .ciclo-caso-item { border-bottom:1px solid var(--color-border); }
 .ciclo-caso-item:hover { background:var(--color-surface-alt); }
