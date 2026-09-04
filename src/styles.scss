@@ -2016,6 +2016,10 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   color: var(--color-danger); font-size: 13px; margin-top: 6px;
 }
 
+.evidencia-hint {
+  display: block; margin-top: 4px; font-size: 11px;
+}
+
 .ejecuciones-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 8px; }
 
 /* ────────────────────────────────────────────────────────────
