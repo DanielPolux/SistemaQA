@@ -12,7 +12,7 @@ import { AuditoriaService, AuditoriaRegistro } from '../../../core/services/audi
 import { EjecucionModalService } from './ejecucion-modal.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
-  CasoPrueba, EstadoCasoPrueba, ResultadoCasoPrueba, TipoPrueba,
+  CasoPrueba, ResultadoCasoPrueba, TipoPrueba,
   Proyecto, Requerimiento, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
   SeveridadDefecto, PrioridadDefecto,
@@ -52,34 +52,14 @@ export class TestCaseListComponent implements OnInit {
   proyectoId?: number;
   requerimientoFiltroTexto = '';
   requerimientoFiltroId?: number;
-  estadoFiltro    = '';
   tipoFiltro      = '';
-  resultadoFiltro = '';
   busqueda        = '';
 
-  readonly estadosQA           = Object.values(EstadoCasoPrueba);
   readonly tipos               = Object.values(TipoPrueba);
-  readonly resultados          = Object.values(ResultadoCasoPrueba);
   readonly resultadosEjecucion = Object.values(ResultadoEjecucion);
   readonly ambientes           = Object.values(AmbienteEjecucion);
   readonly severidades         = Object.values(SeveridadDefecto);
   readonly prioridades         = Object.values(PrioridadDefecto);
-
-  readonly resultadoClase: Record<string, string> = {
-    [ResultadoCasoPrueba.APROBADO]:     'badge-resultado-aprobado',
-    [ResultadoCasoPrueba.FALLIDO]:      'badge-resultado-fallido',
-    [ResultadoCasoPrueba.BLOQUEADO]:    'badge-resultado-bloqueado',
-    [ResultadoCasoPrueba.SIN_EJECUTAR]: 'badge-resultado-no-ejecutado',
-    [ResultadoCasoPrueba.OMITIDO]:      'badge-resultado-omitido',
-  };
-
-  readonly estadoQAClase: Record<string, string> = {
-    [EstadoCasoPrueba.PENDIENTE]:    'badge-qa-pendiente',
-    [EstadoCasoPrueba.EN_EJECUCION]: 'badge-qa-en-ejecucion',
-    [EstadoCasoPrueba.EJECUTADO]:    'badge-qa-completado',
-    [EstadoCasoPrueba.BLOQUEADO]:    'badge-qa-bloqueado',
-    [EstadoCasoPrueba.OMITIDO]:      'badge-qa-omitido',
-  };
 
   // ─── Selección masiva ─────────────────────────────────────────────────────
   seleccionados = new Set<number>();
@@ -347,9 +327,7 @@ export class TestCaseListComponent implements OnInit {
     this.requerimientoFiltroTexto = '';
     this.requerimientoFiltroId    = undefined;
     this.requerimientos           = [];
-    this.estadoFiltro             = '';
     this.tipoFiltro               = '';
-    this.resultadoFiltro          = '';
     this.busqueda                 = '';
     this.buscar();
   }
@@ -359,9 +337,7 @@ export class TestCaseListComponent implements OnInit {
     this.service.getAll({
       proyectoId:      this.proyectoId,
       requerimientoId: this.requerimientoFiltroId,
-      estado:          this.estadoFiltro    || undefined,
       tipo:            this.tipoFiltro      || undefined,
-      resultado:       this.resultadoFiltro || undefined,
       busqueda:        this.busqueda        || undefined,
       pagina:          this.pagina,
       porPagina:       this.porPagina,
@@ -391,10 +367,9 @@ export class TestCaseListComponent implements OnInit {
       'Nombre':       c.nombre,
       'Tipo':         c.tipo ?? '',
       'Prioridad':    c.prioridad ?? '',
-      'Estado QA':    c.estado ?? '',
-      'Resultado':    c.ultimoResultado ?? '',
       'Requerimiento': c.requerimientoCodigo ?? '',
       'Asignado A':   c.responsableQaNombre ?? '',
+      'Defectos':     c.totalDefectos ?? 0,
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();

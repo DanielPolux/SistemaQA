@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <!-- Fila 2: Búsqueda de texto + filtros de estado/tipo/resultado -->
+    <!-- Fila 2: Búsqueda de texto + tipo de caso -->
     <div class="filters-row">
       <input type="text"
              [(ngModel)]="busqueda"
@@ -65,16 +65,6 @@
       <select [(ngModel)]="tipoFiltro" (change)="buscar()">
         <option value="">Todos los tipos</option>
         @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
-      </select>
-
-      <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-        <option value="">Todos los estados</option>
-        @for (e of estadosQA; track e) { <option [value]="e">{{ e }}</option> }
-      </select>
-
-      <select [(ngModel)]="resultadoFiltro" (change)="buscar()">
-        <option value="">Todos los resultados</option>
-        @for (r of resultados; track r) { <option [value]="r">{{ r }}</option> }
       </select>
 
       <button class="btn btn-secondary btn-sm" (click)="limpiarFiltros()" title="Limpiar todos los filtros">
@@ -105,10 +95,7 @@
           <th>RF</th>
           <th>Tipo</th>
           <th>Prioridad</th>
-          <th>Estado QA</th>
-          <th>Resultado</th>
           <th>Responsable QA</th>
-          <th>F. Ejecución</th>
           <th>Defectos</th>
           <th>Acciones</th>
         </tr>
@@ -127,14 +114,7 @@
             <td>{{ c.requerimientoRf ?? '-' }}</td>
             <td>{{ c.tipo }}</td>
             <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
-            <td><span class="badge {{ estadoQAClase[c.estado] }}">{{ c.estado }}</span></td>
-            <td>
-              @if (c.resultado) {
-                <span class="badge {{ resultadoClase[c.resultado] }}">{{ c.resultado }}</span>
-              } @else { <span class="text-muted">—</span> }
-            </td>
             <td>{{ c.responsableQaNombre ?? '-' }}</td>
-            <td>{{ c.fechaEjecucion ? (c.fechaEjecucion | date:'dd/MM/yyyy') : '-' }}</td>
             <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
             <td class="actions">
               <button class="btn btn-sm btn-icon btn-info" title="Ver detalle"
@@ -154,7 +134,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td [attr.colspan]="auth.puedeEditar() ? 13 : 12" class="empty-row">No se encontraron casos de prueba</td></tr>
+          <tr><td [attr.colspan]="auth.puedeEditar() ? 10 : 9" class="empty-row">No se encontraron casos de prueba</td></tr>
         }
       </tbody>
     </table>
@@ -327,26 +307,8 @@
               </span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Estado QA</span>
-              <span class="detail-value">
-                <span class="badge {{ estadoQAClase[casoVer.estado] }}">{{ casoVer.estado }}</span>
-              </span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Resultado</span>
-              <span class="detail-value">
-                @if (casoVer.resultado) {
-                  <span class="badge {{ resultadoClase[casoVer.resultado] }}">{{ casoVer.resultado }}</span>
-                } @else { <span class="text-muted">—</span> }
-              </span>
-            </div>
-            <div class="detail-row">
               <span class="detail-label">Responsable QA</span>
               <span class="detail-value">{{ casoVer.responsableQaNombre ?? '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Fecha Ejecución</span>
-              <span class="detail-value">{{ casoVer.fechaEjecucion ? (casoVer.fechaEjecucion | date:'dd/MM/yyyy') : '—' }}</span>
             </div>
           </div>
 

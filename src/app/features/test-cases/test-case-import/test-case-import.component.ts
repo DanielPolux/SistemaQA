@@ -45,14 +45,10 @@ export class TestCaseImportComponent implements OnInit {
   // Valores permitidos — alineados con el backend
   private readonly TIPOS_VALIDOS      = Object.values(TipoPrueba);
   private readonly PRIORIDADES_VALIDAS= Object.values(PrioridadCasoPrueba);
-  private readonly ESTADOS_VALIDOS    = Object.values(EstadoCasoPrueba);
-  private readonly RESULTADOS_VALIDOS = Object.values(ResultadoCasoPrueba);
-
   readonly COLUMNAS_TEMPLATE = [
     'Codigo CP', 'Nombre del Caso de Prueba *', 'Clave Proyecto',
     'Tipo de Prueba *', 'Descripcion del Caso de Prueba *', 'Prioridad *',
-    'Estado QA *', 'Resultado Esperado *', 'Pasos de Prueba *',
-    'Requerimiento RF', 'Resultado', 'Observaciones', 'Evidencia URL'
+    'Resultado Esperado *', 'Pasos de Prueba *', 'Requerimiento RF'
   ];
 
   proyectos: Proyecto[]              = [];
@@ -100,13 +96,9 @@ export class TestCaseImportComponent implements OnInit {
       'Funcional',
       'Comprobar que un usuario registrado pueda iniciar sesión correctamente',
       'Alta',
-      'Pendiente',
       'El sistema muestra el dashboard del usuario',
       '1. Ir a /login\n2. Ingresar email: usuario@test.com\n3. Ingresar contraseña: 123456\n4. Clic en Iniciar Sesión',
-      'RF-001',
-      'Sin Ejecutar',
-      '',
-      ''
+      'RF-001'
     ]];
 
     const wsData = [...instruccion, [], encabezados[0], ...ejemplo];
@@ -114,19 +106,16 @@ export class TestCaseImportComponent implements OnInit {
 
     ws['!cols'] = [
       { wch: 12 }, { wch: 40 }, { wch: 14 }, { wch: 16 }, { wch: 40 },
-      { wch: 10 }, { wch: 16 }, { wch: 40 }, { wch: 50 }, { wch: 14 },
-      { wch: 16 }, { wch: 30 }, { wch: 30 }
+      { wch: 10 }, { wch: 40 }, { wch: 50 }, { wch: 14 }
     ];
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }];
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Casos de Prueba');
 
     const wsValores = XLSX.utils.aoa_to_sheet([
       ['Campo', 'Valores Permitidos'],
       ['Tipo de Prueba', this.TIPOS_VALIDOS.join(' | ')],
-      ['Prioridad',      this.PRIORIDADES_VALIDAS.join(' | ')],
-      ['Estado QA',      this.ESTADOS_VALIDOS.join(' | ')],
-      ['Resultado',      this.RESULTADOS_VALIDOS.join(' | ')]
+      ['Prioridad',      this.PRIORIDADES_VALIDAS.join(' | ')]
     ]);
     wsValores['!cols'] = [{ wch: 18 }, { wch: 80 }];
     XLSX.utils.book_append_sheet(wb, wsValores, 'Valores Válidos');
@@ -175,12 +164,28 @@ export class TestCaseImportComponent implements OnInit {
 
     const dataRows = rows.slice(headerIdx + 1).filter(r => r.some(c => String(c).trim()));
 
+    const headers = rows[headerIdx].map(c => String(c ?? '').replace(/\s*\*\s*$/, '').trim());
+    const valor = (row: string[], nombre: string): string => {
+      const idx = headers.indexOf(nombre);
+      return idx >= 0 ? String(row[idx] ?? '').trim() : '';
+    };
+
     this.filas = dataRows.map((row, i) => {
-      const [
-        codigoCP = '', nombreCasoPrueba = '', claveProyecto = '', tipoPrueba = '',
-        descripcionCasoPrueba = '', prioridad = '', estadoQA = '', resultadoEsperado = '',
-        pasosDePrueba = '', requerimientoRF = '', resultado = '', observaciones = '', evidenciaUrl = ''
-      ] = row.map(c => String(c ?? '').trim());
+      const codigoCP = valor(row, 'Codigo CP');
+      const nombreCasoPrueba = valor(row, 'Nombre del Caso de Prueba');
+      const claveProyecto = valor(row, 'Clave Proyecto');
+      const tipoPrueba = valor(row, 'Tipo de Prueba');
+      const descripcionCasoPrueba = valor(row, 'Descripcion del Caso de Prueba');
+      const prioridad = valor(row, 'Prioridad');
+      const resultadoEsperado = valor(row, 'Resultado Esperado');
+      const pasosDePrueba = valor(row, 'Pasos de Prueba');
+      const requerimientoRF = valor(row, 'Requerimiento RF');
+      const estadoQA = EstadoCasoPrueba.PENDIENTE;
+      const resultado = ResultadoCasoPrueba.SIN_EJECUTAR;
+      // Se leen para mantener compatibilidad con plantillas antiguas, pero ya no
+      // forman parte de la plantilla porque son datos propios de la ejecución.
+      const observaciones = valor(row, 'Observaciones');
+      const evidenciaUrl = valor(row, 'Evidencia URL');
 
       const errores: string[] = [];
 
@@ -194,14 +199,8 @@ export class TestCaseImportComponent implements OnInit {
         errores.push('Prioridad es requerida');
       else if (!this.PRIORIDADES_VALIDAS.includes(prioridad as PrioridadCasoPrueba))
         errores.push(`Prioridad inválida: "${prioridad}". Valores: ${this.PRIORIDADES_VALIDAS.join(', ')}`);
-      if (!estadoQA)
-        errores.push('Estado QA es requerido');
-      else if (!this.ESTADOS_VALIDOS.includes(estadoQA as EstadoCasoPrueba))
-        errores.push(`Estado QA inválido: "${estadoQA}". Valores: ${this.ESTADOS_VALIDOS.join(', ')}`);
       if (!resultadoEsperado) errores.push('Resultado Esperado es requerido');
       if (!pasosDePrueba)     errores.push('Pasos de Prueba es requerido');
-      if (resultado && !this.RESULTADOS_VALIDOS.includes(resultado as ResultadoCasoPrueba))
-        errores.push(`Resultado inválido: "${resultado}". Valores: ${this.RESULTADOS_VALIDOS.join(', ')}`);
 
       // Validate Clave Proyecto against selected project
       if (claveProyecto && this.proyectoActual && claveProyecto !== this.proyectoActual.codigo) {
