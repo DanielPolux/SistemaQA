@@ -57,7 +57,7 @@
             @for (cliente of clientes; track cliente.id) {
               <option [ngValue]="cliente.nombre"
                       [disabled]="!cliente.activo && cliente.nombre !== form.get('cliente')?.value">
-                {{ cliente.codigo }} — {{ cliente.nombre }}{{ cliente.activo ? '' : ' (Inactivo)' }}
+                {{ cliente.nombre }}{{ cliente.activo ? '' : ' (Inactivo)' }}
               </option>
             }
           </select>
