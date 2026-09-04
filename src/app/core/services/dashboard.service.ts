@@ -20,6 +20,7 @@ export interface DashboardStats {
   defectosPorEstado:     { estado: string; total: number }[];
   proyectosAvance: {
     id: number; codigo: string; nombre: string; estado: string;
+    ciclo_id: number; ciclo_nombre: string;
     porcentaje_avance: number; casos_totales: number;
     casos_ejecutados: number; defectos_abiertos: number;
   }[];
