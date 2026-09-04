@@ -667,6 +667,7 @@
                 <span class="evidencia-subiendo"><i class="bi bi-arrow-repeat"></i> Subiendo...</span>
               }
             </div>
+            <small class="text-muted evidencia-hint">Tamaño máximo por archivo: 25MB</small>
             @if (ejecucion.formEjecucion.evidencias.length > 0) {
               <ul class="evidencia-lista">
                 @for (ev of ejecucion.formEjecucion.evidencias; track ev.url; let i = $index) {
@@ -757,6 +758,7 @@
                   <span class="evidencia-subiendo"><i class="bi bi-arrow-repeat"></i> Subiendo...</span>
                 }
               </div>
+              <small class="text-muted evidencia-hint">Tamaño máximo por archivo: 25MB</small>
               @if (ejecucion.formEjecucion.evidencias.length > 0) {
                 <ul class="evidencia-lista">
                   @for (ev of ejecucion.formEjecucion.evidencias; track ev.url; let i = $index) {

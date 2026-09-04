@@ -16,9 +16,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (err.status === 401) {
         // Sesión expirada o token inválido — redirigir sin propagar el error
         // para evitar toasts de error durante el proceso de logout.
-        if (auth.isAuthenticated()) {
-          auth.logout();
-        }
+        // Siempre se limpia y redirige: isAuthenticated() ya deja la sesión
+        // en null como efecto secundario cuando el token expiró, así que
+        // condicionar el logout a su resultado nunca disparaba la redirección.
+        auth.logout();
         return EMPTY;
       }
       return throwError(() => err);

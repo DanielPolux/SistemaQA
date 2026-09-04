@@ -8,12 +8,13 @@ import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UploadService, Evidencia } from '../../../core/services/upload.service';
+import { mensajeErrorSubida } from '../../../core/utils/http-error.util';
 import { DefectService } from '../../../core/services/defect.service';
 import { WordExportService } from '../../../core/services/word-export.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
-  SeveridadDefecto, PrioridadDefecto, Defecto,
+  SeveridadDefecto, PrioridadDefecto, Defecto, EstadoDefecto,
 } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -433,7 +434,7 @@ export class CicloEjecucionComponent implements OnInit {
           if (--pendientes === 0) this.subiendoEvidencia.set(false);
         },
         error: (err) => {
-          this.errorEvidencia = `No se pudo subir "${file.name}": ${err?.error?.message ?? 'error desconocido'}`;
+          this.errorEvidencia = `No se pudo subir "${file.name}": ${mensajeErrorSubida(err)}`;
           if (--pendientes === 0) this.subiendoEvidencia.set(false);
         },
       });
@@ -489,8 +490,9 @@ export class CicloEjecucionComponent implements OnInit {
     const casoId = this.formEjecucion.bloqueadoPorCasoId;
     if (casoId) {
       this.defectService.getByCasoPrueba(casoId).subscribe(ds => {
-        this.defectosBloqueantes = ds;
-        if (ds.length === 1) this.formEjecucion.defectoBloqueanteId = ds[0].id;
+        // Un defecto ya cerrado no puede seguir bloqueando la ejecución de otro caso.
+        this.defectosBloqueantes = ds.filter(d => d.estado !== EstadoDefecto.CERRADO);
+        if (this.defectosBloqueantes.length === 1) this.formEjecucion.defectoBloqueanteId = this.defectosBloqueantes[0].id;
       });
     }
   }

@@ -3,6 +3,7 @@ import { EjecucionService } from '../../../core/services/ejecucion.service';
 import { CicloService } from '../../../core/services/ciclo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UploadService, Evidencia } from '../../../core/services/upload.service';
+import { mensajeErrorSubida } from '../../../core/utils/http-error.util';
 import { DefectService } from '../../../core/services/defect.service';
 import { WordExportService } from '../../../core/services/word-export.service';
 import {
@@ -173,7 +174,7 @@ export class EjecucionModalService {
           if (--pendientes === 0) this.subiendoEvidencia.set(false);
         },
         error: (err) => {
-          this.errorEvidencia = `No se pudo subir "${file.name}": ${err?.error?.message ?? 'error desconocido'}`;
+          this.errorEvidencia = `No se pudo subir "${file.name}": ${mensajeErrorSubida(err)}`;
           if (--pendientes === 0) this.subiendoEvidencia.set(false);
         },
       });

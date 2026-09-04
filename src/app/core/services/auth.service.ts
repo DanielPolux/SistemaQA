@@ -10,7 +10,7 @@ export class AuthService {
   private readonly TOKEN_KEY = 'qa_token';
   private readonly USER_KEY = 'qa_user';
 
-  usuarioActual = signal<Usuario | null>(this.getUserFromStorage());
+  usuarioActual = signal<Usuario | null>(this.getValidUserFromStorage());
 
   readonly esAdmin          = computed(() => this.usuarioActual()?.rol === Rol.ADMIN);
   readonly esDesarrollador  = computed(() => this.usuarioActual()?.rol === Rol.DEVELOPER);
@@ -102,21 +102,31 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp * 1000 < Date.now()) {
-        localStorage.removeItem(this.TOKEN_KEY);
+    if (!token) {
+      // Estado inconsistente (p.ej. quedó el usuario en storage sin token):
+      // limpiar para que el layout autenticado no se muestre sin sesión válida.
+      if (localStorage.getItem(this.USER_KEY)) {
         localStorage.removeItem(this.USER_KEY);
         this.usuarioActual.set(null);
-        return false;
       }
-      return true;
-    } catch {
+      return false;
+    }
+
+    if (!this.esTokenVigente(token)) {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
       this.usuarioActual.set(null);
+      return false;
+    }
+    return true;
+  }
+
+  // Verifica localmente la expiración del JWT (sin efectos secundarios).
+  private esTokenVigente(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 >= Date.now();
+    } catch {
       return false;
     }
   }
@@ -124,5 +134,18 @@ export class AuthService {
   private getUserFromStorage(): Usuario | null {
     const data = localStorage.getItem(this.USER_KEY);
     return data ? JSON.parse(data) : null;
+  }
+
+  // Usado solo en la inicialización del signal: si el token cacheado ya
+  // expiró (p.ej. sesión de un día anterior), no debe darse por autenticado
+  // ni mostrarse cabecera/sidebar hasta un login válido.
+  private getValidUserFromStorage(): Usuario | null {
+    const token = this.getToken();
+    if (!token || !this.esTokenVigente(token)) {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
+    return this.getUserFromStorage();
   }
 }

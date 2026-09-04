@@ -10,6 +10,7 @@ export interface Usuario {
   id: number;
   nombre: string;
   apellido: string;
+  username: string;
   email: string;
   password?: string;
   rol: Rol;
@@ -27,7 +28,7 @@ export interface UsuarioRol {
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
