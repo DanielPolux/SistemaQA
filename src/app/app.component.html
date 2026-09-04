@@ -1,4 +1,4 @@
-@if (auth.usuarioActual()) {
+@if (auth.usuarioActual() && !esRutaAutenticacion()) {
   <app-header />
   <div class="app-layout">
     <app-sidebar />
