@@ -19,73 +19,51 @@
   @if (cargando) {
     <div class="loading">Cargando proyectos...</div>
   } @else {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Nombre Proyecto</th>
-          <th>Cliente</th>
-          <th>Estado</th>
+    <div class="project-portfolio-grid">
+      @for (p of proyectos; track p.id) {
+        <article class="project-portfolio-card">
+          <div class="project-portfolio-head">
+            <div>
+              <span class="tag-codigo">{{ p.codigo }}</span>
+              <h3>{{ p.nombre }}</h3>
+              <p>{{ p.cliente }}</p>
+            </div>
+            <span class="badge {{ badgeEstado(p.estado) }}">{{ p.estado }}</span>
+          </div>
 
-          <th>% Avance</th>
-          <th>% Aprobación</th>
-          <th>Jefe de Proyecto</th>
-          <th>Jefe QA</th>
-          <th>F. Fin Planificada</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of proyectos; track p.id) {
-          <tr>
-            <td><span class="tag-codigo">{{ p.codigo }}</span></td>
-            <td class="td-nombre">{{ p.nombre }}</td>
-            <td>{{ p.cliente }}</td>
-            <td>
-              <span class="badge {{ badgeEstado(p.estado) }}">{{ p.estado }}</span>
-            </td>
+          <div class="project-portfolio-people">
+            <div class="portfolio-person">
+              <span class="portfolio-avatar">PM</span>
+              <div><small>Jefe de Proyecto</small><strong>{{ p.jefeProyectoNombre ?? 'Sin asignar' }}</strong></div>
+            </div>
+            <div class="portfolio-person">
+              <span class="portfolio-avatar portfolio-avatar--qa">QA</span>
+              <div><small>Jefe QA</small><strong>{{ p.jefeQaNombre ?? 'Sin asignar' }}</strong></div>
+            </div>
+          </div>
 
-            <td class="td-center">
-              <div class="progress-cell">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="p.porcentajeAvance"></div>
-                </div>
-                <span>{{ p.porcentajeAvance }}%</span>
-              </div>
-            </td>
-            <td class="td-center">
-              <div class="progress-cell">
-                <div class="progress-bar">
-                  <div class="progress-fill progress-fill--aprobacion" [style.width.%]="p.porcentajeAprobacion ?? 0"></div>
-                </div>
-                <span>{{ p.porcentajeAprobacion ?? 0 }}%</span>
-              </div>
-            </td>
-            <td>{{ p.jefeProyectoNombre ?? '-' }}</td>
-            <td>{{ p.jefeQaNombre ?? '-' }}</td>
-            <td>{{ p.fechaFinPlanificada ? (p.fechaFinPlanificada | date:'dd/MM/yyyy') : '-' }}</td>
-            <td class="actions">
-              <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-icon btn-info" title="Ver detalle">
-                <i class="bi bi-eye"></i>
-              </a>
+          <div class="portfolio-progress-label"><span>Avance del proyecto</span><strong>{{ p.porcentajeAvance }}%</strong></div>
+          <div class="progress-bar portfolio-progress"><div class="progress-fill" [style.width.%]="p.porcentajeAvance"></div></div>
+          <div class="project-portfolio-meta">
+            <span>Aprobación <strong>{{ p.porcentajeAprobacion ?? 0 }}%</strong></span>
+            <span>Fin planificado <strong>{{ p.fechaFinPlanificada ? (p.fechaFinPlanificada | date:'dd/MM/yyyy') : '—' }}</strong></span>
+          </div>
+          <div class="project-portfolio-actions">
+            <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-secondary"><i class="bi bi-eye"></i> Ver detalle</a>
+            <div class="actions">
               @if (auth.puedeGestionarProyectos()) {
-                <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Editar">
-                  <i class="bi bi-pencil"></i>
-                </a>
+                <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
               }
               @if (auth.puedeEliminarProyectos()) {
-                <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
-                  (click)="eliminar(p.id, p.nombre)">
-                  <i class="bi bi-trash"></i>
-                </button>
+                <button class="btn btn-sm btn-icon btn-danger" title="Eliminar" (click)="eliminar(p.id, p.nombre)"><i class="bi bi-trash"></i></button>
               }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="10" class="empty-row">No se encontraron proyectos</td></tr>
-        }
-      </tbody>
-    </table>
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <div class="empty-state project-portfolio-empty">No se encontraron proyectos</div>
+      }
+    </div>
 
     <div class="pagination-footer">
       <span class="pagination-info">{{ proyectos.length }} de {{ total }} registros</span>
