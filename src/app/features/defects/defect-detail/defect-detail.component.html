@@ -2,26 +2,13 @@
   <div class="page-header">
     <div class="page-header-info">
       @if (defecto) {
-        <h2>
-          <span class="tag-codigo tag-codigo--defecto">{{ defecto.codigoProyecto ?? defecto.codigo }}</span>
-          &nbsp;{{ defecto.titulo }}
-        </h2>
-        <span class="detail-cliente">{{ defecto.proyectoNombre }}</span>
+        <h2>Revisión del defecto</h2>
+        <span class="detail-cliente">Valida la respuesta de Desarrollo y registra la decisión de QA.</span>
       } @else {
         <h2>Detalle de Defecto</h2>
       }
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      @if (defecto && puedeRevisarQa) {
-        <button class="btn btn-success" (click)="confirmarRespuestaDesarrollo()" [disabled]="guardandoAceptar">
-          <i class="bi bi-check-circle"></i> {{ guardandoAceptar ? 'Guardando...' : textoAceptar }}
-        </button>
-      }
-      @if (defecto && puedeReabrir) {
-        <button class="btn btn-warning" (click)="abrirModalReabrir()">
-          <i class="bi bi-arrow-clockwise"></i> Rechazar respuesta y reabrir
-        </button>
-      }
       <a routerLink="/defectos" class="btn btn-secondary">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
@@ -31,155 +18,107 @@
   @if (cargando) { <div class="loading">Cargando defecto...</div> }
 
   @if (!cargando && defecto) {
-
-    <!-- Badges de estado -->
-    <div class="detail-section" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px 20px;">
-      <span class="badge {{ estadoClase[defecto.estado] }}">{{ defecto.estado }}</span>
-      <span class="badge {{ severidadClase[defecto.severidad] }}">{{ defecto.severidad }}</span>
-      <span class="badge {{ prioridadClase[defecto.prioridad] }}">{{ defecto.prioridad }}</span>
-      @if (defecto.estadoDesarrollo === 'Atendido') {
-        <span class="badge badge-dev-atendido">Atendido</span>
-      } @else if (defecto.estadoDesarrollo === 'No Aplica') {
-        <span class="badge badge-dev-noapl">No Aplica</span>
-      } @else {
-        <span class="badge badge-dev-pendiente">Pendiente de atención</span>
-      }
+    <div class="defect-review-context">
+      <strong>{{ defecto.codigoProyecto ?? defecto.codigo }}</strong><i class="bi bi-chevron-right"></i>
+      <span>{{ defecto.proyectoNombre ?? 'Proyecto' }}</span><i class="bi bi-chevron-right"></i>
+      <strong>{{ defecto.casoPruebaCodigo ?? 'Sin caso asociado' }}</strong><i class="bi bi-chevron-right"></i>
+      <strong>{{ defecto.codigo }}</strong>
     </div>
 
-    <!-- Datos generales -->
-    <div class="detail-section">
-      <h3>Datos Generales</h3>
-      <div class="detail-grid">
-        <div class="detail-row">
-          <span class="detail-label">Código</span>
-          <span class="detail-value">
-            <span class="tag-codigo tag-codigo--defecto">{{ defecto.codigoProyecto ?? defecto.codigo }}</span>
-            &nbsp;<small class="text-muted">{{ defecto.codigo }}</small>
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Proyecto</span>
-          <span class="detail-value">{{ defecto.proyectoNombre ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Caso de Prueba</span>
-          <span class="detail-value">{{ defecto.casoPruebaCodigo ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Ambiente</span>
-          <span class="detail-value">{{ defecto.ambiente }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Versión</span>
-          <span class="detail-value">{{ defecto.version }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Asignado A</span>
-          <span class="detail-value">{{ defecto.asignadoANombre ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Reportado Por</span>
-          <span class="detail-value">{{ defecto.reportadoPorNombre ?? '—' }}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Fecha Reporte</span>
-          <span class="detail-value">{{ defecto.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
-        </div>
-        @if (defecto.fechaResolucion) {
-          <div class="detail-row">
-            <span class="detail-label">Fecha Resolución</span>
-            <span class="detail-value">{{ defecto.fechaResolucion | date:'dd/MM/yyyy HH:mm' }}</span>
+    <div class="defect-review-layout">
+      <section class="defect-review-card">
+        <div class="defect-review-head">
+          <h3><span>{{ defecto.codigoProyecto ?? defecto.codigo }}</span> · {{ defecto.titulo }}</h3>
+          <div class="defect-review-badges">
+            <span class="badge {{ estadoClase[defecto.estado] }}">{{ defecto.estado }}</span>
+            <span class="badge {{ severidadClase[defecto.severidad] }}">{{ defecto.severidad }}</span>
+            <span class="badge {{ prioridadClase[defecto.prioridad] }}">{{ defecto.prioridad }}</span>
+            @if (defecto.estadoDesarrollo === 'Atendido') { <span class="badge badge-dev-atendido">Atendido</span> }
+            @else if (defecto.estadoDesarrollo === 'No Aplica') { <span class="badge badge-dev-noapl">No Aplica</span> }
+            @else { <span class="badge badge-dev-pendiente">Pendiente de atención</span> }
           </div>
-        }
-      </div>
-    </div>
-
-    <!-- Descripción del defecto -->
-    <div class="detail-section">
-      <h3>Descripción del Defecto</h3>
-
-      <p class="detail-section-title">Descripción</p>
-      <p class="detail-text" style="margin-bottom:16px">{{ defecto.descripcion }}</p>
-
-      <p class="detail-section-title">Pasos para Reproducir</p>
-      <pre class="detail-pre" style="margin-bottom:16px">{{ defecto.pasosReproduccion }}</pre>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-        <div>
-          <p class="detail-section-title">Resultado Obtenido</p>
-          <p class="detail-text">{{ defecto.resultadoObtenido }}</p>
         </div>
-        <div>
-          <p class="detail-section-title">Resultado Esperado</p>
-          <p class="detail-text">{{ defecto.resultadoEsperado }}</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- Respuesta del desarrollador -->
-    @if (defecto.estadoDesarrollo || defecto.comentariosDesarrollo) {
-      <div class="detail-section">
-        <h3>Respuesta del Desarrollador</h3>
-        @if (defecto.estadoDesarrollo) {
-          <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px">
-            <span class="detail-section-title" style="display:inline; border:none; padding:0; margin:0">Estado Dev:</span>
-            @if (defecto.estadoDesarrollo === 'Atendido') {
-              <span class="badge badge-dev-atendido">Atendido</span>
-            } @else {
-              <span class="badge badge-dev-noapl">No Aplica</span>
-            }
+        <div class="defect-review-section">
+          <p class="defect-review-label">Datos generales</p>
+          <div class="defect-review-grid">
+            <div><small>Proyecto</small><strong>{{ defecto.proyectoNombre ?? '—' }}</strong></div>
+            <div><small>Reportado por</small><strong>{{ defecto.reportadoPorNombre ?? '—' }}</strong></div>
+            <div><small>Asignado a</small><strong>{{ defecto.asignadoANombre ?? '—' }}</strong></div>
+            <div><small>Ambiente / versión</small><strong>{{ defecto.ambiente }} · {{ defecto.version }}</strong></div>
+            <div><small>Caso de prueba</small><strong>{{ defecto.casoPruebaCodigo ?? '—' }}</strong></div>
+            <div><small>Fecha de reporte</small><strong>{{ defecto.creadoEn | date:'dd/MM/yyyy HH:mm' }}</strong></div>
           </div>
-        }
-        @if (defecto.comentariosDesarrollo) {
-          <p class="detail-section-title">Comentarios del Desarrollador</p>
-          <p class="detail-text">{{ defecto.comentariosDesarrollo }}</p>
-        }
-      </div>
-    }
+        </div>
 
-    <!-- Comentarios del sistema -->
-    @if (defecto.comentarios && defecto.comentarios.length > 0) {
-      <div class="detail-section">
-        <h3>Historial de Comentarios</h3>
-        @for (c of defecto.comentarios; track c.id) {
-          <div style="padding:10px 0; border-bottom:1px solid var(--color-border)">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px">
-              <strong style="font-size:13px">{{ c.usuarioNombre ?? '—' }}</strong>
-              <span class="text-light" style="font-size:11.5px">{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</span>
+        <div class="defect-review-section">
+          <p class="defect-review-label">Descripción</p>
+          <p class="detail-text">{{ defecto.descripcion }}</p>
+          <div class="defect-review-results">
+            <div><p class="defect-review-label">Resultado obtenido</p><p class="detail-text">{{ defecto.resultadoObtenido }}</p></div>
+            <div><p class="defect-review-label">Resultado esperado</p><p class="detail-text">{{ defecto.resultadoEsperado }}</p></div>
+          </div>
+          <p class="defect-review-label">Pasos para reproducir</p>
+          <pre class="detail-pre">{{ defecto.pasosReproduccion }}</pre>
+        </div>
+
+        <div class="defect-review-section">
+          <p class="defect-review-label">Respuesta del desarrollador</p>
+          @if (defecto.estadoDesarrollo || defecto.comentariosDesarrollo) {
+            <div class="defect-dev-response" [class.defect-dev-response--attended]="defecto.estadoDesarrollo === 'Atendido'">
+              <div class="defect-dev-response-head">
+                <strong>{{ defecto.asignadoANombre ?? 'Desarrollo' }} · Desarrollo</strong>
+                @if (defecto.estadoDesarrollo === 'Atendido') { <span class="badge badge-dev-atendido">Atendido</span> }
+                @else { <span class="badge badge-dev-noapl">No Aplica</span> }
+              </div>
+              <p>{{ defecto.comentariosDesarrollo ?? 'Desarrollo registró la respuesta sin comentarios adicionales.' }}</p>
             </div>
-            <p style="font-size:13.5px; margin:0; line-height:1.6">{{ c.comentario }}</p>
-          </div>
-        }
-      </div>
-    }
+          } @else {
+            <div class="defect-dev-empty"><i class="bi bi-hourglass-split"></i> Desarrollo aún no ha registrado una respuesta.</div>
+          }
 
-    <!-- Auditoría -->
-    <div class="detail-section">
-      <h3>Historial de Auditoría</h3>
-      @if (auditoria.length === 0) {
-        <p class="text-muted">Sin registros de auditoría.</p>
-      } @else {
-        <table class="audit-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Usuario</th>
-              <th>Acción</th>
-              <th>Detalle</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of auditoria; track r.id) {
-              <tr>
-                <td class="audit-fecha">{{ r.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ r.usuarioNombre ?? '—' }}</td>
-                <td><span [class]="accionClase(r.accion)">{{ r.accion }}</span></td>
-                <td class="audit-valor">{{ r.valorNuevo ?? r.valorAnterior ?? '—' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
+          @if (puedeRevisarQa || puedeReabrir) {
+            <div class="defect-review-actions">
+              @if (puedeRevisarQa) {
+                <button class="btn btn-success" (click)="confirmarRespuestaDesarrollo()" [disabled]="guardandoAceptar">
+                  <i class="bi bi-check-circle"></i> {{ guardandoAceptar ? 'Guardando...' : textoAceptar }}
+                </button>
+              }
+              @if (puedeReabrir) {
+                <button class="btn btn-warning" (click)="abrirModalReabrir()">
+                  <i class="bi bi-arrow-clockwise"></i> Rechazar respuesta y reabrir
+                </button>
+              }
+            </div>
+            <p class="defect-review-hint">
+              @if (defecto.estadoDesarrollo === 'No Aplica') { Aceptar “No Aplica” descartará el defecto como Rechazado. Reabrirlo lo devolverá a Desarrollo. }
+              @else { Cerrar confirma que la corrección fue verificada. Reabrir indica que el defecto continúa presentándose. }
+            </p>
+          }
+        </div>
+
+        <div class="defect-review-permissions"><i class="bi bi-shield-check"></i><strong>Permisos QA:</strong> revisar respuesta, cerrar o reabrir el defecto.</div>
+      </section>
+
+      <aside class="defect-review-card defect-review-history">
+        <div class="defect-review-head"><h3>Historial del defecto</h3></div>
+        @if (defecto.comentarios && defecto.comentarios.length > 0) {
+          @for (c of defecto.comentarios; track c.id) {
+            <div class="defect-history-event">
+              <span class="defect-history-icon"><i class="bi bi-chat-left-text"></i></span>
+              <div><strong>{{ c.usuarioNombre ?? 'Usuario' }}</strong><p>{{ c.comentario }}</p><time>{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</time></div>
+            </div>
+          }
+        }
+        @for (r of auditoria; track r.id) {
+          <div class="defect-history-event">
+            <span class="defect-history-icon"><i class="bi bi-clock-history"></i></span>
+            <div><strong>{{ r.accion }}</strong><p>{{ r.valorNuevo ?? r.valorAnterior ?? 'Actualización registrada' }}</p><time>{{ r.usuarioNombre ?? 'Sistema' }} · {{ r.fecha | date:'dd/MM/yyyy HH:mm' }}</time></div>
+          </div>
+        } @empty {
+          @if (!defecto.comentarios?.length) { <p class="defect-history-empty">Sin actividad registrada.</p> }
+        }
+      </aside>
     </div>
   }
 
