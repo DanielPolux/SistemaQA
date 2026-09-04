@@ -29,6 +29,17 @@
     </div>
 
     <div class="form-group">
+      <label>Responsable QA *</label>
+      <select formControlName="responsableQaId">
+        <option [ngValue]="null">Seleccionar tester...</option>
+        @for (u of testers; track u.id) {
+          <option [ngValue]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+        }
+      </select>
+      <span class="field-hint">Tester responsable de la ejecución y seguimiento de este ciclo.</span>
+    </div>
+
+    <div class="form-group">
       <label>Plan de Pruebas (opcional)</label>
       <select formControlName="planPruebaId">
         <option [ngValue]="null">Sin plan asignado</option>

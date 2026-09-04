@@ -39,6 +39,7 @@
           <th>Nombre</th>
           <th>Proyecto</th>
           <th>Estado</th>
+          <th>Responsable QA</th>
           <th>Fecha Inicio</th>
           <th>Fecha Fin</th>
           <th>Ejecuciones</th>
@@ -61,6 +62,7 @@
             <td>
               <span class="badge {{ estadoClase[c.estado] }}">{{ c.estado }}</span>
             </td>
+            <td>{{ c.responsableQaNombre ?? '—' }}</td>
             <td>{{ c.fechaInicio ? (c.fechaInicio | date:'dd/MM/yyyy') : '—' }}</td>
             <td>{{ c.fechaFin    ? (c.fechaFin    | date:'dd/MM/yyyy') : '—' }}</td>
             <td class="td-center">
@@ -101,7 +103,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="8" class="empty-row">No se encontraron ciclos de prueba</td></tr>
+          <tr><td colspan="9" class="empty-row">No se encontraron ciclos de prueba</td></tr>
         }
       </tbody>
     </table>
@@ -196,6 +198,19 @@
       </div>
 
       <div class="modal-body" [formGroup]="formCiclo">
+
+        <div class="form-group">
+          <label>Responsable QA <span class="req">*</span></label>
+          <select formControlName="responsableQaId">
+            <option [ngValue]="null">Seleccionar tester...</option>
+            @for (u of testers; track u.id) {
+              <option [ngValue]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
+            }
+          </select>
+          @if (formCiclo.get('responsableQaId')?.invalid && formCiclo.get('responsableQaId')?.touched) {
+            <span class="field-error">Selecciona el tester responsable del ciclo.</span>
+          }
+        </div>
 
         <div class="form-group">
           <label>Plan de Pruebas</label>

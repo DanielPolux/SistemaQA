@@ -22,7 +22,6 @@ export class ProjectFormComponent implements OnInit {
   proyectoId?: number;
   jefesProyecto: Usuario[] = [];
   jefesQA: Usuario[]       = [];
-  responsablesQA: Usuario[] = [];
   cargando = false;
   guardando = false;
   error = '';
@@ -59,7 +58,6 @@ export class ProjectFormComponent implements OnInit {
     sistema: [''],
 
     // Responsables
-    responsableQaId: [null as number | null],
     jefeProyectoId: [null as number | null, Validators.required],
     jefeQaId: [null as number | null, Validators.required],
 
@@ -93,7 +91,6 @@ export class ProjectFormComponent implements OnInit {
     const base = { activo: true, porPagina: 200 };
     this.userService.getAll({ ...base, rol: Rol.PROJECT_MANAGER }).subscribe(r => { this.jefesProyecto  = r.datos; });
     this.userService.getAll({ ...base, rol: Rol.QA_LEAD         }).subscribe(r => { this.jefesQA        = r.datos; });
-    this.userService.getAll({ ...base, rol: Rol.QA_TESTER       }).subscribe(r => { this.responsablesQA = r.datos; });
 
     this.form.get('estado')!.valueChanges.subscribe(estado => {
       if (estado === EstadoProyecto.POR_ESTIMAR) {
@@ -181,7 +178,6 @@ export class ProjectFormComponent implements OnInit {
       ...raw,
       jefeProyectoId:         toNum(raw.jefeProyectoId),
       jefeQaId:               toNum(raw.jefeQaId),
-      responsableQaId:        toNum(raw.responsableQaId) ?? undefined,
       horasQa:                toNum(raw.horasQa),
       fechaEstimacion:        toDate(raw.fechaEstimacion),
       fechaInicioPlanificada: toDate(raw.fechaInicioPlanificada),

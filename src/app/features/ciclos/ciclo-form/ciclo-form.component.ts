@@ -8,7 +8,8 @@ import { PlanPruebaService } from '../../../core/services/plan-prueba.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { RequirementService } from '../../../core/services/requirement.service';
 import { TestCaseService } from '../../../core/services/test-case.service';
-import { AmbienteEjecucion, EstadoProyecto, Proyecto, PlanPrueba } from '../../../core/models';
+import { UserService } from '../../../core/services/user.service';
+import { AmbienteEjecucion, EstadoProyecto, Proyecto, PlanPrueba, Rol, Usuario } from '../../../core/models';
 
 @Component({
   selector: 'app-ciclo-form',
@@ -23,6 +24,7 @@ export class CicloFormComponent implements OnInit {
   private projectService     = inject(ProjectService);
   private requirementService = inject(RequirementService);
   private testCaseService    = inject(TestCaseService);
+  private userService        = inject(UserService);
   private router             = inject(Router);
   private route              = inject(ActivatedRoute);
 
@@ -35,6 +37,7 @@ export class CicloFormComponent implements OnInit {
   cicloId?: number;
   proyectos: Proyecto[] = [];
   planes: PlanPrueba[]  = [];
+  testers: Usuario[]    = [];
   readonly ambientes = Object.values(AmbienteEjecucion);
   guardando = false;
   error = '';
@@ -51,6 +54,7 @@ export class CicloFormComponent implements OnInit {
 
   form = this.fb.group({
     proyectoId:   [null as number | null, Validators.required],
+    responsableQaId: [null as number | null, Validators.required],
     planPruebaId: [null as number | null],
     nombre:       ['', [Validators.required, Validators.maxLength(200)]],
     descripcion:  [''],
@@ -71,6 +75,7 @@ export class CicloFormComponent implements OnInit {
   ngOnInit(): void {
     this.projectService.getAll({ porPagina: 500 }).subscribe(r => { this.proyectos = r.datos; });
     this.planService.getAll({ porPagina: 500 }).subscribe(r => { this.planes = r.datos; });
+    this.userService.getAll({ rol: Rol.QA_TESTER, activo: true, porPagina: 500 }).subscribe(r => { this.testers = r.datos; });
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -78,6 +83,7 @@ export class CicloFormComponent implements OnInit {
       this.service.getById(this.cicloId).subscribe(c => {
         this.form.patchValue({
           proyectoId:   c.proyectoId,
+          responsableQaId: c.responsableQaId ?? null,
           planPruebaId: c.planPruebaId ?? null,
           nombre:       c.nombre,
           descripcion:  c.descripcion ?? '',
@@ -193,6 +199,7 @@ export class CicloFormComponent implements OnInit {
 
     const payload: any = {
       proyectoId:   val.proyectoId,
+      responsableQaId: val.responsableQaId,
       planPruebaId: val.planPruebaId || undefined,
       nombre:       val.nombre,
       descripcion:  val.descripcion || undefined,

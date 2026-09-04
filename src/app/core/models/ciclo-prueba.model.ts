@@ -16,6 +16,8 @@ export interface CicloPrueba {
   fechaFin?: string;
   creadoPor: number;
   creadoPorNombre?: string;
+  responsableQaId?: number | null;
+  responsableQaNombre?: string | null;
   creadoEn: Date;
   actualizadoEn: Date;
   totalEjecuciones?: number;

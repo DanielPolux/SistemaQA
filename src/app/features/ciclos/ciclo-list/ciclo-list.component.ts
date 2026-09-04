@@ -10,7 +10,8 @@ import { RequirementService } from '../../../core/services/requirement.service';
 import { TestCaseService } from '../../../core/services/test-case.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { AmbienteEjecucion, CicloPrueba, EstadoCiclo, EstadoProyecto, PlanPrueba, Proyecto } from '../../../core/models';
+import { UserService } from '../../../core/services/user.service';
+import { AmbienteEjecucion, CicloPrueba, EstadoCiclo, EstadoProyecto, PlanPrueba, Proyecto, Rol, Usuario } from '../../../core/models';
 
 const ESTADOS_PERMITIDOS_CICLO = new Set<EstadoProyecto>([
   EstadoProyecto.PLANIFICADO,
@@ -38,6 +39,7 @@ export class CicloListComponent implements OnInit {
   private fb                 = inject(FormBuilder);
   private router             = inject(Router);
   private toast              = inject(ToastService);
+  private userService        = inject(UserService);
   auth                       = inject(AuthService);
 
   ciclos: CicloPrueba[] = [];
@@ -58,6 +60,7 @@ export class CicloListComponent implements OnInit {
   };
 
   planes: PlanPrueba[]       = [];
+  testers: Usuario[]         = [];
   readonly ambientes = Object.values(AmbienteEjecucion);
 
   // ─── Modal pre-validación "+ Nuevo Ciclo" ────────────────────────────────
@@ -156,6 +159,7 @@ export class CicloListComponent implements OnInit {
   seleccionados = new Set<number>();
 
   formCiclo = this.fb.group({
+    responsableQaId: [null as number | null, Validators.required],
     planPruebaId: [null as number | null],
     nombre:       ['', [Validators.required, Validators.maxLength(200)]],
     descripcion:  [''],
@@ -170,7 +174,7 @@ export class CicloListComponent implements OnInit {
     this.tieneHistorial = false;
     this.casosReejecucion = [];
     this.casosAprobados   = [];
-    this.formCiclo.reset({ planPruebaId: null, nombre: '', descripcion: '', ambiente: '', fechaInicio: '', fechaFin: '' });
+    this.formCiclo.reset({ responsableQaId: null, planPruebaId: null, nombre: '', descripcion: '', ambiente: '', fechaInicio: '', fechaFin: '' });
     this.modalFormAbierto.set(true);
     this.cargandoCasos = true;
     this.service.getCasosPrevios(proyectoId).subscribe({
@@ -211,6 +215,7 @@ export class CicloListComponent implements OnInit {
     const val = this.formCiclo.getRawValue();
     const payload: any = {
       proyectoId:   this.proyectoSelId,
+      responsableQaId: val.responsableQaId,
       planPruebaId: val.planPruebaId || undefined,
       nombre:       val.nombre,
       descripcion:  val.descripcion || undefined,
@@ -265,6 +270,7 @@ export class CicloListComponent implements OnInit {
 
   ngOnInit(): void {
     this.projectService.getAll({ porPagina: 500 }).subscribe(r => { this.proyectos = r.datos; });
+    this.userService.getAll({ rol: Rol.QA_TESTER, activo: true, porPagina: 500 }).subscribe(r => { this.testers = r.datos; });
   }
 
   cargar(): void {

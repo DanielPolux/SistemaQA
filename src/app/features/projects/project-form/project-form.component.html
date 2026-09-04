@@ -68,7 +68,7 @@
     <!-- Responsables -->
     <div class="form-section">
       <h3 class="form-section-title">Responsables</h3>
-      <div class="form-row form-row--3">
+      <div class="form-row">
         <div class="form-group">
           <label for="jefeProyectoId">Jefe de Proyecto *</label>
           <select id="jefeProyectoId" formControlName="jefeProyectoId">
@@ -83,15 +83,6 @@
           <select id="jefeQaId" formControlName="jefeQaId">
             <option [value]="null">Seleccionar...</option>
             @for (u of jefesQA; track u.id) {
-              <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="responsableQaId">Responsable QA</label>
-          <select id="responsableQaId" formControlName="responsableQaId">
-            <option [value]="null">Sin asignar</option>
-            @for (u of responsablesQA; track u.id) {
               <option [value]="u.id">{{ u.nombre }} {{ u.apellido }}</option>
             }
           </select>
