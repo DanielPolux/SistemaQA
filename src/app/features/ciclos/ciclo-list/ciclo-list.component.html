@@ -40,8 +40,8 @@
           <th>Proyecto</th>
           <th>Estado</th>
           <th>Responsable QA</th>
-          <th>Fecha Inicio</th>
-          <th>Fecha Fin</th>
+          <th>Inicio planificado / real</th>
+          <th>Fin estimado / real</th>
           <th>Ejecuciones</th>
           <th>Creado Por</th>
           <th>Acciones</th>
@@ -63,14 +63,20 @@
               <span class="badge {{ estadoClase[c.estado] }}">{{ c.estado }}</span>
             </td>
             <td>{{ c.responsableQaNombre ?? '—' }}</td>
-            <td>{{ c.fechaInicio ? (c.fechaInicio | date:'dd/MM/yyyy') : '—' }}</td>
-            <td>{{ c.fechaFin    ? (c.fechaFin    | date:'dd/MM/yyyy') : '—' }}</td>
+            <td><span class="text-muted">Plan:</span> {{ c.fechaInicio ? (c.fechaInicio | date:'dd/MM/yyyy') : '—' }}<br><span class="text-muted">Real:</span> {{ c.fechaInicioReal ? (c.fechaInicioReal | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td><span class="text-muted">Est.:</span> {{ c.fechaFin ? (c.fechaFin | date:'dd/MM/yyyy') : '—' }}<br><span class="text-muted">Real:</span> {{ c.fechaFinReal ? (c.fechaFinReal | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
             <td class="td-center">
               <span class="badge badge-version">{{ c.totalEjecuciones ?? 0 }}</span>
             </td>
             <td>{{ c.creadoPorNombre ?? '—' }}</td>
             <td class="actions">
-              @if (auth.puedeEjecutar() && c.estado === 'Activo') {
+              @if (auth.puedeEjecutar() && c.estado === 'Planificado') {
+                <button class="btn btn-sm btn-icon btn-info" title="Iniciar ciclo"
+                        (click)="iniciar(c)">
+                  <i class="bi bi-play-fill"></i>
+                </button>
+              }
+              @if (auth.puedeEjecutar() && c.estado === 'En ejecución') {
                 <button class="btn btn-sm btn-icon btn-ejecutar"
                         title="Ejecutar casos del ciclo"
                         (click)="ejecutarCiclo(c)">
@@ -82,7 +88,7 @@
                    class="btn btn-sm btn-icon btn-warning" title="Editar">
                   <i class="bi bi-pencil"></i>
                 </a>
-                @if (c.estado === 'Activo') {
+                @if (c.estado === 'En ejecución') {
                   <button class="btn btn-sm btn-icon btn-secondary" title="Cerrar ciclo"
                           (click)="cerrar(c)">
                     <i class="bi bi-lock"></i>
@@ -252,7 +258,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Fecha de Inicio</label>
+            <label>Fecha de Inicio Planificada</label>
             <input type="date" formControlName="fechaInicio" />
           </div>
           <div class="form-group">

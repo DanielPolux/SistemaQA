@@ -55,7 +55,8 @@ export class CicloListComponent implements OnInit {
   readonly estados = Object.values(EstadoCiclo);
 
   readonly estadoClase: Record<string, string> = {
-    [EstadoCiclo.ACTIVO]:  'badge-ciclo-activo',
+    [EstadoCiclo.PLANIFICADO]:  'badge-qa-pendiente',
+    [EstadoCiclo.EN_EJECUCION]: 'badge-ciclo-activo',
     [EstadoCiclo.CERRADO]: 'badge-ciclo-cerrado',
   };
 
@@ -243,6 +244,11 @@ export class CicloListComponent implements OnInit {
   popupBloqueoMsg     = '';
 
   ejecutarCiclo(c: CicloPrueba): void {
+    if (c.estado !== EstadoCiclo.EN_EJECUCION) {
+      this.popupBloqueoMsg = `El ciclo "${c.nombre}" debe iniciarse antes de ejecutar sus casos.`;
+      this.popupBloqueoAbierto.set(true);
+      return;
+    }
     const proyecto = this.proyectos.find(p => p.id === c.proyectoId);
     if (proyecto && !ESTADOS_EJECUTAR_CICLO.has(proyecto.estado as EstadoProyecto)) {
       this.popupBloqueoMsg =
@@ -263,6 +269,13 @@ export class CicloListComponent implements OnInit {
   }
 
   cerrarPopupBloqueo(): void { this.popupBloqueoAbierto.set(false); }
+
+  iniciar(c: CicloPrueba): void {
+    this.service.iniciar(c.id).subscribe({
+      next: () => { this.toast.exito('Ciclo iniciado correctamente'); this.cargar(); },
+      error: (err) => this.toast.error(err?.error?.message || 'No se pudo iniciar el ciclo'),
+    });
+  }
 
   // ─── Modal confirmación eliminar ─────────────────────────────────────────
   modalConfirmarAbierto = signal(false);

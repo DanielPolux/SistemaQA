@@ -1,6 +1,7 @@
 export enum EstadoCiclo {
-  ACTIVO  = 'Activo',
-  CERRADO = 'Cerrado',
+  PLANIFICADO  = 'Planificado',
+  EN_EJECUCION = 'En ejecución',
+  CERRADO      = 'Cerrado',
 }
 
 export interface CicloPrueba {
@@ -14,6 +15,8 @@ export interface CicloPrueba {
   estado: EstadoCiclo;
   fechaInicio?: string;
   fechaFin?: string;
+  fechaInicioReal?: string | null;
+  fechaFinReal?: string | null;
   creadoPor: number;
   creadoPorNombre?: string;
   responsableQaId?: number | null;

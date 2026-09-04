@@ -101,6 +101,10 @@ export class CicloService {
     return this.http.patch<CicloPrueba>(`${this.url}/${id}/cerrar`, datos);
   }
 
+  iniciar(id: number): Observable<CicloPrueba> {
+    return this.http.patch<CicloPrueba>(`${this.url}/${id}/iniciar`, {});
+  }
+
   getInformes(id: number): Observable<InformeCierreCiclo[]> {
     return this.http.get<InformeCierreCiclo[]>(`${this.url}/${id}/informes`);
   }

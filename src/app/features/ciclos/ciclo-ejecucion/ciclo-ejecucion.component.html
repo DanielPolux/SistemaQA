@@ -10,13 +10,13 @@
           <p class="ce-subtitle">
             <strong>{{ ciclo.nombre }}</strong>
             @if (ciclo.proyectoNombre) { — <span class="text-muted">{{ ciclo.proyectoNombre }}</span> }
-            <span class="badge {{ ciclo.estado === 'Activo' ? 'badge-ciclo-activo' : 'badge-ciclo-cerrado' }}"
+            <span class="badge {{ ciclo.estado === 'En ejecución' ? 'badge-ciclo-activo' : (ciclo.estado === 'Planificado' ? 'badge-qa-pendiente' : 'badge-ciclo-cerrado') }}"
                   style="margin-left: 0.5rem;">{{ ciclo.estado }}</span>
           </p>
         }
       </div>
     </div>
-    @if (ciclo?.estado === 'Activo' && auth.puedeEjecutar()) {
+    @if (ciclo?.estado === 'En ejecución' && auth.puedeEjecutar()) {
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
         <button class="btn btn-primary" (click)="abrirFinalizarCiclo()"
                 [disabled]="casos.length === 0 || totalPendientes > 0">
@@ -451,7 +451,7 @@
               <button class="btn btn-outline" (click)="limpiarSeleccion()" [disabled]="guardandoEjec()">
                 ← Cancelar
               </button>
-              @if (ciclo?.estado === 'Activo' && auth.puedeEjecutar()) {
+              @if (ciclo?.estado === 'En ejecución' && auth.puedeEjecutar()) {
                 <button class="btn btn-accent" (click)="guardarEjecucion()" [disabled]="guardandoEjec()">
                   @if (guardandoEjec()) { Registrando... } @else { ✓ Registrar Ejecución }
                 </button>
