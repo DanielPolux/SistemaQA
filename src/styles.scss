@@ -961,7 +961,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 .text-success { color: var(--color-success); }
 .text-danger  { color: var(--color-danger); }
 .td-nombre    { font-weight: 500; min-width: 180px; }
-.th-rf, .td-rf { min-width: 100px; white-space: nowrap; }
+.th-rf, .td-rf { width: 76px; min-width: 76px; white-space: nowrap; }
 .td-center    { text-align: center; }
 .td-obs       { min-width: 160px; font-size: 13px; color: var(--color-text-muted); }
 .req          { color: var(--color-danger); margin-left: 2px; }
