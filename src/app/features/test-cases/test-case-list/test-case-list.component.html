@@ -116,21 +116,23 @@
             <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
             <td>{{ c.responsableQaNombre ?? '-' }}</td>
             <td class="td-center">{{ c.totalDefectos ?? 0 }}</td>
-            <td class="actions">
-              <button class="btn btn-sm btn-icon btn-info" title="Ver detalle"
-                      (click)="abrirVer(c.id)">
-                <i class="bi bi-eye"></i>
-              </button>
-              @if (auth.puedeEditar()) {
-                <button class="btn btn-sm btn-icon btn-warning" title="Editar"
-                        (click)="abrirEditar(c.id)">
-                  <i class="bi bi-pencil"></i>
+            <td class="action-cell">
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-icon btn-info" title="Ver detalle"
+                        (click)="abrirVer(c.id)">
+                  <i class="bi bi-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
-                  (click)="eliminar(c.id, c.nombre, c.totalDefectos ?? 0)">
-                  <i class="bi bi-trash"></i>
-                </button>
-              }
+                @if (auth.puedeEditar()) {
+                  <button class="btn btn-sm btn-icon btn-warning" title="Editar"
+                          (click)="abrirEditar(c.id)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
+                    (click)="eliminar(c.id, c.nombre, c.totalDefectos ?? 0)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
+              </div>
             </td>
           </tr>
         } @empty {
