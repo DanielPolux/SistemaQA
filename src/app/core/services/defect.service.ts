@@ -54,8 +54,8 @@ export class DefectService {
     return this.http.patch<Defecto>(`${this.url}/${id}/estado`, { estado, comentario });
   }
 
-  asignarLote(defectoIds: number[], desarrolladorId: number): Observable<{ asignados: number }> {
-    return this.http.patch<{ asignados: number }>(`${this.url}/asignacion-lote`, { defectoIds, desarrolladorId });
+  asignarLote(defectoIds: number[], desarrolladorId: number): Observable<{ asignados: number; correoEnviado: boolean }> {
+    return this.http.patch<{ asignados: number; correoEnviado: boolean }>(`${this.url}/asignacion-lote`, { defectoIds, desarrolladorId });
   }
 
   agregarComentario(defectoId: number, comentario: string): Observable<ComentarioDefecto> {

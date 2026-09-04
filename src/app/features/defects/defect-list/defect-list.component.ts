@@ -162,7 +162,10 @@ export class DefectListComponent implements OnInit {
     this.service.asignarLote([...this.seleccionados], this.desarrolladorLoteId).subscribe({
       next: r => {
         this.asignandoLote = false; this.modalAsignacionAbierto.set(false);
-        this.toast.exito(`${r.asignados} defecto${r.asignados === 1 ? '' : 's'} asignado${r.asignados === 1 ? '' : 's'} correctamente`);
+        const base = `${r.asignados} defecto${r.asignados === 1 ? '' : 's'} asignado${r.asignados === 1 ? '' : 's'} correctamente`;
+        r.correoEnviado
+          ? this.toast.exito(`${base}. Correo enviado al desarrollador.`)
+          : this.toast.error(`${base}, pero el correo no pudo enviarse. Revisa la auditoría.`);
         this.cargar();
       },
       error: err => { this.asignandoLote = false; this.toast.error(err?.error?.message || 'No se pudo completar la asignación'); },
