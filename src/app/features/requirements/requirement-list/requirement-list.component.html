@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Requerimientos</h2>
-    @if (auth.puedeEditar() && proyectoId) {
+    @if (auth.puedeGestionarRequerimientos() && proyectoId) {
       <button class="btn btn-primary" (click)="abrirModal()">+ Nuevo Requerimiento</button>
     }
   </div>
@@ -66,7 +66,7 @@
                    class="btn btn-sm btn-icon btn-info" title="Ver casos de prueba">
                   <i class="bi bi-list-check"></i>
                 </a>
-                @if (auth.puedeEditar()) {
+                @if (auth.puedeGestionarRequerimientos()) {
                   <button class="btn btn-sm btn-icon btn-warning" title="Editar"
                     (click)="abrirModalEditar(r)">
                     <i class="bi bi-pencil"></i>

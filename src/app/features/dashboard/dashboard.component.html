@@ -59,7 +59,7 @@
         <div class="kpi-icon">🧪</div>
         <div class="kpi-body">
           <div class="kpi-value">{{ s.resumen.casos_totales }}</div>
-          <div class="kpi-label">Casos de Prueba</div>
+          <div class="kpi-label">{{ esTester ? 'Casos del Ciclo Activo' : 'Casos en Ciclos Activos' }}</div>
         </div>
         <div class="kpi-sub">Ejecutados: <strong>{{ s.resumen.casos_ejecutados }}</strong>
           ({{ pct(s.resumen.casos_ejecutados, s.resumen.casos_totales) }}%)</div>
@@ -89,7 +89,7 @@
         <div class="kpi-icon">👤</div>
         <div class="kpi-body">
           <div class="kpi-value">{{ s.resumen.mis_casos }}</div>
-          <div class="kpi-label">Mis Casos Asignados</div>
+          <div class="kpi-label">{{ esTester ? 'Mis Casos del Ciclo' : 'Casos en Alcance' }}</div>
         </div>
         <div class="kpi-sub">
           @if (esTester) {
@@ -119,6 +119,7 @@
                 <div class="project-progress-top">
                   <span class="project-codigo">{{ p.codigo }}</span>
                   <span class="project-nombre">{{ p.nombre }}</span>
+                  <span class="text-muted">· {{ p.ciclo_nombre }}</span>
                   <span class="project-pct">{{ p.porcentaje_avance }}%</span>
                 </div>
                 <div class="progress-bar-track">
@@ -139,7 +140,7 @@
       <!-- Casos por estado -->
       <div class="dash-card">
         <div class="dash-card-header">
-          <h3>Casos de Prueba por Estado</h3>
+          <h3>Casos del Ciclo por Estado</h3>
           <a routerLink="/casos-prueba" class="dash-card-link">Ver todos →</a>
         </div>
         @if (s.casosPorEstado.length === 0) {
@@ -168,7 +169,7 @@
       <!-- Mis casos por estado -->
       <div class="dash-card">
         <div class="dash-card-header">
-          <h3>Mis Casos Asignados</h3>
+          <h3>{{ esTester ? 'Mis Casos del Ciclo Activo' : 'Casos en Ciclos Activos' }}</h3>
         </div>
         @if (s.misCasos.length === 0) {
           <p class="text-muted">No tienes casos asignados.</p>

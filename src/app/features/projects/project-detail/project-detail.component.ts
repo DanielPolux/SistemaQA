@@ -26,7 +26,7 @@ export class ProjectDetailComponent implements OnInit {
   error = '';
 
   get puedeArchivar(): boolean {
-    return this.auth.esAdmin() || this.auth.esProjectManager();
+    return this.auth.esAdmin();
   }
 
   ngOnInit(): void {

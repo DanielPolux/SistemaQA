@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../../core/guards/role.guard';
+import { Rol } from '../../core/models';
 
 export const TEST_CASES_ROUTES: Routes = [
   {
@@ -7,10 +9,12 @@ export const TEST_CASES_ROUTES: Routes = [
   },
   {
     path: 'importar',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD, Rol.QA_TESTER])],
     loadComponent: () => import('./test-case-import/test-case-import.component').then(m => m.TestCaseImportComponent)
   },
   {
     path: 'nuevo',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD, Rol.QA_TESTER])],
     loadComponent: () => import('./test-case-form/test-case-form.component').then(m => m.TestCaseFormComponent)
   },
   {
@@ -19,6 +23,7 @@ export const TEST_CASES_ROUTES: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD, Rol.QA_TESTER])],
     loadComponent: () => import('./test-case-form/test-case-form.component').then(m => m.TestCaseFormComponent)
   }
 ];

@@ -55,6 +55,19 @@ export class DefectDetailComponent implements OnInit {
   comentarioReabrir   = '';
   errorReabrir        = '';
   guardandoReabrir    = false;
+  guardandoAceptar    = false;
+
+  get puedeRevisarQa(): boolean {
+    return this.auth.puedeEditar() && this.defecto?.estado === EstadoDefecto.EN_REVISION;
+  }
+
+  get estadoAceptacion(): EstadoDefecto {
+    return this.defecto?.estadoDesarrollo === 'No Aplica' ? EstadoDefecto.RECHAZADO : EstadoDefecto.CERRADO;
+  }
+
+  get textoAceptar(): string {
+    return this.defecto?.estadoDesarrollo === 'No Aplica' ? 'Aceptar No Aplica' : 'Cerrar defecto';
+  }
 
   get puedeReabrir(): boolean {
     return this.auth.puedeEditar() &&
@@ -91,6 +104,25 @@ export class DefectDetailComponent implements OnInit {
       error: (err) => {
         this.guardandoReabrir = false;
         this.errorReabrir = err?.error?.message || 'Error al reabrir el defecto.';
+      },
+    });
+  }
+
+  confirmarRespuestaDesarrollo(): void {
+    if (!this.defecto || !this.puedeRevisarQa || this.guardandoAceptar) return;
+    this.guardandoAceptar = true;
+    this.service.cambiarEstado(this.defecto.id, this.estadoAceptacion).subscribe({
+      next: (d) => {
+        this.defecto = d;
+        this.guardandoAceptar = false;
+        this.toast.exito(d.estado === EstadoDefecto.RECHAZADO
+          ? 'La respuesta No Aplica fue aceptada.'
+          : 'La corrección fue verificada y el defecto quedó cerrado.');
+        this.auditoriaService.getByDefecto(d.id).subscribe(r => { this.auditoria = r; });
+      },
+      error: (err) => {
+        this.guardandoAceptar = false;
+        this.toast.error(err?.error?.message || 'No se pudo registrar la revisión QA.');
       },
     });
   }

@@ -26,10 +26,10 @@
         }
 
         <div class="form-group">
-          <label for="email">Correo electrónico</label>
-          <input id="email" type="email" formControlName="email" placeholder="usuario@empresa.com" />
-          @if (form.get('email')?.invalid && form.get('email')?.touched) {
-            <span class="field-error">Ingresa un correo válido</span>
+          <label for="username">Usuario</label>
+          <input id="username" type="text" formControlName="username" placeholder="usuario" autocomplete="username" />
+          @if (form.get('username')?.invalid && form.get('username')?.touched) {
+            <span class="field-error">Solo letras y números, mínimo 3 caracteres</span>
           }
         </div>
 

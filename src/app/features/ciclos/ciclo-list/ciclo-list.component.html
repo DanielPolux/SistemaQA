@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Ciclos de Prueba</h2>
-    @if (auth.puedeEditar()) {
+    @if (auth.puedeGestionarCiclos()) {
       <button class="btn btn-primary" (click)="abrirModalNuevo()">+ Nuevo Ciclo</button>
     }
   </div>
@@ -83,7 +83,7 @@
                   <i class="bi bi-play-circle-fill"></i>
                 </button>
               }
-              @if (auth.puedeEditar()) {
+              @if (auth.puedeGestionarCiclos()) {
                 <a [routerLink]="['/ciclos', c.id, 'editar']"
                    class="btn btn-sm btn-icon btn-warning" title="Editar">
                   <i class="bi bi-pencil"></i>

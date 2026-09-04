@@ -6,7 +6,7 @@ import { Rol } from '../models';
 import { environment } from '../../../environments/environment';
 
 const mockUsuario = {
-  id: 1, nombre: 'Admin', apellido: 'QA', email: 'admin@qa.com',
+  id: 1, nombre: 'Admin', apellido: 'QA', username: 'admin', email: 'admin@qa.com',
   rol: Rol.ADMIN, activo: true,
 };
 
@@ -35,7 +35,7 @@ describe('AuthService', () => {
   });
 
   it('login guarda token y usuario en localStorage', () => {
-    service.login({ email: 'admin@qa.com', password: '123456' }).subscribe();
+    service.login({ username: 'admin', password: '123456' }).subscribe();
 
     const req = http.expectOne(`${environment.apiUrl}/auth/login`);
     req.flush({ token: 'test_token', usuario: mockUsuario });
