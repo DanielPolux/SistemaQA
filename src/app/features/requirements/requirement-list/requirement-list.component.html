@@ -9,10 +9,10 @@
   <!-- Selector de proyecto (paso 1) -->
   <div class="project-selector">
     <label for="proyectoFiltro"><strong>Proyecto</strong></label>
-    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="onProyectoChange()" class="select-proyecto">
-      <option [value]="null">— Selecciona un proyecto —</option>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="onProyectoChange()" class="select-proyecto project-select">
+      <option [ngValue]="null">Selecciona un proyecto</option>
       @for (p of proyectos; track p.id) {
-        <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+        <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
       }
     </select>
     @if (proyectoSeleccionado) {

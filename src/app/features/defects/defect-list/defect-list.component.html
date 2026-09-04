@@ -16,8 +16,8 @@
   <!-- Selector de proyecto (paso 1) -->
   <div class="project-selector">
     <label for="proyectoFiltro"><strong>Proyecto</strong></label>
-    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="buscar()" class="select-proyecto">
-      <option [ngValue]="undefined">— Selecciona un proyecto —</option>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoId" (change)="buscar()" class="select-proyecto project-select">
+      <option [ngValue]="undefined">Selecciona un proyecto</option>
       @for (p of proyectos; track p.id) {
         <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
       }

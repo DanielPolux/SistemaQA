@@ -26,7 +26,7 @@
     <div class="filters-row">
       <div class="filter-field filter-field--wide">
         <label class="filter-label" for="filtroProyecto">Proyecto</label>
-        <select id="filtroProyecto" [(ngModel)]="proyectoId" (change)="onProyectoChange()">
+        <select id="filtroProyecto" [(ngModel)]="proyectoId" (change)="onProyectoChange()" class="project-select">
           <option [ngValue]="undefined">Todos los proyectos</option>
           @for (p of proyectos; track p.id) {
             <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
@@ -403,10 +403,10 @@
         <div class="form-row">
           <div class="form-group">
             <label>Proyecto *</label>
-            <select formControlName="proyectoId">
-              <option [value]="null">Seleccionar...</option>
+            <select formControlName="proyectoId" class="project-select">
+              <option [ngValue]="null">Selecciona un proyecto</option>
               @for (p of proyectos; track p.id) {
-                <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+                <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
               }
             </select>
           </div>

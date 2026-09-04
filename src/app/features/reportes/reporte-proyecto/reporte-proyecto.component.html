@@ -11,10 +11,10 @@
   <!-- Selectores en cascada: proyecto → ciclo -->
   <div class="reporte-selector">
     <div class="reporte-selector-row"><label class="form-label">Proyecto</label>
-      <select class="form-control reporte-select" [(ngModel)]="proyectoId" (change)="seleccionarProyecto()">
-        <option [ngValue]="null" disabled>-- Elige un proyecto --</option>
+      <select class="form-control reporte-select project-select" [(ngModel)]="proyectoId" (change)="seleccionarProyecto()">
+        <option [ngValue]="null" disabled>Selecciona un proyecto</option>
         @for (p of proyectos; track p.id) {
-          <option [ngValue]="p.id">{{ p.codigo }} · {{ p.nombre }}</option>
+          <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
         }
       </select>
     </div>

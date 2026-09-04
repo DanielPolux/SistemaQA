@@ -9,8 +9,8 @@
   <!-- Selector de proyecto (paso 1) -->
   <div class="project-selector">
     <label for="proyectoFiltro"><strong>Proyecto</strong></label>
-    <select id="proyectoFiltro" [(ngModel)]="proyectoFiltroId" (change)="buscar()" class="select-proyecto">
-      <option [ngValue]="undefined">— Selecciona un proyecto —</option>
+    <select id="proyectoFiltro" [(ngModel)]="proyectoFiltroId" (change)="buscar()" class="select-proyecto project-select">
+      <option [ngValue]="undefined">Selecciona un proyecto</option>
       @for (p of proyectos; track p.id) {
         <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
       }
@@ -151,10 +151,10 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Proyecto *</label>
-          <select [ngModel]="proyectoSelId" (ngModelChange)="onProyectoNuevoChange($event)">
-            <option [ngValue]="null">Seleccionar proyecto...</option>
+          <select [ngModel]="proyectoSelId" (ngModelChange)="onProyectoNuevoChange($event)" class="project-select">
+            <option [ngValue]="null">Selecciona un proyecto</option>
             @for (p of proyectos; track p.id) {
-              <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }} ({{ p.estado }})</option>
+              <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
             }
           </select>
         </div>

@@ -28,10 +28,10 @@
       <div class="form-row">
         <div class="form-group">
           <label for="proyectoId">Proyecto *</label>
-          <select id="proyectoId" formControlName="proyectoId">
-            <option [value]="null">Seleccionar proyecto...</option>
+          <select id="proyectoId" formControlName="proyectoId" class="project-select">
+            <option [ngValue]="null">Selecciona un proyecto</option>
             @for (p of proyectos; track p.id) {
-              <option [value]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
+              <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
             }
           </select>
         </div>

@@ -30,9 +30,9 @@
         @if (casoFijo) {
           <input type="text" [value]="proyectoNombreFijo" readonly class="input-readonly" />
         } @else {
-          <select formControlName="proyectoId">
-            <option [value]="null">Seleccionar...</option>
-            @for (p of proyectos; track p.id) { <option [value]="p.id">{{ p.nombre }}</option> }
+          <select formControlName="proyectoId" class="project-select">
+            <option [ngValue]="null">Selecciona un proyecto</option>
+            @for (p of proyectos; track p.id) { <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option> }
           </select>
         }
       </div>

@@ -16,10 +16,10 @@
     <div class="form-row">
       <div class="form-group">
         <label>Proyecto <span class="req">*</span></label>
-        <select formControlName="proyectoId" [attr.disabled]="esEdicion ? true : null">
-          <option [ngValue]="null">Selecciona un proyecto...</option>
+        <select formControlName="proyectoId" [attr.disabled]="esEdicion ? true : null" class="project-select">
+          <option [ngValue]="null">Selecciona un proyecto</option>
           @for (p of proyectos; track p.id) {
-            <option [ngValue]="p.id">{{ p.nombre }}</option>
+            <option [ngValue]="p.id">{{ p.codigo }} — {{ p.nombre }}</option>
           }
         </select>
       </div>
