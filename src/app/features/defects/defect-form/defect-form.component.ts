@@ -157,7 +157,9 @@ export class DefectFormComponent implements OnInit {
     }
 
     op.subscribe({
-      next: (d) => this.router.navigate(['/defectos', d.id]),
+      next: (d) => this.esSoloDesarrollo
+        ? this.router.navigate(['/defectos'], { queryParams: { proyectoId: d.proyectoId } })
+        : this.router.navigate(['/defectos', d.id]),
       error: (err) => { this.error = err.error?.message || 'Error al guardar'; this.guardando = false; }
     });
   }
