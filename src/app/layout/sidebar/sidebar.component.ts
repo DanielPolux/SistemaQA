@@ -11,4 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class SidebarComponent {
   auth = inject(AuthService);
+  usuario = this.auth.usuarioActual;
+
+  logout(): void { this.auth.logout(); }
 }

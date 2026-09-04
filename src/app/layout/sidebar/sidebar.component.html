@@ -1,5 +1,8 @@
 <nav class="sidebar">
-  <div class="sidebar-divider"></div>
+  <a routerLink="/dashboard" class="sidebar-brand" aria-label="Sistema QA — DLW LATAM">
+    <img src="/assets/img/logo-dlw-blanco.jpg" alt="DLW LATAM" class="sidebar-brand-logo" />
+    <span class="sidebar-brand-copy"><strong>Sistema QA</strong><small>DLW LATAM</small></span>
+  </a>
 
   <p class="sidebar-section-label">Principal</p>
   <ul class="sidebar-menu">
@@ -92,7 +95,18 @@
     </ul>
   }
 
-  <div class="sidebar-footer">
-    v2.0 &nbsp;·&nbsp; Sistema QA
-  </div>
+  @if (usuario()) {
+    <div class="sidebar-profile">
+      <span class="sidebar-profile-avatar">
+        {{ (usuario()?.nombre ?? '?')[0].toUpperCase() }}{{ usuario()?.apellido?.[0]?.toUpperCase() ?? '' }}
+      </span>
+      <span class="sidebar-profile-copy">
+        <strong>{{ usuario()?.nombre }} {{ usuario()?.apellido }}</strong>
+        <small>{{ usuario()?.rol }}</small>
+      </span>
+      <button class="sidebar-logout" (click)="logout()" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  }
 </nav>
