@@ -24,7 +24,7 @@ export interface GrupoResumen {
 
 export interface CreateCatalogoDto {
   grupo: string;
-  codigo: string;
+  codigo?: string;
   nombre: string;
   descripcion?: string;
   orden?: number;

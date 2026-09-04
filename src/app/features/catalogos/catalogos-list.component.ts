@@ -58,6 +58,11 @@ export class CatalogosListComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarGrupos();
+    this.form.get('grupo')!.valueChanges.subscribe(() => this.actualizarValidadorCodigo());
+  }
+
+  get esClienteModal(): boolean {
+    return this.form.get('grupo')?.value?.trim().toUpperCase() === 'CLIENTE';
   }
 
   cargarGrupos(): void {
@@ -88,6 +93,7 @@ export class CatalogosListComponent implements OnInit {
     this.editandoId = null;
     this.errorModal = '';
     this.form.reset({ grupo: this.grupoActivo ?? '', codigo: '', nombre: '', descripcion: '', orden: 0, activo: true });
+    this.actualizarValidadorCodigo();
     this.modalAbierto.set(true);
   }
 
@@ -103,6 +109,7 @@ export class CatalogosListComponent implements OnInit {
       orden:       item.orden,
       activo:      item.activo,
     });
+    this.actualizarValidadorCodigo();
     this.modalAbierto.set(true);
   }
 
@@ -121,10 +128,10 @@ export class CatalogosListComponent implements OnInit {
     const val = this.form.value;
     const dto = {
       grupo:       val.grupo!,
-      codigo:      val.codigo!,
+      codigo:      this.esClienteModal ? undefined : val.codigo!,
       nombre:      val.nombre!,
       descripcion: val.descripcion || undefined,
-      orden:       val.orden ?? 0,
+      orden:       this.esClienteModal ? undefined : (val.orden ?? 0),
       activo:      val.activo ?? true,
     };
 
@@ -144,6 +151,13 @@ export class CatalogosListComponent implements OnInit {
         this.guardando.set(false);
       },
     });
+  }
+
+  private actualizarValidadorCodigo(): void {
+    const codigo = this.form.get('codigo')!;
+    if (this.esClienteModal) codigo.clearValidators();
+    else codigo.setValidators(Validators.required);
+    codigo.updateValueAndValidity({ emitEvent: false });
   }
 
   // ─── Eliminar ────────────────────────────────────────────────────────────
