@@ -14,7 +14,7 @@ import { WordExportService } from '../../../core/services/word-export.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
   ResultadoEjecucion, AmbienteEjecucion,
-  SeveridadDefecto, PrioridadDefecto, Defecto,
+  SeveridadDefecto, PrioridadDefecto, Defecto, EstadoDefecto,
 } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -490,8 +490,9 @@ export class CicloEjecucionComponent implements OnInit {
     const casoId = this.formEjecucion.bloqueadoPorCasoId;
     if (casoId) {
       this.defectService.getByCasoPrueba(casoId).subscribe(ds => {
-        this.defectosBloqueantes = ds;
-        if (ds.length === 1) this.formEjecucion.defectoBloqueanteId = ds[0].id;
+        // Un defecto ya cerrado no puede seguir bloqueando la ejecución de otro caso.
+        this.defectosBloqueantes = ds.filter(d => d.estado !== EstadoDefecto.CERRADO);
+        if (this.defectosBloqueantes.length === 1) this.formEjecucion.defectoBloqueanteId = this.defectosBloqueantes[0].id;
       });
     }
   }
