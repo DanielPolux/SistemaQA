@@ -36,19 +36,15 @@
 
       <div class="filter-field filter-field--wide">
         <label class="filter-label" for="filtroRequerimiento">Requerimiento</label>
-        <input id="filtroRequerimiento"
-               type="text"
-               [(ngModel)]="requerimientoFiltroTexto"
-               list="requerimientosDatalist"
-               (change)="onRequerimientoChange($event)"
-               [placeholder]="proyectoId ? 'Escribe código o título del requerimiento...' : 'Selecciona un proyecto primero'"
-               [disabled]="!proyectoId"
-               autocomplete="off" />
-        <datalist id="requerimientosDatalist">
+        <select id="filtroRequerimiento"
+                [(ngModel)]="requerimientoFiltroId"
+                (change)="buscar()"
+                [disabled]="!proyectoId">
+          <option [ngValue]="undefined">Todos los requerimientos</option>
           @for (r of requerimientos; track r.id) {
-            <option value="{{ r.codigo }}">{{ r.codigo }} — {{ r.titulo }}</option>
+            <option [ngValue]="r.id">{{ r.codigo }} — {{ r.titulo }}</option>
           }
-        </datalist>
+        </select>
         @if (proyectoId && requerimientos.length > 0) {
           <span class="filter-hint">{{ requerimientos.length }} requerimiento(s)</span>
         }
@@ -416,17 +412,14 @@
           </div>
           <div class="form-group">
             <label>Requerimiento RF</label>
-            <input type="text"
-                   formControlName="requerimientoRf"
-                   list="requerimientosEditarDatalist"
-                   (change)="onRequerimientoChangeEditar($event)"
-                   placeholder="Escribe o selecciona..."
-                   autocomplete="off" />
-            <datalist id="requerimientosEditarDatalist">
+            <select formControlName="requerimientoId"
+                    (change)="onRequerimientoChangeEditar()"
+                    [disabled]="!formEditar.get('proyectoId')?.value">
+              <option [ngValue]="null">Sin requerimiento</option>
               @for (r of requerimientosEditar; track r.id) {
-                <option value="{{ r.codigo }}">{{ r.codigo }} — {{ r.titulo }}</option>
+                <option [ngValue]="r.id">{{ r.codigo }} — {{ r.titulo }}</option>
               }
-            </datalist>
+            </select>
           </div>
         </div>
 

@@ -50,7 +50,6 @@ export class TestCaseListComponent implements OnInit {
 
   // Filtros
   proyectoId?: number;
-  requerimientoFiltroTexto = '';
   requerimientoFiltroId?: number;
   tipoFiltro      = '';
   busqueda        = '';
@@ -237,10 +236,10 @@ export class TestCaseListComponent implements OnInit {
     this.errorEditar = '';
   }
 
-  onRequerimientoChangeEditar(event: Event): void {
-    const codigo = (event.target as HTMLInputElement).value.trim();
-    const match  = this.requerimientosEditar.find(r => r.codigo === codigo);
-    this.formEditar.patchValue({ requerimientoId: match?.id ?? null }, { emitEvent: false });
+  onRequerimientoChangeEditar(): void {
+    const id = this.formEditar.get('requerimientoId')?.value;
+    const match = this.requerimientosEditar.find(r => r.id === Number(id));
+    this.formEditar.patchValue({ requerimientoRf: match?.codigo ?? '' }, { emitEvent: false });
   }
 
   guardarEditar(): void {
@@ -305,7 +304,6 @@ export class TestCaseListComponent implements OnInit {
 
   onProyectoChange(): void {
     this.requerimientos           = [];
-    this.requerimientoFiltroTexto = '';
     this.requerimientoFiltroId    = undefined;
     if (this.proyectoId) {
       this.requirementService.getByProyecto(this.proyectoId).subscribe(r => {
@@ -315,16 +313,8 @@ export class TestCaseListComponent implements OnInit {
     this.buscar();
   }
 
-  onRequerimientoChange(event: Event): void {
-    const codigo = (event.target as HTMLInputElement).value.trim();
-    const match  = this.requerimientos.find(r => r.codigo === codigo);
-    this.requerimientoFiltroId = match?.id;
-    this.buscar();
-  }
-
   limpiarFiltros(): void {
     this.proyectoId               = undefined;
-    this.requerimientoFiltroTexto = '';
     this.requerimientoFiltroId    = undefined;
     this.requerimientos           = [];
     this.tipoFiltro               = '';
