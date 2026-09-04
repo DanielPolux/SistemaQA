@@ -41,6 +41,7 @@ export interface DashboardStats {
     resultado: string; ambiente: string; fecha: string;
     tester_nombre: string; proyecto_nombre: string;
   }[];
+  resultadosEjecucion: { resultado: string; total: number }[];
 }
 
 @Injectable({ providedIn: 'root' })

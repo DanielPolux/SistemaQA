@@ -1,19 +1,23 @@
 <div class="page-container">
   <div class="page-header">
-    <h2>Proyectos</h2>
+    <div class="page-header-info"><h2>Portafolio de proyectos</h2><span class="detail-cliente">Seguimiento ejecutivo de calidad, responsables y avance.</span></div>
     @if (auth.puedeGestionarProyectos()) {
       <a routerLink="/proyectos/nuevo" class="btn btn-primary">+ Nuevo Proyecto</a>
     }
   </div>
 
-  <div class="filters">
-    <input type="text" [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" placeholder="Buscar proyecto o cliente..." />
-    <select [(ngModel)]="estadoFiltro" (change)="buscar()">
-      <option value="">Todos los estados</option>
-      @for (e of estados; track e) {
-        <option [value]="e">{{ e }}</option>
-      }
-    </select>
+  <div class="portfolio-filters">
+    <label><span>Buscar proyecto</span><input type="text" [ngModel]="busqueda" (ngModelChange)="onBusquedaChange($event)" placeholder="Código, nombre o cliente" /></label>
+    <label><span>Estado</span><select [(ngModel)]="estadoFiltro" (change)="buscar()"><option value="">Todos los estados</option>@for (e of estados; track e) { <option [value]="e">{{ e }}</option> }</select></label>
+    <label><span>Responsable QA</span><select [(ngModel)]="responsableQaId" (change)="buscar()"><option [ngValue]="null">Todos los responsables</option>@for (r of responsablesQa; track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }</select></label>
+    <button class="btn btn-secondary" (click)="limpiarFiltros()">Limpiar</button>
+  </div>
+
+  <div class="portfolio-kpis">
+    <div class="portfolio-kpi"><small>Proyectos activos</small><strong>{{ resumenPortafolio.activos }}</strong></div>
+    <div class="portfolio-kpi"><small>Ciclos vigentes</small><strong>{{ resumenPortafolio.ciclos }}</strong></div>
+    <div class="portfolio-kpi"><small>Aprobación promedio</small><strong>{{ resumenPortafolio.aprobacion }}%</strong></div>
+    <div class="portfolio-kpi"><small>Defectos abiertos</small><strong>{{ resumenPortafolio.defectosAbiertos }}</strong></div>
   </div>
 
   @if (cargando) {
@@ -45,8 +49,9 @@
           <div class="portfolio-progress-label"><span>Avance del proyecto</span><strong>{{ p.porcentajeAvance }}%</strong></div>
           <div class="progress-bar portfolio-progress"><div class="progress-fill" [style.width.%]="p.porcentajeAvance"></div></div>
           <div class="project-portfolio-meta">
-            <span>Aprobación <strong>{{ p.porcentajeAprobacion ?? 0 }}%</strong></span>
-            <span>Fin planificado <strong>{{ p.fechaFinPlanificada ? (p.fechaFinPlanificada | date:'dd/MM/yyyy') : '—' }}</strong></span>
+            <span><strong>{{ p.totalCasosPrueba ?? 0 }}</strong> casos</span>
+            <span><strong>{{ p.defectosAbiertos ?? 0 }}</strong> defectos abiertos</span>
+            <span><strong>{{ p.cicloActual ?? 'Sin ciclo' }}</strong></span>
           </div>
           <div class="project-portfolio-actions">
             <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-secondary"><i class="bi bi-eye"></i> Ver detalle</a>

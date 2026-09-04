@@ -101,6 +101,15 @@
     </div>
   }
 
+  @if (ciclo) {
+    <div class="execution-context">
+      <strong>{{ ciclo.proyectoCodigo ?? ciclo.proyectoNombre ?? 'Proyecto' }}</strong><i class="bi bi-chevron-right"></i>
+      <span>{{ ciclo.planNombre ?? 'Sin plan asociado' }}</span><i class="bi bi-chevron-right"></i>
+      <strong>{{ ciclo.nombre }}</strong>
+      @if (casoSeleccionado) { <i class="bi bi-chevron-right"></i><strong>{{ casoSeleccionado.codigo }}</strong> }
+    </div>
+  }
+
   <!-- Split panel layout -->
   @if (cargando()) {
     <div class="loading">Cargando casos del ciclo...</div>

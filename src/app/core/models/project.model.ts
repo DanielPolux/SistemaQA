@@ -29,6 +29,9 @@ export interface Proyecto {
   estado: EstadoProyecto;          // Estado (requerido)
   porcentajeAvance: number;        // % casos ejecutados / total
   porcentajeAprobacion?: number;   // % casos aprobados / ejecutados
+  totalCasosPrueba?: number;
+  defectosAbiertos?: number;
+  cicloActual?: string | null;
   horasQa?: number;                // HorasQA
 
   // Fechas planificadas

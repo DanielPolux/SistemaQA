@@ -54,12 +54,28 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
   proyectos: Proyecto[]        = [];
   proyectoId: number | null    = null;
   cicloId: number | null       = null;
+  vista: 'resumen' | 'detalle' = 'resumen';
   ciclos: CicloPrueba[]        = [];
   datos  = signal<ReporteProyecto | null>(null);
   cargando = signal(false);
   error    = signal('');
 
   private charts: Chart[] = [];
+
+  exportarInforme(): void { window.print(); }
+
+  cambiarVista(): void {
+    this.destruirGraficas();
+    if (this.vista === 'detalle' && this.datos()) setTimeout(() => this.renderizarGraficas(), 80);
+  }
+
+  porcentajeGrupo(valor: number, total: number): number {
+    return total > 0 ? Math.round(valor * 100 / total) : 0;
+  }
+
+  claseSeveridad(severidad: string): string {
+    return `badge-sev-${severidad.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`;
+  }
 
   ngOnInit(): void {
     this.proyectoService.getAll({ porPagina: 500 }).subscribe({
@@ -96,7 +112,7 @@ export class ReporteProyectoComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.datos.set(data);
         this.cargando.set(false);
-        setTimeout(() => this.renderizarGraficas(), 80);
+        if (this.vista === 'detalle') setTimeout(() => this.renderizarGraficas(), 80);
       },
       error: () => {
         this.cargando.set(false);

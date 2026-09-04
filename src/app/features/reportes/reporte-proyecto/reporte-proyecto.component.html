@@ -2,14 +2,15 @@
 
   <div class="page-header">
     <div class="page-header-info">
-      <h2>Reportes de Proyecto</h2>
+      <h2>Reportes de calidad</h2>
+      <span class="detail-cliente">Selecciona primero el proyecto y después el ciclo de prueba.</span>
     </div>
+    <button class="btn btn-primary" (click)="exportarInforme()" [disabled]="!datos()"><i class="bi bi-file-earmark-arrow-down"></i> Exportar informe</button>
   </div>
 
   <!-- Selectores en cascada: proyecto → ciclo -->
   <div class="reporte-selector">
-    <label class="form-label">1. Selecciona un proyecto</label>
-    <div class="reporte-selector-row">
+    <div class="reporte-selector-row"><label class="form-label">Proyecto</label>
       <select class="form-control reporte-select" [(ngModel)]="proyectoId" (change)="seleccionarProyecto()">
         <option [ngValue]="null" disabled>-- Elige un proyecto --</option>
         @for (p of proyectos; track p.id) {
@@ -17,14 +18,18 @@
         }
       </select>
     </div>
-    <label class="form-label" style="margin-top:1rem;">2. Selecciona un ciclo de prueba</label>
-    <div class="reporte-selector-row">
+    <div class="reporte-selector-row"><label class="form-label">Ciclo de prueba</label>
       <select class="form-control reporte-select" [(ngModel)]="cicloId" (change)="seleccionarCiclo()" [disabled]="!proyectoId">
         <option [ngValue]="null" disabled>-- Elige un ciclo --</option>
         <option [ngValue]="0">Todos los ciclos (reporte general del proyecto)</option>
         @for (c of ciclos; track c.id) {
           <option [ngValue]="c.id">{{ c.nombre }} · {{ c.estado }}</option>
         }
+      </select>
+    </div>
+    <div class="reporte-selector-row"><label class="form-label">Vista</label>
+      <select class="form-control reporte-select" [(ngModel)]="vista" (change)="cambiarVista()">
+        <option value="resumen">Resumen ejecutivo</option><option value="detalle">Detalle analítico</option>
       </select>
     </div>
   </div>
@@ -81,6 +86,36 @@
       </div>
     </div>
 
+    @if (vista === 'resumen') {
+      <div class="report-executive-layout">
+        <section class="report-executive-panel">
+          <div class="report-panel-head"><h4>Resultados por grupo funcional</h4><span>{{ d.resumen.casosEjecutados }} ejecuciones</span></div>
+          <div class="report-group-list">
+            <div class="report-group-legend"><span class="ok">Aprobado</span><span class="fail">Fallido</span><span class="block">Bloqueado</span></div>
+            @for (g of d.resultadosPorGrupo; track g.grupo) {
+              <div class="report-group-row">
+                <span>{{ g.grupo }}</span>
+                <div class="report-group-track">
+                  <i class="ok" [style.width.%]="porcentajeGrupo(g.aprobados,g.total)"></i>
+                  <i class="fail" [style.width.%]="porcentajeGrupo(g.fallidos,g.total)"></i>
+                  <i class="block" [style.width.%]="porcentajeGrupo(g.bloqueados,g.total)"></i>
+                </div><strong>{{ g.total }}</strong>
+              </div>
+            } @empty { <p class="chart-empty">Sin ejecuciones agrupadas</p> }
+          </div>
+        </section>
+        <section class="report-executive-panel">
+          <div class="report-panel-head"><h4>Defectos prioritarios</h4><span>{{ d.resumen.defectosAbiertos }} abiertos</span></div>
+          <div class="table-scroll"><table class="report-priority-table"><thead><tr><th>Defecto</th><th>Severidad</th><th>Estado</th></tr></thead><tbody>
+            @for (defecto of d.defectosPrioritarios; track defecto.id) {
+              <tr><td><strong>{{ defecto.codigoProyecto ?? defecto.codigo }}</strong><small>{{ defecto.titulo }}</small></td><td><span class="badge {{ claseSeveridad(defecto.severidad) }}">{{ defecto.severidad }}</span></td><td>{{ defecto.estado }}</td></tr>
+            } @empty { <tr><td colspan="3" class="chart-empty">Sin defectos abiertos</td></tr> }
+          </tbody></table></div>
+        </section>
+      </div>
+    }
+
+    @if (vista === 'detalle') {
     <!-- Barras de avance -->
     <div class="detail-section">
       <div class="avance-header">
@@ -170,6 +205,7 @@
         }
       </div>
     </div>
+    }
 
   }
 </div>

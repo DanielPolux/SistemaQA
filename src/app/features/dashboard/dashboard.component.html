@@ -44,6 +44,10 @@
 
     @if (!sinProyectos) {
 
+    @if (s.proyectosAvance[0]; as activo) {
+      <div class="dashboard-active-context"><span>PROYECTO ACTIVO</span><strong>{{ activo.codigo }} · {{ activo.nombre }}</strong><i class="bi bi-chevron-right"></i><strong>{{ activo.ciclo_nombre }}</strong></div>
+    }
+
     <!-- ─── KPI cards ───────────────────────────────────────────────────── -->
     <div class="kpi-grid">
       <div class="kpi-card kpi-blue">
@@ -99,6 +103,25 @@
           }
         </div>
       </div>
+    </div>
+
+    <div class="dashboard-executive-grid">
+      <section class="dashboard-executive-panel">
+        <div class="dash-card-header"><h3>Ciclos vigentes</h3><span>{{ s.proyectosAvance.length }} proyectos</span></div>
+        <div class="table-scroll"><table class="dashboard-cycle-table"><thead><tr><th>Ciclo</th><th>Proyecto</th><th>Progreso</th><th>Estado</th></tr></thead><tbody>
+          @for (p of s.proyectosAvance; track p.ciclo_id) {
+            <tr><td><strong>{{ p.ciclo_nombre }}</strong></td><td>{{ p.codigo }}</td><td>{{ p.porcentaje_avance }}%</td><td><span class="badge {{ p.porcentaje_avance === 100 ? 'badge-est-cerrado' : 'badge-est-en-revision' }}">{{ p.porcentaje_avance === 100 ? 'Completado' : 'En ejecución' }}</span></td></tr>
+          }
+        </tbody></table></div>
+      </section>
+      <section class="dashboard-executive-panel">
+        <div class="dash-card-header"><h3>Resultados de ejecución</h3><span>{{ totalResultados() }} casos</span></div>
+        <div class="dashboard-result-bars">
+          @for (item of s.resultadosEjecucion; track item.resultado) {
+            <div class="dist-row"><span class="dist-label">{{ item.resultado }}</span><div class="dist-bar-track"><div class="dist-bar-fill" [style.width.%]="pct(item.total,totalResultados())" [style.background]="item.resultado === 'Aprobado' ? '#3b8862' : item.resultado === 'Fallido' ? '#c95050' : '#8795a0'"></div></div><strong>{{ item.total }}</strong></div>
+          } @empty { <p class="text-muted">Sin ejecuciones registradas.</p> }
+        </div>
+      </section>
     </div>
 
     <!-- ─── Fila central ────────────────────────────────────────────────── -->

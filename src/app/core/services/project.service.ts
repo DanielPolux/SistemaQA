@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 
 export interface FiltroProyecto {
   estado?: string;
-  responsableId?: number;
+  responsableQaId?: number;
   busqueda?: string;
   pagina?: number;
   porPagina?: number;

@@ -26,7 +26,10 @@ export class ProjectListComponent implements OnInit, OnDestroy {
   porPagina = 10;
   busqueda = '';
   estadoFiltro = '';
+  responsableQaId: number | null = null;
   cargando = false;
+  resumenPortafolio = { activos: 0, ciclos: 0, aprobacion: 0, defectosAbiertos: 0 };
+  responsablesQa: { id: number; nombre: string }[] = [];
 
   private busquedaSubject = new Subject<string>();
   private sub!: Subscription;
@@ -48,6 +51,7 @@ export class ProjectListComponent implements OnInit, OnDestroy {
       debounceTime(350),
       distinctUntilChanged(),
     ).subscribe(() => { this.pagina = 1; this.cargar(); });
+    this.cargarResumenPortafolio();
     this.cargar();
   }
 
@@ -63,6 +67,7 @@ export class ProjectListComponent implements OnInit, OnDestroy {
     this.service.getAll({
       busqueda: this.busqueda || undefined,
       estado: this.estadoFiltro || undefined,
+      responsableQaId: this.responsableQaId || undefined,
       pagina: this.pagina,
       porPagina: this.porPagina
     }).subscribe({
@@ -75,6 +80,29 @@ export class ProjectListComponent implements OnInit, OnDestroy {
   }
 
   buscar(): void { this.pagina = 1; this.cargar(); }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.estadoFiltro = '';
+    this.responsableQaId = null;
+    this.buscar();
+  }
+
+  private cargarResumenPortafolio(): void {
+    this.service.getAll({ porPagina: 500 }).subscribe(({ datos }) => {
+      const activos = datos.filter(p => !['Finalizado', 'En Produccion'].includes(p.estado));
+      const aprobaciones = datos.map(p => p.porcentajeAprobacion ?? 0);
+      this.resumenPortafolio = {
+        activos: activos.length,
+        ciclos: activos.filter(p => !!p.cicloActual).length,
+        aprobacion: aprobaciones.length ? Math.round(aprobaciones.reduce((a, b) => a + b, 0) / aprobaciones.length) : 0,
+        defectosAbiertos: datos.reduce((total, p) => total + (p.defectosAbiertos ?? 0), 0),
+      };
+      const unicos = new Map<number, string>();
+      datos.forEach(p => { if (p.responsableQaId && p.responsableQaNombre) unicos.set(p.responsableQaId, p.responsableQaNombre); });
+      this.responsablesQa = [...unicos].map(([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    });
+  }
 
   cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
 

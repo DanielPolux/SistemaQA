@@ -24,6 +24,8 @@ export interface AvanceCiclo {
   omitidos: number;
   total: number;
 }
+export interface ResultadoGrupo { grupo: string; aprobados: number; fallidos: number; bloqueados: number; total: number; }
+export interface DefectoPrioritario { id: number; codigo: string; codigoProyecto?: string; titulo: string; severidad: string; prioridad: string; estado: string; }
 
 export interface ReporteProyecto {
   proyecto: { id: number; nombre: string; codigo: string; cliente: string; estado: string };
@@ -35,6 +37,8 @@ export interface ReporteProyecto {
   defectosPorEstado: ChartItem[];
   defectosPorPrioridad: ChartItem[];
   avancePorCiclo: AvanceCiclo[];
+  resultadosPorGrupo: ResultadoGrupo[];
+  defectosPrioritarios: DefectoPrioritario[];
 }
 
 @Injectable({ providedIn: 'root' })

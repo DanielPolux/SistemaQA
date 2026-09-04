@@ -84,4 +84,6 @@ export class DashboardComponent implements OnInit {
   pct(value: number, total: number): number {
     return total === 0 ? 0 : Math.round((value / total) * 100);
   }
+
+  totalResultados(): number { return this.s?.resultadosEjecucion.reduce((total, item) => total + item.total, 0) ?? 0; }
 }
