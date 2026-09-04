@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2>Proyectos</h2>
-    @if (auth.puedeEditar()) {
+    @if (auth.puedeGestionarProyectos()) {
       <a routerLink="/proyectos/nuevo" class="btn btn-primary">+ Nuevo Proyecto</a>
     }
   </div>
@@ -68,10 +68,12 @@
               <a [routerLink]="['/proyectos', p.id]" class="btn btn-sm btn-icon btn-info" title="Ver detalle">
                 <i class="bi bi-eye"></i>
               </a>
-              @if (auth.puedeEditar()) {
+              @if (auth.puedeGestionarProyectos()) {
                 <a [routerLink]="['/proyectos', p.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Editar">
                   <i class="bi bi-pencil"></i>
                 </a>
+              }
+              @if (auth.puedeEliminarProyectos()) {
                 <button class="btn btn-sm btn-icon btn-danger" title="Eliminar"
                   (click)="eliminar(p.id, p.nombre)">
                   <i class="bi bi-trash"></i>

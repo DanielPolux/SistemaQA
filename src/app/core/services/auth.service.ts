@@ -18,7 +18,16 @@ export class AuthService {
   readonly esQaLead         = computed(() => this.usuarioActual()?.rol === Rol.QA_LEAD);
   readonly esProjectManager = computed(() => this.usuarioActual()?.rol === Rol.PROJECT_MANAGER);
 
-  // Puede crear/editar/eliminar proyectos, requerimientos, casos y ciclos
+  // La gestión de proyectos corresponde al equipo que gobierna QA.
+  readonly puedeGestionarProyectos = computed(() => {
+    const rol = this.usuarioActual()?.rol;
+    return rol === Rol.ADMIN || rol === Rol.QA_LEAD;
+  });
+
+  // El borrado de un proyecto es una operación administrativa excepcional.
+  readonly puedeEliminarProyectos = computed(() => this.usuarioActual()?.rol === Rol.ADMIN);
+
+  // Permiso QA general usado por casos, requerimientos y ciclos.
   readonly puedeEditar = computed(() => {
     const rol = this.usuarioActual()?.rol;
     return rol === Rol.ADMIN || rol === Rol.QA_LEAD || rol === Rol.QA_TESTER;

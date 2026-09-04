@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../../core/guards/role.guard';
+import { Rol } from '../../core/models';
 
 export const PROJECTS_ROUTES: Routes = [
   {
@@ -7,6 +9,7 @@ export const PROJECTS_ROUTES: Routes = [
   },
   {
     path: 'nuevo',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD])],
     loadComponent: () => import('./project-form/project-form.component').then(m => m.ProjectFormComponent)
   },
   {
@@ -15,6 +18,7 @@ export const PROJECTS_ROUTES: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [roleGuard([Rol.ADMIN, Rol.QA_LEAD])],
     loadComponent: () => import('./project-form/project-form.component').then(m => m.ProjectFormComponent)
   }
 ];
