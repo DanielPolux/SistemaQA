@@ -12,9 +12,14 @@
       }
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
+      @if (defecto && puedeRevisarQa) {
+        <button class="btn btn-success" (click)="confirmarRespuestaDesarrollo()" [disabled]="guardandoAceptar">
+          <i class="bi bi-check-circle"></i> {{ guardandoAceptar ? 'Guardando...' : textoAceptar }}
+        </button>
+      }
       @if (defecto && puedeReabrir) {
         <button class="btn btn-warning" (click)="abrirModalReabrir()">
-          <i class="bi bi-arrow-clockwise"></i> Reabrir
+          <i class="bi bi-arrow-clockwise"></i> Rechazar respuesta y reabrir
         </button>
       }
       <a routerLink="/defectos" class="btn btn-secondary">

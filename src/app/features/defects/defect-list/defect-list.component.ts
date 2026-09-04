@@ -224,12 +224,12 @@ export class DefectListComponent implements OnInit {
 
   // ─── Modal verificación (Cerrar / Reabrir) ───────────────────────────────
   modalVerificarAbierto = signal(false);
-  verificarPendiente: { id: number; titulo: string; accion: 'cerrar' | 'reabrir' } | null = null;
+  verificarPendiente: { id: number; titulo: string; estadoDesarrollo?: string | null; accion: 'aceptar' | 'reabrir' } | null = null;
   comentarioReabrir = '';
   errorVerificar = '';
 
-  abrirVerificar(d: Defecto, accion: 'cerrar' | 'reabrir'): void {
-    this.verificarPendiente = { id: d.id, titulo: d.titulo, accion };
+  abrirVerificar(d: Defecto, accion: 'aceptar' | 'reabrir'): void {
+    this.verificarPendiente = { id: d.id, titulo: d.titulo, estadoDesarrollo: d.estadoDesarrollo, accion };
     this.comentarioReabrir = '';
     this.errorVerificar = '';
     this.modalVerificarAbierto.set(true);
@@ -252,12 +252,28 @@ export class DefectListComponent implements OnInit {
       return;
     }
 
-    const nuevoEstado  = accion === 'cerrar' ? EstadoDefecto.CERRADO : EstadoDefecto.REABIERTO;
+    const nuevoEstado  = accion === 'aceptar'
+      ? (this.verificarPendiente.estadoDesarrollo === 'No Aplica' ? EstadoDefecto.RECHAZADO : EstadoDefecto.CERRADO)
+      : EstadoDefecto.REABIERTO;
     const comentario   = accion === 'reabrir' ? this.comentarioReabrir.trim() : undefined;
 
     this.service.cambiarEstado(id, nuevoEstado, comentario).subscribe({
       next: () => { this.cerrarModalVerificar(); this.cargar(); },
       error: (err) => { this.errorVerificar = err?.error?.message || 'Error al actualizar el defecto.'; }
     });
+  }
+
+  get estadoAceptacion(): string {
+    return this.verificarPendiente?.estadoDesarrollo === 'No Aplica' ? 'Rechazado' : 'Cerrado';
+  }
+
+  get tituloAceptacion(): string {
+    return this.verificarPendiente?.estadoDesarrollo === 'No Aplica' ? 'Aceptar No Aplica' : 'Cerrar defecto';
+  }
+
+  get mensajeAceptacion(): string {
+    return this.verificarPendiente?.estadoDesarrollo === 'No Aplica'
+      ? `¿Confirmas que aceptas la justificación “No Aplica” para ${this.verificarPendiente.titulo}?`
+      : `¿Confirmas que la corrección de ${this.verificarPendiente?.titulo ?? ''} fue verificada?`;
   }
 }

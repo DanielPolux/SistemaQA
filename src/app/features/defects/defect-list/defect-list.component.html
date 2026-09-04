@@ -117,8 +117,9 @@
                 }
               } @else {
                 @if (d.estado === 'En Revisión') {
-                  <button class="btn btn-sm btn-icon btn-success" title="Verificado — Cerrar defecto"
-                          (click)="abrirVerificar(d, 'cerrar')">
+                  <button class="btn btn-sm btn-icon btn-success"
+                          [title]="d.estadoDesarrollo === 'No Aplica' ? 'Aceptar No Aplica — Rechazar defecto' : 'Corrección verificada — Cerrar defecto'"
+                          (click)="abrirVerificar(d, 'aceptar')">
                     <i class="bi bi-check-circle"></i>
                   </button>
                   <button class="btn btn-sm btn-icon btn-warning" title="Sigue fallando — Reabrir defecto"
@@ -171,25 +172,25 @@
 </div>
 
 <!-- ─── Modal Verificación (Cerrar / Reabrir) ────────────────────────────── -->
-@if (modalVerificarAbierto() && verificarPendiente) {
+  @if (modalVerificarAbierto() && verificarPendiente) {
   <div class="modal-overlay" (click)="cerrarModalVerificar()">
     <div class="modal-panel modal-panel--sm" (click)="$event.stopPropagation()">
-      <div class="modal-header" [class.modal-header--success]="verificarPendiente.accion === 'cerrar'"
+      <div class="modal-header" [class.modal-header--success]="verificarPendiente.accion === 'aceptar'"
                                 [class.modal-header--warning]="verificarPendiente.accion === 'reabrir'">
         <div class="modal-title-group">
-          <span class="modal-icon">{{ verificarPendiente.accion === 'cerrar' ? '✅' : '🔄' }}</span>
+          <span class="modal-icon">{{ verificarPendiente.accion === 'aceptar' ? '✅' : '🔄' }}</span>
           <div>
             <h3 class="modal-title">
-              {{ verificarPendiente.accion === 'cerrar' ? 'Cerrar defecto verificado' : 'Reabrir defecto' }}
+              {{ verificarPendiente.accion === 'aceptar' ? tituloAceptacion : 'Reabrir defecto' }}
             </h3>
           </div>
         </div>
         <button class="modal-close" (click)="cerrarModalVerificar()">✕</button>
       </div>
       <div class="modal-body modal-body--confirm">
-        @if (verificarPendiente.accion === 'cerrar') {
-          <p class="confirm-msg">¿Confirmas que el defecto <strong>{{ verificarPendiente.titulo }}</strong> fue corregido y puede cerrarse?</p>
-          <p class="confirm-sub">El defecto pasará a estado <strong>Cerrado</strong>.</p>
+        @if (verificarPendiente.accion === 'aceptar') {
+          <p class="confirm-msg">{{ mensajeAceptacion }}</p>
+          <p class="confirm-sub">El defecto pasará a estado <strong>{{ estadoAceptacion }}</strong>.</p>
         } @else {
           <p class="confirm-msg">El defecto <strong>{{ verificarPendiente.titulo }}</strong> sigue fallando.</p>
           <p class="confirm-sub" style="margin-bottom:12px">Quedará en estado <strong>Asignado</strong> para que el desarrollador lo revise nuevamente.</p>
@@ -206,8 +207,8 @@
       }
       <div class="modal-footer">
         <button class="btn btn-outline" (click)="cerrarModalVerificar()">Cancelar</button>
-        @if (verificarPendiente.accion === 'cerrar') {
-          <button class="btn btn-success" (click)="confirmarVerificar()">Cerrar Defecto</button>
+        @if (verificarPendiente.accion === 'aceptar') {
+          <button class="btn btn-success" (click)="confirmarVerificar()">{{ tituloAceptacion }}</button>
         } @else {
           <button class="btn btn-warning" (click)="confirmarVerificar()">Reabrir Defecto</button>
         }
