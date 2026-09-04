@@ -88,7 +88,7 @@
           <th>Código CP</th>
           <th>Proyecto</th>
           <th>Nombre del Caso de Prueba</th>
-          <th>RF</th>
+          <th class="th-rf">RF</th>
           <th>Tipo</th>
           <th>Prioridad</th>
           <th>Responsable QA</th>
@@ -107,7 +107,7 @@
             <td><span class="tag-codigo">{{ c.codigo ?? '-' }}</span></td>
             <td>{{ c.proyectoNombre ?? '-' }}</td>
             <td class="td-nombre">{{ c.nombre }}</td>
-            <td>{{ c.requerimientoRf ?? '-' }}</td>
+            <td class="td-rf">{{ c.requerimientoRf ?? '-' }}</td>
             <td>{{ c.tipo }}</td>
             <td><span class="badge badge-prioridad-{{ c.prioridad | lowercase }}">{{ c.prioridad }}</span></td>
             <td>{{ c.responsableQaNombre ?? '-' }}</td>
