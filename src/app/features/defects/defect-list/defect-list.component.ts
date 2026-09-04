@@ -104,6 +104,13 @@ export class DefectListComponent implements OnInit {
   cambiarPagina(p: number): void { this.pagina = p; this.cargar(); }
   get paginas(): number[] { return Array.from({ length: this.totalPaginas }, (_, i) => i + 1); }
 
+  iniciarAtencion(defecto: Defecto): void {
+    this.service.cambiarEstado(defecto.id, EstadoDefecto.EN_PROGRESO, 'El desarrollador inició la atención del defecto.').subscribe({
+      next: () => { this.toast.exito('Atención iniciada'); this.cargar(); },
+      error: (err) => this.toast.error(err?.error?.message || 'No se pudo iniciar la atención'),
+    });
+  }
+
   // ─── Modal confirmación eliminar ─────────────────────────────────────────
   modalConfirmarAbierto = signal(false);
   confirmPendiente: { id: number; nombre: string } | null = null;

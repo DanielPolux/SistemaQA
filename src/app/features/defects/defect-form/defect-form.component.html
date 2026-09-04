@@ -123,7 +123,7 @@
         <div class="form-group">
           <label>Estado Desarrollo</label>
           <select formControlName="estadoDesarrollo">
-            <option [value]="null">— Sin actualizar —</option>
+            <option [value]="null">Pendiente de atención</option>
             @for (ed of estadosDesarrollo; track ed) { <option [value]="ed">{{ ed }}</option> }
           </select>
         </div>

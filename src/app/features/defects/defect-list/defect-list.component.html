@@ -78,7 +78,7 @@
               } @else if (d.estadoDesarrollo === 'No Aplica') {
                 <span class="badge badge-dev-noapl">No Aplica</span>
               } @else {
-                <span class="text-muted">—</span>
+                <span class="badge badge-dev-pendiente">Pendiente de atención</span>
               }
             </td>
             <td>{{ d.creadoEn | date:'dd/MM/yyyy' }}</td>
@@ -89,6 +89,12 @@
               </button>
               @if (auth.esDesarrollador()) {
                 @if (d.estado === 'Nuevo' || d.estado === 'Asignado' || d.estado === 'En Progreso' || d.estado === 'Reabierto') {
+                  @if (d.estado === 'Asignado' || d.estado === 'Reabierto') {
+                    <button class="btn btn-sm btn-icon btn-success" title="Iniciar atención"
+                            (click)="iniciarAtencion(d)">
+                      <i class="bi bi-play-circle"></i>
+                    </button>
+                  }
                   <a [routerLink]="['/defectos', d.id, 'editar']" class="btn btn-sm btn-icon btn-warning" title="Responder defecto">
                     <i class="bi bi-pencil"></i>
                   </a>
