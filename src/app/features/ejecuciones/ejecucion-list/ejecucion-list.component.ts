@@ -7,7 +7,7 @@ import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UploadService } from '../../../core/services/upload.service';
-import { EjecucionCasoPrueba, Proyecto, Usuario, ResultadoEjecucion, AmbienteEjecucion } from '../../../core/models';
+import { EjecucionCasoPrueba, Proyecto, Usuario, ResultadoEjecucion, AmbienteEjecucion, TipoEjecucion } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
 import { DefectService } from '../../../core/services/defect.service';
 import { TestCaseService } from '../../../core/services/test-case.service';
@@ -47,12 +47,14 @@ export class EjecucionListComponent implements OnInit {
   proyectoFiltroId?: number;
   resultadoFiltro  = '';
   ambienteFiltro   = '';
+  tipoFiltro       = '';
   testerFiltroId?: number;
   fechaDesde = '';
   fechaHasta = '';
 
   readonly resultados = Object.values(ResultadoEjecucion);
   readonly ambientes  = Object.values(AmbienteEjecucion);
+  readonly tipos      = Object.values(TipoEjecucion);
 
   readonly resultadoClase: Record<string, string> = {
     [ResultadoEjecucion.APROBADO]:  'badge-resultado-aprobado',
@@ -77,6 +79,7 @@ export class EjecucionListComponent implements OnInit {
       proyectoId:  this.proyectoFiltroId,
       resultado:   this.resultadoFiltro  || undefined,
       ambiente:    this.ambienteFiltro   || undefined,
+      tipoEjecucion: this.tipoFiltro     || undefined,
       testerId:    this.testerFiltroId,
       fechaDesde:  this.fechaDesde       || undefined,
       fechaHasta:  this.fechaHasta       || undefined,
@@ -99,6 +102,7 @@ export class EjecucionListComponent implements OnInit {
     this.proyectoFiltroId = undefined;
     this.resultadoFiltro  = '';
     this.ambienteFiltro   = '';
+    this.tipoFiltro       = '';
     this.testerFiltroId   = undefined;
     this.fechaDesde       = '';
     this.fechaHasta       = '';
@@ -114,6 +118,7 @@ export class EjecucionListComponent implements OnInit {
       'Tester':       e.testerNombre ?? '',
       'Fecha':        e.fecha ? new Date(e.fecha).toLocaleString('es-PE') : '',
       'Ambiente':     e.ambiente,
+      'Tipo':         e.tipoEjecucion ?? TipoEjecucion.MANUAL,
       'Versión':      e.version,
       'Resultado':    e.resultado,
       'Defecto':      e.defectoCodigo ?? '',
@@ -166,6 +171,7 @@ export class EjecucionListComponent implements OnInit {
         descripcionCaso: caso.descripcion,
         tester: e.testerNombre ?? '—',
         ambiente: e.ambiente,
+        tipoEjecucion: e.tipoEjecucion ?? TipoEjecucion.MANUAL,
         version: e.version,
         resultado: e.resultado,
         resultadoEsperado: caso.resultadoEsperado,

@@ -29,6 +29,7 @@ export interface EjecucionEvidenciaWord {
   descripcionCaso?: string;
   tester: string;
   ambiente: string;
+  tipoEjecucion?: string;
   version: string;
   resultado: string;
   resultadoEsperado?: string;
@@ -141,6 +142,7 @@ export class EjecucionWordExportService {
             ['Tester', data.tester || '—'],
             ['Fecha de generación', fecha],
             ['Ambiente', data.ambiente || '—'],
+            ['Tipo de ejecución', data.tipoEjecucion || 'Manual'],
             ['Versión', data.version || '—'],
             ['Resultado', data.resultado || 'Pendiente'],
           ], 25),

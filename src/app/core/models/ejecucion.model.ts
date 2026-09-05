@@ -12,6 +12,11 @@ export enum AmbienteEjecucion {
   PRODUCCION = 'Producción',
 }
 
+export enum TipoEjecucion {
+  MANUAL       = 'Manual',
+  AUTOMATIZADA = 'Automatizada',
+}
+
 export interface EjecucionCasoPrueba {
   id: number;
   casoPruebaId: number;
@@ -29,6 +34,7 @@ export interface EjecucionCasoPrueba {
   testerNombre?: string;
   fecha: Date;
   ambiente: AmbienteEjecucion;
+  tipoEjecucion?: TipoEjecucion;
   version: string;
   resultado: ResultadoEjecucion;
   resultadoObtenido: string;

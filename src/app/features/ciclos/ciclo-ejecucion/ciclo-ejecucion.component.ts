@@ -13,7 +13,7 @@ import { DefectService } from '../../../core/services/defect.service';
 import { WordExportService } from '../../../core/services/word-export.service';
 import {
   CicloPrueba, EstadoCiclo, EstadoProyecto, Usuario, Rol,
-  ResultadoEjecucion, AmbienteEjecucion,
+  ResultadoEjecucion, AmbienteEjecucion, TipoEjecucion,
   SeveridadDefecto, PrioridadDefecto, Defecto, EstadoDefecto,
 } from '../../../core/models';
 import { ToastService } from '../../../core/services/toast.service';
@@ -101,6 +101,7 @@ export class CicloEjecucionComponent implements OnInit {
   formEjecucion = {
     testerId:             0,
     ambiente:             '' as AmbienteEjecucion | '',
+    tipoEjecucion:        TipoEjecucion.MANUAL,
     version:              '',
     resultado:            '' as ResultadoEjecucion | '',
     resultadoObtenido:    '',
@@ -334,6 +335,7 @@ export class CicloEjecucionComponent implements OnInit {
     this.formEjecucion = {
       testerId:             userId,
       ambiente:             (this.ciclo?.ambiente as AmbienteEjecucion | '') ?? '',
+      tipoEjecucion:        TipoEjecucion.MANUAL,
       version:              '',
       resultado:            '' as ResultadoEjecucion | '',
       resultadoObtenido:    '',
@@ -583,6 +585,7 @@ export class CicloEjecucionComponent implements OnInit {
         descripcionCaso:   this.casoSeleccionado.descripcion,
         tester:            usuario ? `${usuario.nombre} ${usuario.apellido}` : '—',
         ambiente:          this.formEjecucion.ambiente,
+        tipoEjecucion:     this.formEjecucion.tipoEjecucion,
         version:           this.formEjecucion.version,
         resultado:         this.formEjecucion.resultado,
         resultadoEsperado: this.casoSeleccionado.resultadoEsperado,
@@ -646,6 +649,7 @@ export class CicloEjecucionComponent implements OnInit {
       cicloId:           this.cicloId,
       testerId:          f.testerId,
       ambiente:          f.ambiente,
+      tipoEjecucion:     f.tipoEjecucion,
       version:           f.version,
       resultado:         f.resultado,
       resultadoObtenido: this.resultadoObtenidoEfectivo(),

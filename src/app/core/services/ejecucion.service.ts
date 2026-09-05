@@ -10,6 +10,7 @@ export interface FiltroEjecucion {
   proyectoId?: number;
   resultado?: string;
   ambiente?: string;
+  tipoEjecucion?: string;
   testerId?: number;
   fechaDesde?: string;
   fechaHasta?: string;

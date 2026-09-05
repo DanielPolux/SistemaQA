@@ -8,7 +8,7 @@ import { DefectService } from '../../../core/services/defect.service';
 import { WordExportService } from '../../../core/services/word-export.service';
 import {
   AmbienteEjecucion, CasoPrueba, CicloPrueba, EstadoProyecto,
-  PrioridadDefecto, Proyecto, ResultadoEjecucion, SeveridadDefecto,
+  PrioridadDefecto, Proyecto, ResultadoEjecucion, SeveridadDefecto, TipoEjecucion,
 } from '../../../core/models';
 
 export interface PasoEjecucion {
@@ -232,6 +232,7 @@ export class EjecucionModalService {
       cicloPrueba:       f.cicloPrueba     || undefined,
       testerId:          f.testerId,
       ambiente:          f.ambiente,
+      tipoEjecucion:     f.tipoEjecucion,
       version:           f.version,
       resultado:         f.resultado,
       resultadoObtenido: f.resultadoObtenido,
@@ -293,6 +294,7 @@ export class EjecucionModalService {
       cicloPrueba:          '',
       testerId:             0,
       ambiente:             '' as AmbienteEjecucion | '',
+      tipoEjecucion:        TipoEjecucion.MANUAL,
       version:              '',
       resultado:            '' as ResultadoEjecucion | '',
       resultadoObtenido:    '',
